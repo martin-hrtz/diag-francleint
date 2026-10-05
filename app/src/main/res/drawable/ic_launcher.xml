@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Petite tortue francleint (dessin original). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <path android:fillColor="#141B2B" android:pathData="M100,0a100,100 0,1 1,0 200a100,100 0,1 1,0 -200z" />
+    <path android:fillColor="#4FA83A" android:pathData="M52,128h26v30h-26z" />
+    <path android:fillColor="#4FA83A" android:pathData="M112,128h26v30h-26z" />
+    <path android:fillColor="#7BD15A" android:pathData="M166,82a22,22 0,1 1,0 44a22,22 0,1 1,0 -44z" />
+    <path android:fillColor="#7BD15A" android:pathData="M28,124C28,64 152,64 152,124Z" />
+    <path android:fillColor="#4FA83A" android:pathData="M22,118h136v14h-136z" />
+    <path android:fillColor="#141B2B" android:pathData="M173,96a4,4 0,1 1,0 8a4,4 0,1 1,0 -8z" />
+</vector>
