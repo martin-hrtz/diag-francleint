@@ -1,0 +1,27 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'fr.francleint.diag'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'fr.francleint.diag'
+        minSdk 21
+        // Les écrans visés tournent sous Android 9 : on cible l'API 28.
+        targetSdk 28
+        versionCode 1
+        versionName '1.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
