@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diag francleint</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="turtle" viewBox="0 0 200 160"><rect x="52" y="108" width="26" height="30" rx="13" fill="#4FA83A"/><rect x="112" y="108" width="26" height="30" rx="13" fill="#4FA83A"/><circle cx="166" cy="84" r="22" fill="#7BD15A"/><circle cx="173" cy="78" r="4" fill="#141B2B"/><path d="M28 104 C28 44 152 44 152 104 Z" fill="#7BD15A"/><rect x="22" y="98" width="136" height="14" rx="7" fill="#4FA83A"/></symbol>
+</svg>
+
+<!-- ACCUEIL -->
+<section class="screen on" id="home">
+  <div class="left">
+    <div class="brand"><svg viewBox="0 0 200 160"><use href="#turtle"/></svg>francleint</div>
+    <div>
+      <p class="hello" id="hello">Salut</p>
+      <h1>Ta Clio mérite un <em>check-up</em>.</h1>
+      <p class="sub">3 minutes pour savoir ce qui fait ramer ton écran. Rien n'est modifié.</p>
+    </div>
+    <div class="actions">
+      <button class="btn dark" id="go"><span class="play"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M5 3 L13 8 L5 13 Z" fill="#141B2B"/></svg></span>Lancer le check-up</button>
+      <button class="btn white" data-goto="wheel">Tester mon volant</button>
+    </div>
+  </div>
+  <div class="photo">
+    <img src="clio.jpg" alt="Ta Clio">
+    <div class="top">
+      <span class="pill"><span class="dot"></span>Clio 4 · connectée</span>
+      <span class="pill dark">Vu sur @francleint</span>
+    </div>
+    <div class="checks">
+      <div class="check"><small>On vérifie</small><b>L'écran</b></div>
+      <div class="check"><small>On vérifie</small><b>La vitesse</b></div>
+      <div class="check"><small>On vérifie</small><b>Le volant</b></div>
+      <div class="check"><small>On vérifie</small><b>CarPlay</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- CHECK-UP EN COURS -->
+<section class="screen" id="scan">
+  <div class="photo">
+    <img src="clio.jpg" alt="Ta Clio">
+    <div class="sweep"></div>
+    <div class="brand"><svg viewBox="0 0 200 160"><use href="#turtle"/></svg>francleint</div>
+    <span class="pill"><span class="dot"></span>On écoute ta voiture…</span>
+  </div>
+  <div class="right">
+    <div class="pct"><b id="pct">0</b><span>%</span></div>
+    <div class="bar"><i id="bar"></i></div>
+    <h1 id="scanTitle">C'est parti.</h1>
+    <div class="steps" id="steps">
+      <div class="step"><span class="ring"></span>Ton écran, en vrai</div>
+      <div class="step"><span class="ring"></span>Mémoire et stockage</div>
+      <div class="step"><span class="ring"></span>CarPlay et Wi-Fi</div>
+      <div class="step"><span class="ring"></span>Chaleur et applis</div>
+    </div>
+  </div>
+</section>
+
+<!-- RÉSULTAT -->
+<section class="screen" id="result">
+  <div class="photo">
+    <img src="clio.jpg" alt="Ta Clio">
+    <div class="brand"><svg viewBox="0 0 200 160"><use href="#turtle"/></svg>francleint</div>
+    <div class="spot" id="spotScreen" style="left:38%;top:40%"><i></i><b>Écran</b></div>
+    <div class="spot" id="spotWheel" style="left:56%;top:44%"><i></i><b>Volant</b></div>
+    <h1 id="verdict">Ta Clio est en <em>forme</em>.</h1>
+  </div>
+  <div class="right">
+    <div class="summary"><b id="count">0</b><span id="countTxt">petits trucs à régler</span></div>
+    <div id="rows" style="display:flex;flex-direction:column;gap:.75rem"></div>
+    <div class="ctas">
+      <button class="btn white" data-goto="wheel">Tester le volant</button>
+      <button class="btn green" id="export">Exporter mon rapport</button>
+    </div>
+  </div>
+</section>
+
+<!-- VOLANT -->
+<section class="screen" id="wheel">
+  <div class="left">
+    <div class="brand"><svg viewBox="0 0 200 160"><use href="#turtle"/></svg>francleint</div>
+    <div>
+      <h1>Teste ton <em>volant</em>.</h1>
+      <p class="sub">Touche une case, puis appuie sur le vrai bouton.</p>
+    </div>
+    <div class="art">
+      <svg viewBox="0 0 340 300" aria-hidden="true">
+        <circle cx="170" cy="150" r="128" fill="none" stroke="#141B2B" stroke-width="28"/>
+        <path d="M58 182 Q170 218 282 182 L262 214 Q170 244 78 214 Z" fill="#141B2B"/>
+        <rect x="128" y="120" width="84" height="74" rx="22" fill="#2A3245"/>
+        <circle cx="96" cy="152" r="13" fill="#7BD15A"/><circle cx="96" cy="118" r="13" fill="#7BD15A"/>
+        <circle cx="244" cy="118" r="13" fill="#7BD15A"/><circle cx="244" cy="152" r="13" fill="#7BD15A"/>
+      </svg>
+    </div>
+  </div>
+  <div class="right">
+    <div class="keys" id="keys"></div>
+    <p class="last" id="last"></p>
+    <button class="btn black" id="wheelDone">C'est bon</button>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><i></i><span id="toastTxt"></span></div>
+
+<script src="app.js"></script>
+</body>
+</html>
