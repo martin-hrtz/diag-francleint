@@ -44,11 +44,18 @@ public class AmbianceService extends Service {
     static final int[] NIGHT = {20, 170, 85};      // nuit : vert sapin (version LED)
     static final int[] ROAD = {25, 70, 220};       // autoroute : bleu nuit
 
-    // Mode sport : réagit à l'ACCÉLÉRATION (réglé pour une Clio 4 0.9 TCe 75 ch)
-    //   +1 km/h par seconde  → début de l'effet
-    //   +5 km/h par seconde  → rouge (≈ 2e/3e rapport à 5000 tr/min)
-    static final double ACC_START = 0.25;  // m/s²
-    static final double ACC_FULL = 1.40;   // m/s²
+    // Mode sport : réagit à l'EFFORT du moteur, pas à l'accélération brute.
+    // Clio 4 phase 2 0.9 TCe 75 ch : 55 kW, 120 Nm, 0-100 en 12,3 s, ≈ 1150 kg avec le conducteur.
+    // À chaque vitesse on calcule l'accélération MAXIMALE possible (puissance / vitesse − air − roulement),
+    // et on compare : 100 % = pied au plancher, quelle que soit la vitesse.
+    static final double MASS = 1150;       // kg (voiture + conducteur)
+    static final double P_MAX = 55000;     // W
+    static final double ETA = 0.85;        // rendement de la transmission
+    static final double CDA = 0.70;        // Cx × surface frontale (m²)
+    static final double CRR = 0.012;       // résistance au roulement
+    static final double A_LOW = 2.2;       // m/s² : plafond réaliste en 1re/2e (0-100 en 12,3 s ≈ 2,3 m/s² de moyenne)
+    static final double EFFORT_START = 0.12;   // en dessous : conduite normale, bleu
+    static final double EFFORT_RED = 0.75;     // au-dessus : rouge
     static final double HUE_BASE = 225;    // bleu en roulant
     static final double HUE_SPAN = 135;    // bleu → violet → magenta → rouge (225° → 360°)
 
@@ -64,6 +71,16 @@ public class AmbianceService extends Service {
     }
 
     private volatile boolean sportActive = false;   // on roule, mode sport, rien de prioritaire
+    private volatile double effort = 0;              // 0 → 1 : part de la puissance utilisée
+    private volatile int estHp = 0;                  // puissance estimée (ch), pour l'écran
+
+    static double resist(double v) { return 0.5 * 1.2 * CDA * v * v + CRR * MASS * 9.81; }   // N
+
+    /** Accélération maximale possible à la vitesse v (m/s). */
+    static double aMax(double v) {
+        double fromPower = (ETA * P_MAX / Math.max(v, 1) - resist(v)) / MASS;
+        return Math.max(0.15, Math.min(A_LOW, fromPower));
+    }
 
     private double lastGpsV = -1;          // dernière vitesse GPS (m/s)
     private long lastGpsT = 0;
@@ -167,6 +184,9 @@ public class AmbianceService extends Service {
                         if (lastGpsV >= 0 && dt > 0.3 && dt < 3) {
                             accel = (loc.getSpeed() - lastGpsV) / dt;   // brut : aucun lissage = aucun retard ajouté
                             accelAt = System.currentTimeMillis();
+                            double vm = (loc.getSpeed() + lastGpsV) / 2;        // vitesse moyenne sur l'intervalle
+                            effort = accel > 0 ? clamp(accel / aMax(vm), 0, 1) : 0;
+                            estHp = accel > 0 ? (int) Math.round((MASS * accel + resist(vm)) * vm / ETA / 735.5) : 0;
                         }
                         lastGpsV = loc.getSpeed(); lastGpsT = t;
                     }
@@ -301,13 +321,14 @@ public class AmbianceService extends Service {
             double tl = blinker ? Math.max(targetLevel, 0.5) : targetLevel;
             // Accélération → teinte (bleu → violet → magenta → rouge), intensité inchangée
             long now = System.currentTimeMillis();
-            double acc = "acc1".equals(sim) ? 0.8 : "acc2".equals(sim) ? 1.6
-                    : (now - accelAt < 1300 ? accel : 0);
+            double eff = "acc1".equals(sim) ? 0.45 : "acc2".equals(sim) ? 0.9
+                    : (now - accelAt < 1300 ? effort : 0);
             double want = sportActive && !blinker
-                    ? Math.pow(clamp((acc - ACC_START) / (ACC_FULL - ACC_START), 0, 1), 0.8) : 0;
-            // Glisse entre deux mesures GPS au lieu de sauter : tout le dégradé en ≈ 0,4 s
+                    ? clamp((eff - EFFORT_START) / (EFFORT_RED - EFFORT_START), 0, 1) : 0;
+            // Monte en glissant (≈ 0,4 s pour tout le dégradé), redescend doucement (≈ 2,5 s du rouge au bleu).
+            // Si tu ré-accélères pendant la descente, ça repart de la couleur actuelle.
             if (want > power) power = Math.min(want, power + 0.075);
-            else power = Math.max(want, power - 0.045);
+            else power = Math.max(want, power - 0.012);
             if (sportActive && !blinker) {
                 tc = hue(HUE_BASE + HUE_SPAN * power);
                 k = 1.0;                                 // la teinte est déjà progressive : pas de mélange RGB (évite le blanc)
@@ -434,6 +455,7 @@ public class AmbianceService extends Service {
             o.put("sport", sport);
             o.put("accel", Math.round((System.currentTimeMillis() - accelAt < 2500 ? accel : 0) * 10) / 10.0);
             o.put("power", Math.round(power * 100));
+            o.put("hp", System.currentTimeMillis() - accelAt < 1300 ? estHp : 0);
             o.put("canOverlay", canOverlay());
             boolean locOn = false;
             try { locOn = ((LocationManager) getSystemService(LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER); } catch (Exception ignored) { }
