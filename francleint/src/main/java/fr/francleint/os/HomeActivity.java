@@ -313,10 +313,41 @@ public class HomeActivity extends Activity {
                     case "home": if (!tryStart(new Intent(Settings.ACTION_HOME_SETTINGS))) tryStart(new Intent(Settings.ACTION_SETTINGS)); break;
                     case "media": tryStart(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")); break;
                     case "stock": launchPkg("com.ts.MainUI"); break;
+                    case "p_install": tryStart(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()))); break;
+                    case "p_write": tryStart(new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()))); break;
+                    case "p_overlay": tryStart(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()))); break;
+                    case "p_battery": if (!tryStart(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))) tryStart(new Intent(Settings.ACTION_SETTINGS)); break;
+                    case "p_location":
+                        if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+                        else tryStart(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())));
+                        break;
                     case "miravision": if (!launchPkg("com.mediatek.miravision.ui")) toast("MiraVision introuvable"); break;
                     default: break;
                 }
             });
+        }
+
+        /** État de chaque autorisation, pour l'onglet « Autorisations ». */
+        @JavascriptInterface
+        public String perms() {
+            JSONObject o = new JSONObject();
+            try {
+                String me = getPackageName();
+                boolean m23 = Build.VERSION.SDK_INT >= 23;
+                o.put("p_install", Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls());
+                String nl = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
+                o.put("media", nl != null && nl.contains(me));
+                o.put("p_write", !m23 || Settings.System.canWrite(HomeActivity.this));
+                o.put("p_overlay", !m23 || Settings.canDrawOverlays(HomeActivity.this));
+                o.put("p_location", !m23 || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+                android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
+                o.put("p_battery", !m23 || (pm != null && pm.isIgnoringBatteryOptimizations(me)));
+                Intent h = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
+                ResolveInfo ri = getPackageManager().resolveActivity(h, PackageManager.MATCH_DEFAULT_ONLY);
+                o.put("home", ri != null && ri.activityInfo != null && me.equals(ri.activityInfo.packageName));
+            } catch (Exception ignored) { }
+            return o.toString();
         }
 
         @JavascriptInterface
