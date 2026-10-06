@@ -103,6 +103,7 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 
 /* PAGES INTERNES */
 .sub { grid-template-rows: 2.75rem minmax(0,1fr); grid-gap: 1.25rem; gap: 1.25rem; }
+.sub header { display: flex; align-items: center; justify-content: space-between; }
 .sub header button { height: 2.75rem; padding: 0 1.1rem; border-radius: 999px; border: 1px solid var(--line); font-size: 1.15rem; font-weight: 600; color: var(--ink-2); }
 .sub h1 { font-size: 1.75rem; font-weight: 600; }
 .grid { overflow-y: auto; display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); grid-gap: 1rem; gap: 1rem; align-content: start; }
@@ -146,6 +147,10 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 @media (prefers-reduced-motion: reduce) {
   #welcomeFx.on .hl-word, #welcomeFx.on .hl-word .n, #welcomeFx.on .hl-glow, #welcomeFx.on .hl-brand { animation-duration: 1ms; animation-delay: 0ms; }
 }
+
+.item .pill { margin-top: 0; color: #fff; font-size: 1.05rem; }
+.item .pstate { flex: none; margin-top: 0; height: 2.6rem; padding: 0 1.1rem; border-radius: 999px; font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; background: var(--accent); color: #fff; }
+.item .pstate.ok { background: none; color: var(--accent-hi); padding: 0 .25rem; }
 
 /* Pas de cadre orange au toucher / au focus */
 *:focus { outline: none !important; }
@@ -249,10 +254,25 @@ button:focus { outline: none !important; }
   <div class="grid" id="appGrid"></div>
 </section>
 
+<!-- AUTORISATIONS -->
+<section class="page sub" id="perms">
+  <header><h1>Autorisations</h1><button data-page="settings">Retour</button></header>
+  <div class="list">
+    <button class="item" data-open="p_install"><span><b>Installer les mises à jour</b><span>Autoriser francleint à installer ses nouvelles versions</span></span><span class="pstate" id="ps_p_install">…</span></button>
+    <button class="item" data-open="media"><span><b>Afficher la musique</b><span>Lire le titre et l'artiste en cours</span></span><span class="pstate" id="ps_media">…</span></button>
+    <button class="item" data-open="p_write"><span><b>Luminosité de l'écran</b><span>Régler la luminosité jour / nuit</span></span><span class="pstate" id="ps_p_write">…</span></button>
+    <button class="item" data-open="p_overlay"><span><b>Filtre de nuit</b><span>Assombrir l'écran par-dessus les autres applis</span></span><span class="pstate" id="ps_p_overlay">…</span></button>
+    <button class="item" data-open="p_location"><span><b>Position GPS</b><span>Vitesse et effort moteur</span></span><span class="pstate" id="ps_p_location">…</span></button>
+    <button class="item" data-open="p_battery"><span><b>Toujours actif</b><span>Ne jamais être endormi par Android</span></span><span class="pstate" id="ps_p_battery">…</span></button>
+    <button class="item" data-open="home"><span><b>Écran d'accueil</b><span>francleint comme écran principal</span></span><span class="pstate" id="ps_home">…</span></button>
+  </div>
+</section>
+
 <!-- RÉGLAGES -->
 <section class="page sub" id="settings">
   <header><h1>Réglages</h1><button data-page="home">Retour</button></header>
   <div class="list">
+    <button class="item" data-page="perms"><span><b>Autorisations</b><span id="permsTxt">Tout activer au même endroit</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="ambiance"><span><b>Ambiance</b><span>LED et luminosité de l'écran</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="diag"><span><b>Check-up de l'écran</b><span>Diagnostic et rapport</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" id="autoCp"><span><b>CarPlay au démarrage</b><span>S'ouvre tout seul quand tu démarres</span></span><span class="toggle" id="autoCpT"><i></i></span></button>
@@ -280,9 +300,20 @@ button:focus { outline: none !important; }
     if (id !== 'home') document.body.classList.remove('full'); else wake();
     [].forEach.call(document.querySelectorAll('.page'), function (p) { p.classList.toggle('on', p.id === id); });
     if (id === 'apps') loadApps();
+    if (id === 'perms' || id === 'settings') refreshPerms();
+  }
+  var PERM_KEYS = ['p_install', 'media', 'p_write', 'p_overlay', 'p_location', 'p_battery', 'home'];
+  function refreshPerms() {
+    var p = {}; try { p = NATIVE ? JSON.parse(Home.perms()) : { p_install: true, media: true, p_write: false }; } catch (e) { }
+    var n = 0;
+    PERM_KEYS.forEach(function (k) {
+      var el = $('ps_' + k), ok = !!p[k]; if (ok) n++;
+      if (el) { el.textContent = ok ? 'Activé ✓' : 'Activer'; el.className = 'pstate' + (ok ? ' ok' : ''); }
+    });
+    $('permsTxt').textContent = n === PERM_KEYS.length ? 'Tout est activé ✓' : (PERM_KEYS.length - n) + ' à activer';
   }
   window.onBack = function () { if (current !== 'home') show('home'); };
-  window.onHome = function () { show('home'); tick(); };
+  window.onHome = function () { if (current === 'perms' || current === 'settings') refreshPerms(); else show('home'); tick(); };
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
   function tick() {
@@ -384,6 +415,7 @@ button:focus { outline: none !important; }
   tick(); refresh(); updRefresh();
   setInterval(tick, 5000);
   setInterval(refresh, 2000);
+  setInterval(function () { if (current === 'perms') refreshPerms(); }, 1500);
 })();
 </script>
 
