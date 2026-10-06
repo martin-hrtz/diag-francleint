@@ -42,7 +42,8 @@ main { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap:
 .bar i { display: block; height: 100%; width: 100%; background: var(--accent-hi); transform-origin: left; transition: transform 600ms var(--ease); }
 .with-bar { display: flex; align-items: center; gap: 1rem; }
 
-footer { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1.25rem; align-items: center; }
+footer { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 1.25rem; align-items: center; }
+.chips .chip { padding: 0 1rem; }
 .chips { display: flex; gap: .6rem; flex-wrap: wrap; }
 .chip { height: 3.4rem; padding: 0 1.25rem; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 1.15rem; font-weight: 600; }
 .chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
@@ -110,6 +111,14 @@ footer { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1.25rem;
       <button class="chip" data-sim="appel">Appel</button>
       <button class="chip" data-sim="accueil">Accueil</button>
     </div>
+    <div class="park">
+      <span>Test LED</span>
+      <button class="sw" data-test="#FF0000" style="background:#FF0000" aria-label="Test rouge"></button>
+      <button class="sw" data-test="#00FF00" style="background:#00FF00" aria-label="Test vert"></button>
+      <button class="sw" data-test="#0000FF" style="background:#0000FF" aria-label="Test bleu"></button>
+      <button class="chip" data-proto="0">A</button>
+      <button class="chip" data-proto="1">B</button>
+    </div>
     <div class="park" id="park">
       <span>À l'arrêt</span>
       <button class="sw" data-c="#FFB070" style="background:#FFB070" aria-label="Blanc chaud"></button>
@@ -176,7 +185,8 @@ function render() {
   $('orb').style.opacity = a;
   $('allow').style.display = s.canWrite === false ? 'block' : 'none';
   [].forEach.call(document.querySelectorAll('.chip'), function (b) { b.classList.toggle('on', b.dataset.sim === (s.sim || 'auto')); });
-  [].forEach.call(document.querySelectorAll('.sw'), function (b) { b.classList.toggle('on', (s.park || '').toUpperCase() === b.dataset.c.toUpperCase()); });
+  [].forEach.call(document.querySelectorAll('.sw[data-c]'), function (b) { b.classList.toggle('on', (s.park || '').toUpperCase() === b.dataset.c.toUpperCase()); });
+  [].forEach.call(document.querySelectorAll('[data-proto]'), function (b) { b.classList.toggle('on', String(s.proto || 0) === b.dataset.proto); });
   if ($('sheet').classList.contains('on')) renderDevices(s);
 }
 
