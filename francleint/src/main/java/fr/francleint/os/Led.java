@@ -56,7 +56,31 @@ class Led {
 
     boolean ready() { return chr != null && gatt != null; }
 
+    private long attemptAt = 0;
+    private int failures = 0;
+
+    /** Chien de garde : toutes les 8 s, si le boîtier n'est pas prêt depuis trop longtemps, on recommence proprement. */
+    private final Runnable watchdog = new Runnable() {
+        @Override public void run() {
+            try {
+                long now = System.currentTimeMillis();
+                if (!ready() && !scanning && now - attemptAt > 12000) {
+                    failures++;
+                    if (gatt != null) { try { gatt.disconnect(); gatt.close(); } catch (Exception ignored) { } gatt = null; chr = null; }
+                    String addr = prefs.getString("addr", null);
+                    // Adresse connue : on la retente ; tous les 3 échecs, on refait une recherche complète.
+                    if (addr != null && failures % 3 != 0) connect(addr, prefs.getString("name", ""));
+                    else scan();
+                }
+                if (ready()) failures = 0;
+            } catch (Exception ignored) { }
+            h.postDelayed(this, 8000);
+        }
+    };
+
     void start() {
+        h.removeCallbacks(watchdog);
+        h.postDelayed(watchdog, 8000);
         if (adapter == null) { state = "pas de Bluetooth"; return; }
         if (!adapter.isEnabled()) { try { adapter.enable(); } catch (Exception ignored) { } }
         String saved = prefs.getString("addr", null);
@@ -65,6 +89,7 @@ class Led {
     }
 
     void stop() {
+        h.removeCallbacks(watchdog);
         stopScan();
         if (gatt != null) { try { gatt.disconnect(); gatt.close(); } catch (Exception ignored) { } }
         gatt = null; chr = null;
@@ -89,6 +114,7 @@ class Led {
         final BluetoothLeScanner sc = adapter.getBluetoothLeScanner();
         if (sc == null) { state = "Bluetooth éteint"; h.postDelayed(this::scan, 3000); return; }
         scanning = true;
+        attemptAt = System.currentTimeMillis();
         state = "recherche";
         try { sc.startScan(scanCb); } catch (Exception e) { state = "recherche impossible : " + e.getMessage(); scanning = false; return; }
         h.postDelayed(() -> {
@@ -126,6 +152,7 @@ class Led {
             BluetoothDevice d = adapter.getRemoteDevice(address);
             deviceName = name == null ? "" : name;
             state = "connexion à " + deviceName;
+            attemptAt = System.currentTimeMillis();
             prefs.edit().putString("addr", address).putString("name", deviceName).apply();
             if (Build.VERSION.SDK_INT >= 23) gatt = d.connectGatt(ctx, false, gattCb, BluetoothDevice.TRANSPORT_LE);
             else gatt = d.connectGatt(ctx, false, gattCb);
@@ -138,6 +165,14 @@ class Led {
     private final BluetoothGattCallback gattCb = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt g, int status, int newState) {
+            if (newState == BluetoothProfile.STATE_CONNECTED && status != BluetoothGatt.GATT_SUCCESS) {
+                // Connexion bancale (erreur 133 fréquente) : on ferme et le chien de garde relance.
+                try { g.disconnect(); g.close(); } catch (Exception ignored) { }
+                if (g == gatt) { gatt = null; chr = null; }
+                state = "connexion ratée, nouvel essai";
+                attemptAt = 0;
+                return;
+            }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 state = "connecté, lecture";
                 g.discoverServices();
