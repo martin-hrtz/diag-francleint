@@ -43,6 +43,14 @@ public class AmbianceService extends Service {
     static final int[] DAY = {190, 215, 255};      // jour : blanc froid
     static final int[] NIGHT = {20, 170, 85};      // nuit : vert sapin (version LED)
     static final int[] ROAD = {25, 70, 220};       // autoroute : bleu nuit
+    static final int[] TURN = {255, 100, 0};       // clignotant : orange
+
+    // Clignotant : tenu 1,2 s après le dernier signal (le voyant clignote, on ne veut pas que les LED clignotent)
+    private volatile long blinkerUntil = 0;
+    volatile boolean blinker = false;
+
+    /** À appeler à chaque signal de clignotant (source branchée pendant la séance voiture). */
+    void blinkerSignal() { blinkerUntil = System.currentTimeMillis() + 1200; }
 
     private final Handler h = new Handler(Looper.getMainLooper());
     private Led led;
@@ -244,11 +252,14 @@ public class AmbianceService extends Service {
 
     private final Runnable fade = new Runnable() {
         @Override public void run() {
-            double k = 0.35; // ~0,6 s pour faire 90 % du chemin
-            cr += (targetColor[0] - cr) * k;
-            cg += (targetColor[1] - cg) * k;
-            cb += (targetColor[2] - cb) * k;
-            cl += (targetLevel - cl) * k;
+            blinker = System.currentTimeMillis() < blinkerUntil || "clignotant".equals(sim);
+            double k = blinker ? 0.8 : 0.35; // clignotant : quasi instantané ; sinon ~0,6 s
+            int[] tc = blinker ? TURN : targetColor;
+            double tl = blinker ? Math.max(targetLevel, 0.5) : targetLevel;
+            cr += (tc[0] - cr) * k;
+            cg += (tc[1] - cg) * k;
+            cb += (tc[2] - cb) * k;
+            cl += (tl - cl) * k;
             led.color((int) Math.round(cr * cl), (int) Math.round(cg * cl), (int) Math.round(cb * cl));
             curDim += (targetDim - curDim) * 0.08;
             applyOverlay();
@@ -343,7 +354,7 @@ public class AmbianceService extends Service {
     String status() {
         try {
             JSONObject o = new JSONObject();
-            o.put("context", context);
+            o.put("context", blinker ? "clignotant" : context);
             o.put("sim", sim);
             o.put("ambient", Math.round(ambient * 100));
             o.put("elevation", Math.round(elevation));
