@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HAS_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
+      HAS_KEY: ${{ secrets.FR_KEYSTORE_B64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,7 +39,17 @@ jobs:
             "https://raw.githubusercontent.com/google/fonts/main/ofl/instrumentsans/InstrumentSans%5Bwdth%2Cwght%5D.ttf" \
             || echo "Police introuvable : la police système sera utilisée."
 
+      - name: Clé de signature fixe (secrets)
+        if: env.HAS_KEY == 'true'
+        env:
+          FR_KEYSTORE_B64: ${{ secrets.FR_KEYSTORE_B64 }}
+        run: |
+          echo "$FR_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/francleint.keystore"
+          echo "FR_KEYSTORE=$RUNNER_TEMP/francleint.keystore" >> "$GITHUB_ENV"
+
       - name: Fabriquer l'APK
+        env:
+          FR_KS_PASS: ${{ secrets.FR_KS_PASS }}
         run: gradle assembleDebug --no-daemon
 
       - name: Renommer
