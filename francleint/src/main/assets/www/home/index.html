@@ -40,8 +40,8 @@ svg { display: block; }
 body.full #home .rail { transform: translateX(-100%); opacity: 0; pointer-events: none; }
 body.full #home .dash { padding-left: 1.75rem; }
 .rail { display: flex; flex-direction: column;  padding: 1.25rem .75rem; border-right: 1px solid var(--line); }
-.mark { height: 3.25rem; display: grid; place-items: center; margin-bottom: .5rem; }
-.mark span { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 1.35rem; background: var(--surface-2); color: var(--ink);
+.mark { height: 3.25rem; display: flex; align-items: center; justify-content: center; margin-bottom: .5rem; }
+.mark span { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.35rem; background: var(--surface-2); color: var(--ink);
   box-shadow: 0 0 0 2px var(--live), 0 0 1.25rem -.25rem var(--live); transition: box-shadow 700ms var(--ease); }
 .tab { height: 4.6rem; border-radius: 1.1rem; display: flex; flex-direction: column; align-items: center; justify-content: center;  color: var(--ink-3); font-size: .95rem; font-weight: 600; }
 .tab svg { width: 1.6rem; height: 1.6rem; stroke: currentColor; }
@@ -69,12 +69,12 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 .info b i { width: .9rem; height: .9rem; border-radius: 50%; background: var(--live); box-shadow: 0 0 .8rem var(--live); flex: none; }
 
 .now { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem; display: flex; align-items: center;  min-width: 0; }
-.art { width: 4.25rem; height: 4.25rem; border-radius: .9rem; background: var(--surface-2); display: grid; place-items: center; flex: none; }
+.art { width: 4.25rem; height: 4.25rem; border-radius: .9rem; background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex: none; }
 .art svg { width: 1.8rem; height: 1.8rem; stroke: var(--accent-hi); }
 .track { flex: 1; min-width: 0; }
 .track b { display: block; font-size: 1.4rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .track span { display: block; margin-top: .2rem; font-size: 1.1rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ctl { width: 3.75rem; height: 3.75rem; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.ctl { width: 3.75rem; height: 3.75rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; }
 .ctl svg { width: 1.6rem; height: 1.6rem; stroke: var(--ink); }
 .play { width: 4.75rem; height: 4.75rem; background: var(--ink); }
 .play svg { stroke: var(--bg); width: 1.8rem; height: 1.8rem; }
@@ -85,7 +85,7 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 .cp-bottom { position: relative; display: flex; align-items: flex-end; justify-content: space-between; width: 100%;  }
 .cp-title { display: block; font-size: 4.6rem; font-weight: 600; font-stretch: 85%; letter-spacing: -.02em; line-height: 1; }
 .cp-sub { display: block; margin-top: .6rem; font-size: 1.15rem; font-weight: 500; color: rgba(255,255,255,.8); }
-.arrow { width: 4.5rem; height: 4.5rem; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; }
+.arrow { width: 4.5rem; height: 4.5rem; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex: none; }
 .arrow svg { width: 1.8rem; height: 1.8rem; stroke: var(--accent); }
 
 .drive { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem 1.1rem; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) auto; grid-gap: 1rem; gap: 1rem; align-items: center; text-align: left; }
@@ -123,8 +123,8 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 
 /* ───── Bienvenue v3 : « Bonsoir Martin » qui se révèle comme une mise au point (flou → net, interlettrage qui se resserre),
    un reflet de lumière passe sur le prénom, une lueur douce monte du bas. 3,4 s. ───── */
-#welcomeFx { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 100; background: #030504; display: none; place-items: center; overflow: hidden; }
-#welcomeFx.on { display: grid; animation: hl-out 600ms cubic-bezier(.65,0,.35,1) 2850ms forwards; }
+#welcomeFx { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 100; background: #030504; display: none; align-items: center; justify-content: center; overflow: hidden; }
+#welcomeFx.on { display: flex; animation: hl-out 600ms cubic-bezier(.65,0,.35,1) 2850ms forwards; }
 #welcomeFx .hl-glow { position: absolute; left: 50%; bottom: -38rem; width: 80rem; height: 56rem; margin-left: -40rem; border-radius: 50%;
   background: radial-gradient(closest-side, rgba(79,191,133,.42), rgba(79,191,133,.10) 55%, transparent 100%); opacity: 0; transform: translateY(6rem) scale(.85); }
 #welcomeFx.on .hl-glow { animation: hl-glow 2600ms cubic-bezier(.22,1,.36,1) 80ms forwards; }
@@ -146,6 +146,10 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 @media (prefers-reduced-motion: reduce) {
   #welcomeFx.on .hl-word, #welcomeFx.on .hl-word .n, #welcomeFx.on .hl-glow, #welcomeFx.on .hl-brand { animation-duration: 1ms; animation-delay: 0ms; }
 }
+
+/* Pas de cadre orange au toucher / au focus */
+*:focus { outline: none !important; }
+button:focus { outline: none !important; }
 
 /* Compat WebView Android 9 : remplace le « gap » des flex (non supporté) */
 .rail > * + * { margin-top: .75rem; }
@@ -182,7 +186,7 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
   <symbol id="i-prev" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></symbol>
   <symbol id="i-next" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="5" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/></symbol>
-  <symbol id="i-playtri" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="7 4 19 12 7 20 7 4"/></symbol>
+  <symbol id="i-playtri" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 4 20 12 8 20 8 4"/></symbol>
   <symbol id="i-screen" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="3"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="18" x2="12" y2="21"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
   <symbol id="i-radio" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/></symbol>
@@ -214,11 +218,6 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
         <p class="hello" id="hello">Bonjour <b>Martin</b></p>
         <p class="clock" id="clock">--:--</p>
         <p class="date" id="date"></p>
-        <div class="infos">
-          <div class="info"><span><svg id="wxIco" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>Météo</span><b id="iWx">—</b></div>
-          <div class="info"><span><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 3v3M4.9 8.9 7 11M19.1 8.9 17 11"/></svg><em id="iSunLbl" style="font-style:normal">Soleil</em></span><b id="iSun">—</b></div>
-          <div class="info"><span>Ambiance</span><b><i></i><em id="iCtx" style="font-style:normal">—</em></b></div>
-        </div>
       </div>
     </div>
     <button class="carplay" data-open="carplay">
@@ -332,21 +331,6 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
     $('dEffBar').style.transform = 'scaleX(' + ((s.sport === false ? 0 : (s.power || 0)) / 100) + ')';
     $('dAmb').innerHTML = s.ambient >= 0 ? s.ambient + '<small>%</small>' : '—';
     $('sportSw').classList.toggle('on', s.sport !== false);
-    var wx = (s.weather || '').toLowerCase();
-    $('iWx').innerHTML = (s.temp != null ? s.temp + '°' : '—') + (wx && wx.indexOf('indispo') < 0 && wx !== 'inconnue' ? ' <small>' + wx.charAt(0).toUpperCase() + wx.slice(1) + '</small>' : '');
-    var night = h < 7 || h >= 20;
-    $('wxIco').innerHTML = /pluie|bruine|orage|averse/.test(wx) ? '<path d="M7 15a4 4 0 1 1 1-7.9A5 5 0 0 1 18 9a3.5 3.5 0 0 1-.5 7H7z"/><path d="M9 19l-1 2M13 19l-1 2M17 19l-1 2"/>'
-      : /nuag|couvert|brouill/.test(wx) ? '<path d="M7 18a4 4 0 1 1 1-7.9A5 5 0 0 1 18 11a3.5 3.5 0 0 1-.5 7H7z"/>'
-      : night ? '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'
-      : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M5 19l1.4-1.4M17.6 6.4 19 5"/>';
-    if (s.lat != null) {
-      var t = sunTimes(s.lat, s.lon, new Date()), now = new Date();
-      var up = now > t.rise && now < t.set;
-      $('iSunLbl').textContent = up ? 'Coucher du soleil' : 'Lever du soleil';
-      var nx = up ? t.set : (now < t.rise ? t.rise : sunTimes(s.lat, s.lon, new Date(now.getTime() + 864e5)).rise);
-      $('iSun').textContent = pad(nx.getHours()) + ':' + pad(nx.getMinutes());
-    }
-    $('iCtx').textContent = s.context ? s.context.charAt(0).toUpperCase() + s.context.slice(1) : '—';
     $('stPhoneTxt').textContent = s.phone ? 'iPhone' : 'Pas de téléphone';
     $('stWifi').style.display = s.wifi ? 'flex' : 'none';
     $('stWifiTxt').textContent = s.wifi || '';
