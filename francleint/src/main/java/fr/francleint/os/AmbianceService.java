@@ -44,29 +44,16 @@ public class AmbianceService extends Service {
     static final int[] NIGHT = {20, 170, 85};      // nuit : vert sapin (version LED)
     static final int[] ROAD = {25, 70, 220};       // autoroute : bleu nuit
 
-    // Mode sport : couleur selon la vitesse (km/h → couleur), dégradé continu entre les paliers
-    static final double[] SPD = {0, 30, 50, 80, 110, 130};
-    static final int[][] SPD_C = {
-            {0, 230, 120},    //   0 : vert
-            {0, 220, 200},    //  30 : vert d'eau
-            {0, 120, 255},    //  50 : bleu (ville)
-            {130, 40, 255},   //  80 : violet (route)
-            {255, 0, 150},    // 110 : magenta (voie rapide)
-            {255, 0, 0}};     // 130 : rouge (autoroute)
+    // Mode sport : réagit à l'ACCÉLÉRATION (réglé pour une Clio 4 0.9 TCe 75 ch, 0-100 en ~14,5 s)
+    static final double ACC_START = 0.30;  // m/s² : en dessous, conduite normale → rien ne change
+    static final double ACC_FULL = 1.80;   // m/s² : pied au plancher en 1re/2e → effet maximum
+    static final int[] POWER = {255, 20, 0};
 
-    static int[] speedColor(double v) {
-        if (v <= SPD[0]) return SPD_C[0];
-        for (int i = 1; i < SPD.length; i++) {
-            if (v <= SPD[i]) {
-                double t = (v - SPD[i - 1]) / (SPD[i] - SPD[i - 1]);
-                int[] a = SPD_C[i - 1], b = SPD_C[i];
-                return new int[]{(int) (a[0] + (b[0] - a[0]) * t), (int) (a[1] + (b[1] - a[1]) * t), (int) (a[2] + (b[2] - a[2]) * t)};
-            }
-        }
-        return SPD_C[SPD.length - 1];
-    }
-
-    private double smoothSpeed = 0;   // vitesse lissée (le GPS saute un peu)
+    private double lastGpsV = -1;          // dernière vitesse GPS (m/s)
+    private long lastGpsT = 0;
+    private volatile double accel = 0;     // accélération mesurée (m/s²)
+    private volatile long accelAt = 0;
+    private double power = 0;              // 0 → 1, lissé
     static final int[] TURN = {255, 100, 0};       // clignotant : orange
 
     // Clignotant : tenu 1,2 s après le dernier signal (le voyant clignote, on ne veut pas que les LED clignotent)
@@ -102,7 +89,6 @@ public class AmbianceService extends Service {
     volatile boolean inCall = false;
     volatile String sim = "auto";
     volatile boolean sport = true;
-    private volatile boolean pulse = false;
 
     @Override
     public void onCreate() {
@@ -159,13 +145,23 @@ public class AmbianceService extends Service {
                 @Override public void onLocationChanged(Location loc) {
                     lat = loc.getLatitude(); lon = loc.getLongitude(); hasFix = true;
                     speedKmh = loc.hasSpeed() ? loc.getSpeed() * 3.6 : speedKmh;
+                    if (LocationManager.GPS_PROVIDER.equals(loc.getProvider()) && loc.hasSpeed()) {
+                        long t = loc.getTime();
+                        double dt = (t - lastGpsT) / 1000.0;
+                        if (lastGpsV >= 0 && dt > 0.3 && dt < 3) {
+                            double a = (loc.getSpeed() - lastGpsV) / dt;
+                            accel = accel * 0.4 + a * 0.6;       // lisse les sauts du GPS
+                            accelAt = System.currentTimeMillis();
+                        }
+                        lastGpsV = loc.getSpeed(); lastGpsT = t;
+                    }
                 }
                 @Override public void onStatusChanged(String p, int s, Bundle e) { }
                 @Override public void onProviderEnabled(String p) { }
                 @Override public void onProviderDisabled(String p) { }
             };
             if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, l, Looper.getMainLooper());
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, l, Looper.getMainLooper());
             if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
                 lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 0, l, Looper.getMainLooper());
         } catch (SecurityException | IllegalArgumentException e) {
@@ -228,7 +224,6 @@ public class AmbianceService extends Service {
         if (speedKmh < 2) { if (stillSince == 0) stillSince = now; } else stillSince = 0;
         boolean parked = hasFix && stillSince > 0 && now - stillSince > 60_000;
         boolean highway = speedKmh > 110;
-        double v = hasFix ? speedKmh : -1;
         boolean welcome = now - startedAt < 4_000;
         boolean call = inCall;
 
@@ -237,12 +232,9 @@ public class AmbianceService extends Service {
             case "soleil": a = 1.0; parked = highway = welcome = call = false; break;
             case "pluie": a = 0.33; parked = highway = welcome = call = false; break;
             case "nuit": a = 0.0; parked = highway = welcome = call = false; break;
-            case "autoroute": a = 0.6; highway = true; v = 120; parked = welcome = call = false; break;
-            case "v30": a = 0.6; v = 30; parked = highway = welcome = call = false; break;
-            case "v50": a = 0.6; v = 50; parked = highway = welcome = call = false; break;
-            case "v90": a = 0.6; v = 90; parked = highway = welcome = call = false; break;
-            case "v130": a = 0.6; v = 135; parked = highway = welcome = call = false; break;
+            case "autoroute": a = 0.6; highway = true; parked = welcome = call = false; break;
             case "arret": a = 0.6; parked = true; highway = welcome = call = false; break;
+            case "acc1": case "acc2": parked = welcome = call = false; break;
             case "appel": call = true; welcome = false; break;
             case "accueil": welcome = true; startedAt = now - 1; sim = "auto"; break;
             default: break;
@@ -262,14 +254,6 @@ public class AmbianceService extends Service {
         } else if (parked) {
             color = parkColor();
             context = "à l'arrêt";
-        } else if (v >= 0 && sport && (v > 3 || !"auto".equals(sim))) {
-            // Mode sport : la couleur suit la vitesse, l'intensité monte avec
-            smoothSpeed += (v - smoothSpeed) * ("auto".equals(sim) ? 0.35 : 1.0);
-            double f = clamp(smoothSpeed / 130.0, 0, 1);
-            color = speedColor(smoothSpeed);
-            level = level * (0.65 + 0.35 * f);                 // +35 % à fond, reste doux la nuit
-            pulse = smoothSpeed >= 130;                          // respiration lente au-delà de 130
-            context = Math.round(smoothSpeed) + " km/h";
         } else if (highway) {
             color = ROAD;
             level = Math.min(level, 0.6);
@@ -281,7 +265,6 @@ public class AmbianceService extends Service {
             color = DAY;
             context = a < 0.5 ? "jour gris" : "jour";
         }
-        if (!context.endsWith("km/h")) pulse = false;
         targetColor = color;
         targetLevel = clamp(level, 0, 1);
 
@@ -297,7 +280,18 @@ public class AmbianceService extends Service {
             double k = blinker ? 0.8 : 0.35; // clignotant : quasi instantané ; sinon ~0,6 s
             int[] tc = blinker ? TURN : targetColor;
             double tl = blinker ? Math.max(targetLevel, 0.5) : targetLevel;
-            if (pulse && !blinker) tl *= 0.85 + 0.15 * Math.sin(System.currentTimeMillis() / 1000.0 * Math.PI);
+            // Accélération : la lumière monte (et vire au rouge si on appuie fort)
+            long now = System.currentTimeMillis();
+            double acc = "acc1".equals(sim) ? 0.9 : "acc2".equals(sim) ? 2.0
+                    : (now - accelAt < 2500 ? accel : 0);
+            double want = sport && !blinker ? clamp((acc - ACC_START) / (ACC_FULL - ACC_START), 0, 1) : 0;
+            power += (want - power) * (want > power ? 0.45 : 0.10);   // monte vite, redescend en ~2 s
+            if (power > 0.01) {
+                double top = ambient < 0.2 ? 0.55 : 1.0;                // la nuit on n'éblouit pas
+                tl = tl + (Math.max(top, tl) - tl) * power;
+                double r = Math.pow(power, 1.6) * 0.85;                   // le rouge n'arrive qu'en appuyant fort
+                tc = new int[]{(int) (tc[0] + (POWER[0] - tc[0]) * r), (int) (tc[1] + (POWER[1] - tc[1]) * r), (int) (tc[2] + (POWER[2] - tc[2]) * r)};
+            }
             cr += (tc[0] - cr) * k;
             cg += (tc[1] - cg) * k;
             cb += (tc[2] - cb) * k;
@@ -418,6 +412,8 @@ public class AmbianceService extends Service {
             o.put("dim", dimPct);
             o.put("dimOn", prefs.getBoolean("dim", true));
             o.put("sport", sport);
+            o.put("accel", Math.round((System.currentTimeMillis() - accelAt < 2500 ? accel : 0) * 10) / 10.0);
+            o.put("power", Math.round(power * 100));
             o.put("canOverlay", canOverlay());
             boolean locOn = false;
             try { locOn = ((LocationManager) getSystemService(LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER); } catch (Exception ignored) { }
