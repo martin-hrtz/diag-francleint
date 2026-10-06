@@ -265,6 +265,7 @@ public class HomeActivity extends Activity {
                     case "home": if (!tryStart(new Intent(Settings.ACTION_HOME_SETTINGS))) tryStart(new Intent(Settings.ACTION_SETTINGS)); break;
                     case "media": tryStart(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")); break;
                     case "stock": launchPkg("com.ts.MainUI"); break;
+                    case "miravision": if (!launchPkg("com.mediatek.miravision.ui")) toast("MiraVision introuvable"); break;
                     default: break;
                 }
             });
@@ -301,6 +302,30 @@ public class HomeActivity extends Activity {
                 case "prev": mediaKey(KeyEvent.KEYCODE_MEDIA_PREVIOUS); break;
                 case "next": mediaKey(KeyEvent.KEYCODE_MEDIA_NEXT); break;
                 default: mediaKey(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE); break;
+            }
+        }
+
+        @JavascriptInterface
+        public void updateCheck() {
+            new Thread(() -> Updater.check(HomeActivity.this)).start();
+        }
+
+        @JavascriptInterface
+        public void updateInstall() {
+            new Thread(() -> Updater.install(HomeActivity.this)).start();
+        }
+
+        @JavascriptInterface
+        public String updateStatus() {
+            try {
+                JSONObject o = new JSONObject();
+                o.put("current", Updater.current(HomeActivity.this));
+                o.put("state", Updater.state);
+                o.put("progress", Updater.progress);
+                o.put("available", Updater.available(HomeActivity.this));
+                return o.toString();
+            } catch (Exception e) {
+                return "{}";
             }
         }
 

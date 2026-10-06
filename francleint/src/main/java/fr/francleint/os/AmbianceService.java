@@ -19,6 +19,10 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.provider.Settings;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.view.View;
+import android.view.WindowManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -89,6 +93,7 @@ public class AmbianceService extends Service {
     @Override
     public void onDestroy() {
         h.removeCallbacksAndMessages(null);
+        removeOverlay();
         led.stop();
         instance = null;
         super.onDestroy();
@@ -245,12 +250,56 @@ public class AmbianceService extends Service {
             cb += (targetColor[2] - cb) * k;
             cl += (targetLevel - cl) * k;
             led.color((int) Math.round(cr * cl), (int) Math.round(cg * cl), (int) Math.round(cb * cl));
+            curDim += (targetDim - curDim) * 0.08;
+            applyOverlay();
             h.postDelayed(this, 100);
         }
     };
 
+    // ---------- Filtre sombre (comme « Réduire luminosité ») ----------
+
+    private View overlay;
+    private double targetDim = 0, curDim = 0;
+    volatile int dimPct = 0;
+
+    boolean canOverlay() { return Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this); }
+
+    private void applyOverlay() {
+        dimPct = (int) Math.round(curDim * 100);
+        if (!canOverlay() || !prefs.getBoolean("dim", true)) { removeOverlay(); return; }
+        if (curDim < 0.01) { if (overlay != null) overlay.setAlpha(0f); return; }
+        if (overlay == null) {
+            try {
+                overlay = new View(this);
+                overlay.setBackgroundColor(Color.BLACK);
+                WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+                        Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : 2006 /* TYPE_SYSTEM_OVERLAY */,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                                | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                        PixelFormat.TRANSLUCENT);
+                ((WindowManager) getSystemService(WINDOW_SERVICE)).addView(overlay, lp);
+            } catch (Exception e) { overlay = null; return; }
+        }
+        overlay.setAlpha((float) curDim);
+    }
+
+    private void removeOverlay() {
+        if (overlay == null) return;
+        try { ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(overlay); } catch (Exception ignored) { }
+        overlay = null;
+    }
+
+    void setDim(boolean on) { prefs.edit().putBoolean("dim", on).apply(); }
+
     private void setScreen(double v) {
-        if (Build.VERSION.SDK_INT >= 23 && !Settings.System.canWrite(this)) return;
+        // Le vrai rétroéclairage descend jusqu'à 30 % (le contraste reste bon).
+        // En dessous, le filtre sombre prend le relais, seulement la nuit.
+        boolean canWrite = Build.VERSION.SDK_INT < 23 || Settings.System.canWrite(this);
+        if (canWrite) targetDim = clamp((0.30 - v) / 0.30, 0, 1) * 0.55;
+        else targetDim = clamp(1 - v, 0, 1) * 0.6;
+        if (!canWrite) return;
+        v = Math.max(v, 0.30);
         int target = (int) Math.round(clamp(v, 0.05, 1) * 255);
         if (lastScreen < 0) lastScreen = target;
         long now = System.currentTimeMillis();
@@ -312,6 +361,12 @@ public class AmbianceService extends Service {
             o.put("ledReady", led.ready());
             o.put("gatt", led.gattInfo);
             o.put("proto", led.protocol());
+            o.put("dim", dimPct);
+            o.put("dimOn", prefs.getBoolean("dim", true));
+            o.put("canOverlay", canOverlay());
+            boolean locOn = false;
+            try { locOn = ((LocationManager) getSystemService(LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER); } catch (Exception ignored) { }
+            o.put("locOn", locOn);
             JSONArray seen = new JSONArray();
             synchronized (led.seen) {
                 for (Map.Entry<String, String> e : led.seen.entrySet()) {

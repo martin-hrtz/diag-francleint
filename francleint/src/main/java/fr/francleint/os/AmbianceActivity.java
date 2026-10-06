@@ -90,6 +90,21 @@ public class AmbianceActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void allowOverlay() {
+            if (Build.VERSION.SDK_INT >= 23) {
+                Intent i = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+            }
+        }
+
+        @JavascriptInterface
+        public void setDim(boolean on) {
+            AmbianceService s = AmbianceService.instance;
+            if (s != null) s.setDim(on);
+        }
+
+        @JavascriptInterface
         public void ledReset() {
             AmbianceService s = AmbianceService.instance;
             if (s != null) s.ledReset();
