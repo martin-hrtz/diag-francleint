@@ -277,7 +277,7 @@ public class AmbianceService extends Service {
     private final Runnable fade = new Runnable() {
         @Override public void run() {
             blinker = System.currentTimeMillis() < blinkerUntil || "clignotant".equals(sim);
-            double k = blinker ? 0.8 : 0.35; // clignotant : quasi instantané ; sinon ~0,6 s
+            double k = blinker ? 1.0 : 0.30; // clignotant : instantané ; sinon fondu ≈ 0,1 s (invisible)
             int[] tc = blinker ? TURN : targetColor;
             double tl = blinker ? Math.max(targetLevel, 0.5) : targetLevel;
             // Accélération : la lumière monte (et vire au rouge si on appuie fort)
@@ -285,7 +285,8 @@ public class AmbianceService extends Service {
             double acc = "acc1".equals(sim) ? 0.9 : "acc2".equals(sim) ? 2.0
                     : (now - accelAt < 2500 ? accel : 0);
             double want = sport && !blinker ? clamp((acc - ACC_START) / (ACC_FULL - ACC_START), 0, 1) : 0;
-            power += (want - power) * (want > power ? 0.45 : 0.10);   // monte vite, redescend en ~2 s
+            if (want > power) power = want;                           // monte instantanément
+            else power += (want - power) * 0.06;                      // redescend en ~0,5 s
             if (power > 0.01) {
                 double top = ambient < 0.2 ? 0.55 : 1.0;                // la nuit on n'éblouit pas
                 tl = tl + (Math.max(top, tl) - tl) * power;
@@ -297,9 +298,9 @@ public class AmbianceService extends Service {
             cb += (tc[2] - cb) * k;
             cl += (tl - cl) * k;
             led.color((int) Math.round(cr * cl), (int) Math.round(cg * cl), (int) Math.round(cb * cl));
-            curDim += (targetDim - curDim) * 0.08;
+            curDim += (targetDim - curDim) * 0.025;
             applyOverlay();
-            h.postDelayed(this, 100);
+            h.postDelayed(this, 30);   // ≈ 33 images/seconde
         }
     };
 

@@ -175,6 +175,8 @@ class Led {
             }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 state = "connecté, lecture";
+                // Liaison rapide : intervalle radio le plus court possible (≈ 7,5–15 ms)
+                try { g.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH); } catch (Exception ignored) { }
                 g.discoverServices();
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 try { g.close(); } catch (Exception ignored) { }
@@ -258,8 +260,10 @@ class Led {
         if (busy && now - lastSendAt < 400) return;      // on attend la réponse du boîtier
         byte[] next = pendingCmd != null ? pendingCmd : pendingColor;
         if (next == null) return;
-        boolean noResp = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0
-                && (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) == 0;
+        // Couleurs : envoi sans accusé de réception (instantané) ; commandes : avec accusé (fiable)
+        boolean canNoResp = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0;
+        boolean canResp = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
+        boolean noResp = canNoResp && (next != pendingCmd || !canResp);
         try {
             chr.setWriteType(noResp ? BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
                     : BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
@@ -269,7 +273,7 @@ class Led {
             lastSendAt = now;
             if (next == pendingCmd) pendingCmd = null;
             else { lastColorSent = pendingColor; pendingColor = null; }
-            if (noResp) { busy = false; if (pendingCmd != null || pendingColor != null) h.postDelayed(this::pump, 40); }
+            if (noResp) { busy = false; if (pendingCmd != null || pendingColor != null) h.postDelayed(this::pump, 20); }
             else busy = true;
         } catch (Exception e) {
             h.postDelayed(this::pump, 200);
