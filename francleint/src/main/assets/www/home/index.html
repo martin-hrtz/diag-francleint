@@ -49,7 +49,8 @@ body.full #home .dash { padding-left: 1.75rem; }
 .tab:active { background: var(--surface-2); }
 body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21,17,.06); }
 
-.dash { min-width: 0; min-height: 0; padding: 1.25rem 1.75rem 1.25rem 1.25rem; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); grid-template-rows: minmax(0,1fr) auto; grid-gap: 1.25rem; gap: 1.25rem;
+/* Cockpit v2 · conducteur à gauche (heure, CarPlay, mode sport) · passager à droite (instruments, musique) */
+.dash { min-width: 0; min-height: 0; padding: 1.25rem 1.75rem 1.25rem 1.25rem; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: minmax(0,1fr) 7rem; grid-gap: 1.25rem; gap: 1.25rem;
   background-image: radial-gradient(48rem 30rem at 0% 0%, var(--glow), transparent 70%); }
 .clockbox { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; padding: .25rem .25rem 0; }
 .status { display: flex; align-items: center;  font-size: 1.1rem; font-weight: 500; color: var(--ink-2); }
@@ -59,16 +60,42 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 .hello b { color: var(--ink); font-weight: 600; }
 .clock { margin-top: .25rem; font-size: 9.5rem; font-weight: 500; font-stretch: 75%; letter-spacing: -.02em; line-height: .9; font-variant-numeric: tabular-nums; }
 .date { margin-top: .5rem; font-size: 1.4rem; font-weight: 500; color: var(--ink-2); }
-.infos { margin-top: 1.75rem; display: flex;  }
-.info { padding: 0 1.75rem; border-left: 1px solid var(--line); min-width: 0; }
-.info:first-child { padding-left: 0; border-left: 0; }
-.info span { display: flex; align-items: center;  font-size: 1rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
-.info span svg { width: 1.15rem; height: 1.15rem; stroke: var(--ink-2); }
-.info b { display: flex; align-items: center;  margin-top: .35rem; font-size: 2rem; font-weight: 600; font-stretch: 80%; line-height: 1; white-space: nowrap; }
-.info b small { font-size: 1.1rem; font-weight: 500; color: var(--ink-2); font-stretch: 100%; }
-.info b i { width: .9rem; height: .9rem; border-radius: 50%; background: var(--live); box-shadow: 0 0 .8rem var(--live); flex: none; }
 
-.now { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem; display: flex; align-items: center;  min-width: 0; }
+/* Instruments (passager) : jauge d'effort en arc, vitesse au centre */
+.gauge { position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; min-height: 0; }
+.gauge::before { content: ""; position: absolute; left: 50%; top: 50%; width: 30rem; height: 30rem; margin: -15rem 0 0 -15rem; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--live), transparent 100%); opacity: var(--gop, .10); transition: opacity 500ms var(--ease), background 500ms var(--ease); pointer-events: none; }
+.ring { position: relative; width: 25rem; height: 25rem; flex: none; }
+.ring svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.ring .trk { fill: none; stroke: var(--surface-2); stroke-width: 10; stroke-linecap: round; }
+.ring .val { fill: none; stroke: var(--live); stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray 300ms var(--ease), stroke 500ms var(--ease); }
+.ring .tick { stroke: var(--line); stroke-width: 2; }
+.ring .mid { position: absolute; left: 0; right: 0; top: 50%; margin-top: -5.6rem; text-align: center; }
+.ring .spd { display: block; font-size: 8.5rem; font-weight: 600; font-stretch: 75%; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.ring .unit { display: block; margin-top: .2rem; font-size: 1.15rem; font-weight: 600; color: var(--ink-2); letter-spacing: .04em; }
+.ring .foot { position: absolute; left: 0; right: 0; bottom: 2.6rem; text-align: center; }
+.ring .foot b { font-size: 2rem; font-weight: 600; font-stretch: 80%; font-variant-numeric: tabular-nums; }
+.ring .foot b small { font-size: 1.05rem; color: var(--ink-2); margin-left: .1rem; }
+.ring .foot span { display: block; margin-top: .15rem; font-size: .95rem; font-weight: 600; color: var(--ink-3); }
+
+/* Bas gauche (conducteur) : CarPlay compact + mode sport */
+.dock { display: flex; min-width: 0; }
+.dock > * + * { margin-left: 1.25rem; }
+.carplay { flex: 1; min-width: 0; position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--accent); color: #fff; padding: 0 1rem 0 1.75rem; display: flex; align-items: center; justify-content: space-between; text-align: left; }
+.carplay::before { content: ""; position: absolute; right: -10%; top: -160%; width: 22rem; height: 22rem; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 65%); pointer-events: none; }
+.cp-title { position: relative; font-size: 3rem; font-weight: 600; font-stretch: 85%; letter-spacing: -.02em; line-height: 1; }
+.arrow { position: relative; width: 4.5rem; height: 4.5rem; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex: none; }
+.arrow svg { width: 1.8rem; height: 1.8rem; stroke: var(--accent); }
+.sport { flex: none; width: 12.5rem; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 0 1.25rem; display: flex; align-items: center; justify-content: space-between; text-align: left; }
+.sport b { font-size: 1.2rem; font-weight: 600; line-height: 1.15; }
+.sport b small { display: block; font-size: .95rem; font-weight: 500; color: var(--ink-2); }
+.sw2 { flex: none; width: 4.5rem; height: 2.6rem; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); position: relative; transition: background 240ms var(--ease); }
+.sw2::after { content: ""; position: absolute; top: .3rem; left: .3rem; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--ink-2); transition: transform 240ms var(--ease), background 240ms var(--ease); }
+.sport.on .sw2 { background: var(--accent); border-color: var(--accent); }
+.sport.on .sw2::after { transform: translateX(1.85rem); background: #fff; }
+
+/* Musique (passager) */
+.now { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 0 1rem 0 1.25rem; display: flex; align-items: center;  min-width: 0; }
 .art { width: 4.25rem; height: 4.25rem; border-radius: .9rem; background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex: none; }
 .art svg { width: 1.8rem; height: 1.8rem; stroke: var(--accent-hi); }
 .track { flex: 1; min-width: 0; }
@@ -78,28 +105,6 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 .ctl svg { width: 1.6rem; height: 1.6rem; stroke: var(--ink); }
 .play { width: 4.75rem; height: 4.75rem; background: var(--ink); }
 .play svg { stroke: var(--bg); width: 1.8rem; height: 1.8rem; }
-
-.carplay { position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--accent); color: #fff; padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; text-align: left; min-height: 0; }
-.carplay::before { content: ""; position: absolute; right: -30%; top: -45%; width: 30rem; height: 30rem; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 65%); pointer-events: none; }
-.carplay .ico { width: 2.5rem; height: 2.5rem; stroke: #fff; position: relative; }
-.cp-bottom { position: relative; display: flex; align-items: flex-end; justify-content: space-between; width: 100%;  }
-.cp-title { display: block; font-size: 4.6rem; font-weight: 600; font-stretch: 85%; letter-spacing: -.02em; line-height: 1; }
-.cp-sub { display: block; margin-top: .6rem; font-size: 1.15rem; font-weight: 500; color: rgba(255,255,255,.8); }
-.arrow { width: 4.5rem; height: 4.5rem; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex: none; }
-.arrow svg { width: 1.8rem; height: 1.8rem; stroke: var(--accent); }
-
-.drive { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem 1.1rem; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) auto; grid-gap: 1rem; gap: 1rem; align-items: center; text-align: left; }
-.drive .st span { display: block; font-size: 1rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
-.drive .st { align-self: start; }
-.drive .st b { display: block; margin-top: .3rem; font-size: 2.6rem; font-weight: 600; font-stretch: 75%; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.drive .st b small { font-size: 1.1rem; color: var(--ink-2); margin-left: .1rem; font-weight: 600; }
-.drive .st i { display: block; margin-top: .55rem; height: .35rem; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
-.drive .st i em { display: block; height: 100%; border-radius: inherit; background: var(--live); transform-origin: left; transform: scaleX(0); transition: transform 500ms var(--ease); }
-.sport { display: flex; flex-direction: column; align-items: center;  font-size: .95rem; font-weight: 600; color: var(--ink-2); }
-.sw2 { width: 4.5rem; height: 2.6rem; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); position: relative; transition: background 240ms var(--ease); }
-.sw2::after { content: ""; position: absolute; top: .3rem; left: .3rem; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--ink-2); transition: transform 240ms var(--ease), background 240ms var(--ease); }
-.sw2.on { background: var(--accent); border-color: var(--accent); }
-.sw2.on::after { transform: translateX(1.85rem); background: #fff; }
 
 /* PAGES INTERNES */
 .sub { grid-template-rows: 2.75rem minmax(0,1fr); grid-gap: 1.25rem; gap: 1.25rem; }
@@ -172,10 +177,6 @@ button:focus { outline: none !important; }
 .info b small { margin-left: .5rem; }
 .now > * + * { margin-left: 1rem; }
 .now > :only-child { margin-right: 1rem; }
-.cp-bottom > * + * { margin-left: 1rem; }
-.cp-bottom > :only-child { margin-right: 1rem; }
-.sport > * + * { margin-top: .45rem; }
-.sport > :only-child { margin-bottom: .45rem; }
 .app > * + * { margin-top: .75rem; }
 .app > :only-child { margin-bottom: .75rem; }
 .item > * + * { margin-left: 1rem; }
@@ -225,25 +226,26 @@ button:focus { outline: none !important; }
         <p class="date" id="date"></p>
       </div>
     </div>
-    <button class="carplay" data-open="carplay">
-      <span></span>
-      <span class="cp-bottom">
-        <span><span class="cp-title">CarPlay</span></span>
-        <span class="arrow"><svg><use href="#i-arrow"/></svg></span>
-      </span>
-    </button>
+    <section class="gauge" aria-label="Ta conduite">
+      <div class="ring">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="trk" cx="100" cy="100" r="88" stroke-dasharray="414.7 552.9" transform="rotate(135 100 100)"/>
+          <circle class="val" id="dArc" cx="100" cy="100" r="88" stroke-dasharray="0 552.9" transform="rotate(135 100 100)"/>
+        </svg>
+        <div class="mid"><b class="spd" id="dSpeed">—</b><span class="unit">km/h</span></div>
+        <div class="foot"><b id="dEff">—</b><span id="dEffLbl">effort moteur</span></div>
+      </div>
+    </section>
+    <div class="dock">
+      <button class="carplay" data-open="carplay"><span class="cp-title">CarPlay</span><span class="arrow"><svg><use href="#i-arrow"/></svg></span></button>
+      <button class="sport" id="sportSw" aria-label="Mode sport"><b>Mode<small>sport</small></b><span class="sw2"></span></button>
+    </div>
     <section class="now" aria-label="Lecture en cours">
       <div class="art"><svg><use href="#i-note"/></svg></div>
       <div class="track"><b id="title">Rien en lecture</b><span id="artist">Lance CarPlay pour écouter</span></div>
       <button class="ctl" data-media="prev" aria-label="Morceau précédent"><svg><use href="#i-prev"/></svg></button>
       <button class="ctl play" data-media="play" aria-label="Lecture ou pause"><svg><use id="playIcon" href="#i-playtri"/></svg></button>
       <button class="ctl" data-media="next" aria-label="Morceau suivant"><svg><use href="#i-next"/></svg></button>
-    </section>
-    <section class="drive" aria-label="Ta conduite">
-      <div class="st"><span>Vitesse</span><b id="dSpeed">—</b></div>
-      <div class="st"><span>Effort moteur</span><b id="dEff">—</b><i><em id="dEffBar"></em></i></div>
-      <div class="st"><span>Lumière</span><b id="dAmb">—</b></div>
-      <div class="sport"><button class="sw2" id="sportSw" aria-label="Mode sport"></button>Mode sport</div>
     </section>
   </div>
 </section>
@@ -347,7 +349,7 @@ button:focus { outline: none !important; }
   wake();
 
   function status() {
-    if (!NATIVE) { var q = location.search; return { weather: /night/.test(q) ? 'pluie' : 'dégagé', temp: /night/.test(q) ? 9 : 17, lat: 47.24, lon: 6.02, context: /night/.test(q) ? 'conduite' : 'jour', ambient: /night/.test(q) ? 4 : 60, phone: true, wifi: '5 GHz', mediaAllowed: true, title: 'Nuit blanche', artist: 'Lomepal', playing: true, autoCarplay: true, speed: 72, power: /night/.test(q) ? 62 : 18, sport: true, ledColor: /night/.test(q) ? '#9B2BFF' : '#2B5BFF' }; }
+    if (!NATIVE) { var q = location.search; return { weather: /night/.test(q) ? 'pluie' : 'dégagé', temp: /night/.test(q) ? 9 : 17, lat: 47.24, lon: 6.02, context: /night/.test(q) ? 'conduite' : 'jour', ambient: /night/.test(q) ? 4 : 60, phone: true, wifi: '5 GHz', mediaAllowed: true, title: 'Nuit blanche', artist: 'Lomepal', playing: true, autoCarplay: true, speed: 72, power: /night/.test(q) ? 62 : 18, sport: true, hp: 48, ledColor: /night/.test(q) ? '#9B2BFF' : '#2B5BFF' }; }
     try { return JSON.parse(Home.status()); } catch (e) { return {}; }
   }
 
@@ -357,11 +359,13 @@ button:focus { outline: none !important; }
     var jour = s.ambient >= 0 ? s.ambient >= 25 : (h >= 8 && h < 19);
     document.body.classList.toggle('jour', jour);
     if (s.ledColor) document.documentElement.style.setProperty('--live', s.ledColor);
-    $('dSpeed').innerHTML = s.speed >= 0 ? s.speed + '<small>km/h</small>' : '—';
-    $('dEff').innerHTML = s.sport === false ? 'off' : (s.power || 0) + '<small>%</small>';
-    $('dEffBar').style.transform = 'scaleX(' + ((s.sport === false ? 0 : (s.power || 0)) / 100) + ')';
-    $('dAmb').innerHTML = s.ambient >= 0 ? s.ambient + '<small>%</small>' : '—';
-    $('sportSw').classList.toggle('on', s.sport !== false);
+    var on = s.sport !== false, pw = on ? (s.power || 0) : 0;
+    $('dSpeed').textContent = s.speed >= 0 ? s.speed : '—';
+    $('dEff').innerHTML = on ? pw + '<small>%</small>' : 'off';
+    $('dEffLbl').textContent = on ? (s.hp > 0 ? '≈ ' + s.hp + ' ch' : 'effort moteur') : 'mode sport coupé';
+    $('dArc').setAttribute('stroke-dasharray', (414.7 * pw / 100).toFixed(1) + ' 552.9');
+    document.querySelector('.gauge').style.setProperty('--gop', (0.06 + 0.22 * pw / 100).toFixed(2));
+    $('sportSw').classList.toggle('on', on);
     $('stPhoneTxt').textContent = s.phone ? 'iPhone' : 'Pas de téléphone';
     $('stWifi').style.display = s.wifi ? 'flex' : 'none';
     $('stWifiTxt').textContent = s.wifi || '';
@@ -397,7 +401,7 @@ button:focus { outline: none !important; }
     else if (t.dataset.media) { if (NATIVE) Home.media(t.dataset.media); setTimeout(refresh, 400); }
     else if (t.dataset.pkg) { if (NATIVE) Home.launch(t.dataset.pkg); }
     else if (t.id === 'upd') { if (NATIVE) { if ($('updBtn').textContent === 'Installer') Home.updateInstall(); else Home.updateCheck(); updStart(); } }
-    else if (t.id === 'sportSw') { var sp = !t.classList.contains('on'); if (NATIVE) Home.setSport(sp); t.classList.toggle('on', sp); }
+    else if (t.id === 'sportSw') { var sp = !t.classList.contains('on'); if (NATIVE) Home.setSport(sp); t.classList.toggle('on', sp); setTimeout(refresh, 300); }
     else if (t.id === 'autoCp') { var on = !$('autoCpT').classList.contains('on'); if (NATIVE) Home.setAutoCarplay(on); $('autoCpT').classList.toggle('on', on); }
   });
 
