@@ -2,6 +2,9 @@ plugins {
     id 'com.android.application'
 }
 
+// Numéro de version = numéro de fabrication GitHub (1, 2, 3…) : sert aux mises à jour dans l'appli.
+def buildNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+
 android {
     namespace 'fr.francleint.os'
     compileSdk 34
@@ -11,8 +14,8 @@ android {
         minSdk 21
         // Les écrans visés tournent sous Android 9 : on cible l'API 28.
         targetSdk 28
-        versionCode 1
-        versionName '1.0'
+        versionCode buildNumber
+        versionName "1.${buildNumber}"
     }
 
     compileOptions {
