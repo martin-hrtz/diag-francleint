@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>francleint</title>
+<style>
+/* Base : maquette 1280×720, 1rem = 16 px à 720 px de haut */
+@font-face { font-family: "Inst"; src: url("../fonts/InstrumentSans.ttf") format("truetype"); font-weight: 400 700; font-stretch: 75% 100%; }
+:root {
+  --bg: #0A0F0C; --surface: #121915; --surface-2: #1C2520; --line: #212A25;
+  --ink: #EEF2EE; --ink-2: #9BA8A0; --accent: #2F5D46; --accent-hi: #86B896;
+  --glow: rgba(80,140,104,.16);
+  --ease: cubic-bezier(.22,1,.36,1);
+}
+body.jour {
+  --bg: #ECEEEA; --surface: #FFFFFF; --surface-2: #E7ECE8; --line: #DADFD9;
+  --ink: #111915; --ink-2: #56625B; --accent-hi: #2F5D46; --glow: rgba(47,93,70,.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { font-size: calc(100vh / 45); }
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--ink); font-family: "Inst", system-ui, sans-serif; user-select: none; transition: background 900ms var(--ease), color 900ms var(--ease); }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; transition: transform 180ms var(--ease); }
+button:active { transform: scale(.97); }
+svg { display: block; }
+
+.page { position: absolute; inset: 0; padding: 1.5rem 1.75rem 1.75rem; display: none;
+  background-image: radial-gradient(56rem 32rem at 12% 0%, var(--glow), transparent 70%); }
+.page.on { display: grid; }
+
+/* ACCUEIL */
+#home { grid-template-rows: 2.75rem minmax(0,1fr) 6.5rem; gap: 1.25rem; }
+header { display: flex; align-items: center; justify-content: space-between; }
+.brand { font-size: 1.375rem; font-weight: 700; letter-spacing: -.01em; }
+.status { display: flex; align-items: center; gap: 1.75rem; font-size: 1.25rem; font-weight: 500; color: var(--ink-2); }
+.status span { display: flex; align-items: center; gap: .625rem; }
+.status svg { width: 1.375rem; height: 1.375rem; stroke: var(--ink-2); }
+main { display: grid; grid-template-columns: minmax(0,7fr) minmax(0,5fr); gap: 1.25rem; min-height: 0; }
+.left { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; padding: .5rem .25rem 0; }
+.hello { font-size: 1.5rem; font-weight: 500; color: var(--ink-2); }
+.clock { margin-top: .25rem; font-size: 11.5rem; font-weight: 500; font-stretch: 75%; letter-spacing: -.02em; line-height: .92; font-variant-numeric: tabular-nums; }
+.date { margin-top: .875rem; font-size: 1.5rem; font-weight: 500; color: var(--ink-2); }
+.now { height: 7rem; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 0 1.25rem; display: flex; align-items: center; gap: 1.125rem; }
+.art { width: 4.5rem; height: 4.5rem; border-radius: .875rem; background: var(--surface-2); display: grid; place-items: center; flex: none; }
+.art svg { width: 1.9rem; height: 1.9rem; stroke: var(--accent-hi); }
+.track { flex: 1; min-width: 0; }
+.track b { display: block; font-size: 1.5rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track span { display: block; margin-top: .25rem; font-size: 1.25rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ctl { width: 4rem; height: 4rem; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.ctl svg { width: 1.75rem; height: 1.75rem; stroke: var(--ink); }
+.play { width: 5rem; height: 5rem; background: var(--ink); }
+.play svg { stroke: var(--bg); width: 1.9rem; height: 1.9rem; }
+.carplay { position: relative; overflow: hidden; border-radius: 1.75rem; background: var(--accent); color: #fff; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; text-align: left; }
+.ring { position: absolute; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); }
+.carplay .ico { width: 2.75rem; height: 2.75rem; stroke: #fff; }
+.cp-bottom { display: flex; align-items: flex-end; justify-content: space-between; width: 100%; gap: 1rem; }
+.cp-title { display: block; font-size: 3.5rem; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
+.cp-sub { display: block; margin-top: .75rem; font-size: 1.25rem; font-weight: 500; color: rgba(255,255,255,.82); }
+.arrow { width: 4.75rem; height: 4.75rem; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; }
+.arrow svg { width: 1.9rem; height: 1.9rem; stroke: var(--accent); }
+nav { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); overflow: hidden; }
+nav button { display: flex; align-items: center; justify-content: center; gap: .875rem; font-size: 1.375rem; font-weight: 600; }
+nav button + button { border-left: 1px solid var(--line); }
+nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
+
+/* PAGES INTERNES */
+.sub { grid-template-rows: 2.75rem minmax(0,1fr); gap: 1.25rem; }
+.sub header button { height: 2.75rem; padding: 0 1.1rem; border-radius: 999px; border: 1px solid var(--line); font-size: 1.15rem; font-weight: 600; color: var(--ink-2); }
+.sub h1 { font-size: 1.75rem; font-weight: 600; }
+.grid { overflow-y: auto; display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 1rem; align-content: start; }
+.app { height: 9rem; border-radius: 1.25rem; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .75rem; padding: 0 .5rem; }
+.app img { width: 3.5rem; height: 3.5rem; border-radius: .875rem; }
+.app span { font-size: 1.05rem; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.list { overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; align-content: start; }
+.item { min-height: 5.5rem; border-radius: 1.25rem; background: var(--surface); border: 1px solid var(--line); padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; text-align: left; }
+.item b { display: block; font-size: 1.3rem; font-weight: 600; }
+.item span { display: block; margin-top: .2rem; font-size: 1.05rem; color: var(--ink-2); }
+.item svg { width: 1.5rem; height: 1.5rem; stroke: var(--ink-2); flex: none; }
+.toggle { width: 3.5rem; height: 2rem; border-radius: 999px; background: var(--surface-2); position: relative; flex: none; transition: background 200ms var(--ease); }
+.toggle i { position: absolute; top: .25rem; left: .25rem; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--ink-2); transition: transform 200ms var(--ease), background 200ms var(--ease); }
+.toggle.on { background: var(--accent); }
+.toggle.on i { transform: translateX(1.5rem); background: #fff; }
+@media (prefers-reduced-motion: reduce) { * { transition-duration: 1ms !important; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-bt" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="5" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/></symbol>
+  <symbol id="i-playtri" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="7 4 19 12 7 20 7 4"/></symbol>
+  <symbol id="i-screen" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="3"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="18" x2="12" y2="21"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-radio" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></symbol>
+  <symbol id="i-apps" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
+</svg>
+
+<!-- ACCUEIL -->
+<section class="page on" id="home">
+  <header>
+    <span class="brand">francleint</span>
+    <div class="status">
+      <span id="stPhone"><svg><use href="#i-bt"/></svg><em id="stPhoneTxt" style="font-style:normal">iPhone</em></span>
+      <span id="stWifi"><svg><use href="#i-wifi"/></svg><em id="stWifiTxt" style="font-style:normal">—</em></span>
+    </div>
+  </header>
+  <main>
+    <div class="left">
+      <div>
+        <p class="hello" id="hello">Bonjour Martin</p>
+        <p class="clock" id="clock">--:--</p>
+        <p class="date" id="date"></p>
+      </div>
+      <section class="now" aria-label="Lecture en cours">
+        <div class="art"><svg><use href="#i-note"/></svg></div>
+        <div class="track"><b id="title">Rien en lecture</b><span id="artist">Lance CarPlay pour écouter</span></div>
+        <button class="ctl" data-media="prev" aria-label="Morceau précédent"><svg><use href="#i-prev"/></svg></button>
+        <button class="ctl play" data-media="play" aria-label="Lecture ou pause"><svg><use id="playIcon" href="#i-playtri"/></svg></button>
+        <button class="ctl" data-media="next" aria-label="Morceau suivant"><svg><use href="#i-next"/></svg></button>
+      </section>
+    </div>
+    <button class="carplay" data-open="carplay">
+      <span class="ring" style="right:-7.5rem;top:-7.5rem;width:22.5rem;height:22.5rem" aria-hidden="true"></span>
+      <span class="ring" style="right:-3.75rem;top:-3.75rem;width:15rem;height:15rem;border-color:rgba(255,255,255,.16)" aria-hidden="true"></span>
+      <span class="ring" style="right:0;top:0;width:7.5rem;height:7.5rem;border-color:rgba(255,255,255,.22)" aria-hidden="true"></span>
+      <svg class="ico"><use href="#i-screen"/></svg>
+      <span class="cp-bottom">
+        <span><span class="cp-title">CarPlay</span><span class="cp-sub">Musique · GPS · Appels</span></span>
+        <span class="arrow"><svg><use href="#i-arrow"/></svg></span>
+      </span>
+    </button>
+  </main>
+  <nav aria-label="Raccourcis">
+    <button data-open="radio"><svg><use href="#i-radio"/></svg>Radio</button>
+    <button data-open="camera"><svg><use href="#i-cam"/></svg>Caméra</button>
+    <button data-page="apps"><svg><use href="#i-apps"/></svg>Applis</button>
+    <button data-page="settings"><svg><use href="#i-gear"/></svg>Réglages</button>
+  </nav>
+</section>
+
+<!-- APPLIS -->
+<section class="page sub" id="apps">
+  <header><h1>Applis</h1><button data-page="home">Retour</button></header>
+  <div class="grid" id="appGrid"></div>
+</section>
+
+<!-- RÉGLAGES -->
+<section class="page sub" id="settings">
+  <header><h1>Réglages</h1><button data-page="home">Retour</button></header>
+  <div class="list">
+    <button class="item" data-open="ambiance"><span><b>Ambiance</b><span>LED et luminosité de l'écran</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" data-open="diag"><span><b>Check-up de l'écran</b><span>Diagnostic et rapport</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" id="autoCp"><span><b>CarPlay au démarrage</b><span>S'ouvre tout seul quand tu démarres</span></span><span class="toggle" id="autoCpT"><i></i></span></button>
+    <button class="item" data-open="media"><span><b>Afficher le morceau</b><span id="mediaTxt">Autoriser francleint à lire le titre</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" data-open="lock"><span><b>Verrouillage de l'écran</b><span>Enlever ou changer le mot de passe</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" data-open="wifi"><span><b>Wi-Fi</b><span>Choisis un réseau en 5 GHz pour CarPlay</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" data-open="bluetooth"><span><b>Bluetooth</b><span>Appareils connectés</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" data-open="home"><span><b>Écran d'accueil par défaut</b><span>Choisir francleint ou l'ancien</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" data-open="stock"><span><b>Ancien écran d'origine</b><span>Radio, réglages voiture du fabricant</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" data-open="android"><span><b>Réglages Android</b><span>Tous les paramètres</span></span><svg><use href="#i-chev"/></svg></button>
+  </div>
+</section>
+
+<script>
+(function () {
+  var NATIVE = typeof window.Home !== 'undefined';
+  var $ = function (id) { return document.getElementById(id); };
+  var JOURS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  var MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  var current = 'home';
+
+  function show(id) {
+    current = id;
+    [].forEach.call(document.querySelectorAll('.page'), function (p) { p.classList.toggle('on', p.id === id); });
+    if (id === 'apps') loadApps();
+  }
+  window.onBack = function () { if (current !== 'home') show('home'); };
+  window.onHome = function () { show('home'); tick(); };
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function tick() {
+    var d = new Date(), h = d.getHours();
+    $('clock').textContent = pad(h) + ':' + pad(d.getMinutes());
+    $('date').textContent = JOURS[d.getDay()] + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()];
+    $('hello').textContent = (h >= 18 || h < 5 ? 'Bonsoir' : 'Bonjour') + ' Martin';
+  }
+
+  function status() {
+    if (!NATIVE) return { ambient: 60, phone: true, wifi: '5 GHz', mediaAllowed: false, autoCarplay: true };
+    try { return JSON.parse(Home.status()); } catch (e) { return {}; }
+  }
+
+  function refresh() {
+    var s = status();
+    var h = new Date().getHours();
+    var jour = s.ambient >= 0 ? s.ambient >= 25 : (h >= 8 && h < 19);
+    document.body.classList.toggle('jour', jour);
+    $('stPhoneTxt').textContent = s.phone ? 'iPhone' : 'Pas de téléphone';
+    $('stWifi').style.display = s.wifi ? 'flex' : 'none';
+    $('stWifiTxt').textContent = s.wifi || '';
+    if (s.title) {
+      $('title').textContent = s.title;
+      $('artist').textContent = s.artist || '';
+    } else {
+      $('title').textContent = 'Rien en lecture';
+      $('artist').textContent = s.mediaAllowed ? 'Lance CarPlay pour écouter' : 'Réglages › Afficher le morceau';
+    }
+    $('playIcon').setAttribute('href', s.playing ? '#i-pause' : '#i-playtri');
+    $('autoCpT').classList.toggle('on', !!s.autoCarplay);
+    $('mediaTxt').textContent = s.mediaAllowed ? 'Autorisé ✓' : 'Autoriser francleint à lire le titre';
+  }
+
+  var appsLoaded = false;
+  function loadApps() {
+    if (appsLoaded) return;
+    var list = [];
+    try { list = NATIVE ? JSON.parse(Home.apps()) : []; } catch (e) { }
+    var html = '';
+    list.forEach(function (a) {
+      html += '<button class="app" data-pkg="' + a.pkg + '">' + (a.icon ? '<img alt="" src="' + a.icon + '">' : '') + '<span>' + a.name.replace(/</g, '&lt;') + '</span></button>';
+    });
+    $('appGrid').innerHTML = html || '<p class="hello">Aucune appli trouvée</p>';
+    appsLoaded = true;
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.page) show(t.dataset.page);
+    else if (t.dataset.open) { if (NATIVE) Home.open(t.dataset.open); }
+    else if (t.dataset.media) { if (NATIVE) Home.media(t.dataset.media); setTimeout(refresh, 400); }
+    else if (t.dataset.pkg) { if (NATIVE) Home.launch(t.dataset.pkg); }
+    else if (t.id === 'autoCp') { var on = !$('autoCpT').classList.contains('on'); if (NATIVE) Home.setAutoCarplay(on); $('autoCpT').classList.toggle('on', on); }
+  });
+
+  tick(); refresh();
+  setInterval(tick, 5000);
+  setInterval(refresh, 2000);
+})();
+</script>
+</body>
+</html>
