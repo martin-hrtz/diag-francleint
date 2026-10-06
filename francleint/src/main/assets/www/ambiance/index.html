@@ -61,6 +61,8 @@ footer { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1.25rem;
 .dev { display: flex; justify-content: space-between; align-items: center; min-height: 3.2rem; padding: 0 1rem; border-radius: 1rem; background: var(--surface-2); font-size: 1.15rem; text-align: left; }
 .dev small { color: var(--ink-2); font-size: .95rem; }
 .mono { font-family: monospace; font-size: .95rem; color: var(--ink-2); word-break: break-all; }
+.test { display: flex; align-items: center; gap: .6rem; }
+.test span { font-size: 1.1rem; color: var(--ink-2); }
 .panel-actions { display: flex; gap: .75rem; justify-content: flex-end; }
 @media (prefers-reduced-motion: reduce) { * { transition-duration: 1ms !important; } }
 </style>
@@ -124,6 +126,16 @@ footer { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1.25rem;
   <div class="panel">
     <h2>Bluetooth</h2>
     <p id="btInfo">Appareils vus autour de l'écran. Touche ton boîtier LED s'il n'a pas été trouvé tout seul. Ferme Lotus Lantern avant : le boîtier n'accepte qu'une connexion à la fois.</p>
+    <div class="test">
+      <span>Test</span>
+      <button class="chip" data-test="#FF0000">Rouge</button>
+      <button class="chip" data-test="#00FF00">Vert</button>
+      <button class="chip" data-test="#0000FF">Bleu</button>
+      <span style="margin-left:auto">Langage</span>
+      <button class="chip" data-proto="0">A</button>
+      <button class="chip" data-proto="1">B</button>
+    </div>
+    <p class="label" id="testHint">Touche Rouge : si rien ne change en 2 s, passe en langage B et réessaie.</p>
     <p class="mono" id="gatt"></p>
     <div class="list" id="devices"></div>
     <div class="panel-actions">
@@ -164,6 +176,7 @@ function render() {
 
 function renderDevices(s) {
   $('gatt').textContent = s.gatt ? 'Services du boîtier : ' + s.gatt : '';
+  [].forEach.call(document.querySelectorAll('[data-proto]'), function (b) { b.classList.toggle('on', String(s.proto || 0) === b.dataset.proto); });
   var list = $('devices'), html = '';
   (s.seen || []).forEach(function (d) {
     html += '<button class="dev" data-addr="' + d.addr + '"><span>' + (d.name || 'sans nom') + '</span><small>' + d.addr + '</small></button>';
@@ -173,7 +186,9 @@ function renderDevices(s) {
 
 document.addEventListener('click', function (e) {
   var t = e.target.closest('button'); if (!t) return;
-  if (t.dataset.sim) { NATIVE ? Amb.sim(t.dataset.sim) : (demo.sim = t.dataset.sim); }
+  if (t.dataset.test) { if (NATIVE) Amb.ledTest(t.dataset.test); }
+  else if (t.dataset.proto) { if (NATIVE) Amb.ledProto(parseInt(t.dataset.proto, 10)); }
+  else if (t.dataset.sim) { NATIVE ? Amb.sim(t.dataset.sim) : (demo.sim = t.dataset.sim); }
   else if (t.dataset.c) { NATIVE ? Amb.park(t.dataset.c) : (demo.park = t.dataset.c); }
   else if (t.dataset.addr) { if (NATIVE) Amb.ledConnect(t.dataset.addr); $('sheet').classList.remove('on'); }
   else if (t.id === 'btBtn') { $('sheet').classList.add('on'); renderDevices(status()); }
