@@ -193,7 +193,7 @@ public class AmbianceService extends Service {
         if (speedKmh < 2) { if (stillSince == 0) stillSince = now; } else stillSince = 0;
         boolean parked = hasFix && stillSince > 0 && now - stillSince > 60_000;
         boolean highway = speedKmh > 110;
-        boolean welcome = now - startedAt < 10_000;
+        boolean welcome = now - startedAt < 4_000;
         boolean call = inCall;
 
         // Simulation depuis l'écran de contrôle
@@ -213,7 +213,7 @@ public class AmbianceService extends Service {
         int[] color;
         if (welcome) {
             color = WARM;
-            level = Math.max(level, 0.6) * Math.min(1, (now - startedAt) / 3000.0);
+            level = Math.max(level, 0.6) * Math.min(1, (now - startedAt) / 800.0);
             context = "accueil";
         } else if (call) {
             color = targetColor;                  // on fige la couleur
@@ -244,7 +244,7 @@ public class AmbianceService extends Service {
 
     private final Runnable fade = new Runnable() {
         @Override public void run() {
-            double k = 0.12; // ~2 s pour faire 90 % du chemin
+            double k = 0.35; // ~0,6 s pour faire 90 % du chemin
             cr += (targetColor[0] - cr) * k;
             cg += (targetColor[1] - cg) * k;
             cb += (targetColor[2] - cb) * k;
