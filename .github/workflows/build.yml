@@ -12,6 +12,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      HAS_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -58,5 +60,18 @@ jobs:
           name: francleint v1.${{ github.run_number }}
           files: |
             diag-francleint.apk
+            francleint.apk
+          make_latest: true
+
+      # Copie publique des APK (le code reste privé) : dépôt « francleint-app »
+      - name: Publier dans francleint-app
+        if: env.HAS_TOKEN == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: martin-hrtz/francleint-app
+          token: ${{ secrets.RELEASE_TOKEN }}
+          tag_name: v1.${{ github.run_number }}
+          name: francleint v1.${{ github.run_number }}
+          files: |
             francleint.apk
           make_latest: true
