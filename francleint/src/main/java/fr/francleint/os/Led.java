@@ -145,6 +145,7 @@ class Led {
                 try { g.close(); } catch (Exception ignored) { }
                 if (g == gatt) { gatt = null; chr = null; }
                 state = "déconnecté, reconnexion";
+                busy = false;
                 lastR = lastG = lastB = -1;
                 final String addr = prefs.getString("addr", null);
                 h.postDelayed(() -> {
@@ -175,27 +176,87 @@ class Led {
             chr = found != null ? found : fallback;
             if (chr == null) { state = "boîtier connecté mais langage inconnu"; return; }
             state = "connecté";
-            write(new byte[]{0x7E, 0x00, 0x04, (byte) 0xF0, 0x00, 0x01, (byte) 0xFF, 0x00, (byte) 0xEF});
-            h.postDelayed(() -> write(new byte[]{0x7E, 0x00, 0x01, 100, 0x00, 0x00, 0x00, 0x00, (byte) 0xEF}), 150);
+            busy = false;
+            powerOn();
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt g, BluetoothGattCharacteristic c, int status) {
+            busy = false;
+            h.post(Led.this::pump);
         }
     };
 
-    private synchronized void write(byte[] b) {
-        if (gatt == null || chr == null) return;
-        try {
-            chr.setWriteType((chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0
-                    ? BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
-                    : BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-            chr.setValue(b);
-            gatt.writeCharacteristic(chr);
-        } catch (Exception ignored) { }
+    // ---- Envoi : un seul message à la fois, le plus récent gagne ----
+
+    private volatile boolean busy = false;
+    private byte[] pendingCmd;       // commande ponctuelle (allumage)
+    private byte[] pendingColor;     // dernière couleur voulue
+    private long lastSendAt = 0;
+    private long testUntil = 0;
+    private byte[] lastColorSent;
+
+    /** 0 = langage A (7E 00 … 00 EF), 1 = langage B (7E 07 … 10 EF) */
+    int protocol() { return prefs.getInt("proto", 0); }
+
+    void setProtocol(int p) {
+        prefs.edit().putInt("proto", p).apply();
+        powerOn();
+        lastR = lastG = lastB = -1;
     }
 
-    /** Envoie une couleur déjà multipliée par l'intensité. N'envoie rien si elle n'a pas changé. */
+    private void powerOn() {
+        if (protocol() == 0) queueCmd(new byte[]{0x7E, 0x00, 0x04, (byte) 0xF0, 0x00, 0x01, (byte) 0xFF, 0x00, (byte) 0xEF});
+        else queueCmd(new byte[]{0x7E, 0x04, 0x04, (byte) 0xF0, 0x00, 0x01, (byte) 0xFF, 0x00, (byte) 0xEF});
+    }
+
+    private byte[] colorCmd(int r, int g, int b) {
+        if (protocol() == 0) return new byte[]{0x7E, 0x00, 0x05, 0x03, (byte) r, (byte) g, (byte) b, 0x00, (byte) 0xEF};
+        return new byte[]{0x7E, 0x07, 0x05, 0x03, (byte) r, (byte) g, (byte) b, 0x10, (byte) 0xEF};
+    }
+
+    private synchronized void queueCmd(byte[] b) { pendingCmd = b; h.post(this::pump); }
+
+    private synchronized void pump() {
+        if (gatt == null || chr == null) return;
+        long now = System.currentTimeMillis();
+        if (busy && now - lastSendAt < 400) return;      // on attend la réponse du boîtier
+        byte[] next = pendingCmd != null ? pendingCmd : pendingColor;
+        if (next == null) return;
+        boolean noResp = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0
+                && (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) == 0;
+        try {
+            chr.setWriteType(noResp ? BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+                    : BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+            chr.setValue(next);
+            boolean ok = gatt.writeCharacteristic(chr);
+            if (!ok) { h.postDelayed(this::pump, 60); return; }
+            lastSendAt = now;
+            if (next == pendingCmd) pendingCmd = null;
+            else { lastColorSent = pendingColor; pendingColor = null; }
+            if (noResp) { busy = false; if (pendingCmd != null || pendingColor != null) h.postDelayed(this::pump, 40); }
+            else busy = true;
+        } catch (Exception e) {
+            h.postDelayed(this::pump, 200);
+        }
+    }
+
+    /** Couleur voulue par le moteur (déjà multipliée par l'intensité). Renvoyée toutes les 3 s par sécurité. */
     void color(int r, int g, int b) {
-        if (!ready()) return;
-        if (r == lastR && g == lastG && b == lastB) return;
+        if (!ready() || System.currentTimeMillis() < testUntil) return;
+        boolean same = r == lastR && g == lastG && b == lastB;
+        if (same && System.currentTimeMillis() - lastSendAt < 3000) return;
         lastR = r; lastG = g; lastB = b;
-        write(new byte[]{0x7E, 0x00, 0x05, 0x03, (byte) r, (byte) g, (byte) b, 0x00, (byte) 0xEF});
+        synchronized (this) { pendingColor = colorCmd(r, g, b); }
+        h.post(this::pump);
+    }
+
+    /** Test manuel : impose une couleur pendant 8 s, le moteur reprend la main ensuite. */
+    void test(int r, int g, int b) {
+        testUntil = System.currentTimeMillis() + 8000;
+        powerOn();
+        synchronized (this) { pendingColor = colorCmd(r, g, b); }
+        h.postDelayed(this::pump, 80);
+        lastR = lastG = lastB = -1;
     }
 }

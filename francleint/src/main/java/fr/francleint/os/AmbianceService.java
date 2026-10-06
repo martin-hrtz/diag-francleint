@@ -277,6 +277,10 @@ public class AmbianceService extends Service {
 
     void ledReset() { led.reset(); }
 
+    void ledTest(int rgb) { led.test((rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255); }
+
+    void ledProto(int p) { led.setProtocol(p); }
+
     void ledConnect(String addr) {
         String name;
         synchronized (led.seen) { name = led.seen.get(addr); }
@@ -307,6 +311,7 @@ public class AmbianceService extends Service {
             o.put("ledName", led.deviceName);
             o.put("ledReady", led.ready());
             o.put("gatt", led.gattInfo);
+            o.put("proto", led.protocol());
             JSONArray seen = new JSONArray();
             synchronized (led.seen) {
                 for (Map.Entry<String, String> e : led.seen.entrySet()) {

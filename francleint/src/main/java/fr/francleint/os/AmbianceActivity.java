@@ -78,6 +78,18 @@ public class AmbianceActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void ledTest(String hex) {
+            AmbianceService s = AmbianceService.instance;
+            if (s != null) s.ledTest(Integer.parseInt(hex.replace("#", ""), 16));
+        }
+
+        @JavascriptInterface
+        public void ledProto(int p) {
+            AmbianceService s = AmbianceService.instance;
+            if (s != null) s.ledProto(p);
+        }
+
+        @JavascriptInterface
         public void ledReset() {
             AmbianceService s = AmbianceService.instance;
             if (s != null) s.ledReset();
