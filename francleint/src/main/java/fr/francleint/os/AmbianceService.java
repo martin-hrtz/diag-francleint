@@ -1,13 +1,23 @@
 package fr.francleint.os;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
@@ -18,6 +28,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -136,7 +147,154 @@ public class AmbianceService extends Service {
         startLocation();
         h.post(tick);
         h.post(fade);
+        IntentFilter f = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        f.addAction(Intent.ACTION_SCREEN_OFF);
+        f.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        f.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        f.addAction(PROX_TICK);
+        registerReceiver(screen, f);
     }
+
+    // ---------- iPhone qui arrive → l'écran se réveille tout seul (avant même d'ouvrir la porte) ----------
+    private long phoneGoneAt = 0;
+    private PowerManager.WakeLock arrival;
+
+    // Distance estimée par la force du signal Bluetooth de l'iPhone (dBm) :
+    //   ≈ -55 : collé à la voiture · ≈ -65 : ~1,5 m · ≈ -80 et moins : loin ou derrière un mur / un plancher
+    private volatile int lastRssi = -127;          // dernier signal Apple le plus fort entendu
+    private volatile boolean measuring = false;
+    private PowerManager.WakeLock scanLock;
+    private long arriveScanUntil = 0;
+
+    int wakeRssi() { return prefs.getInt("wakeRssi", -65); }
+
+    private void phoneEvent(Intent i, boolean connected) {
+        BluetoothDevice d = i.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        BluetoothClass bc = d != null ? d.getBluetoothClass() : null;
+        if (bc == null || bc.getMajorDeviceClass() != BluetoothClass.Device.Major.PHONE) return;   // pas le boîtier LED
+        long now = System.currentTimeMillis();
+        if (!connected) { phoneGoneAt = now; phoneHere = false; cancelProxTick(); return; }
+        phoneHere = true;
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        boolean asleep = pm != null && !pm.isInteractive();
+        if (!asleep || !prefs.getBoolean("wakeOnPhone", true)) return;
+        // Le téléphone vient de se connecter, écran endormi : on écoute 2 min la force du signal.
+        // On ne réveille que s'il est vraiment PRÈS (assez fort) — à travers un plancher, le signal reste faible.
+        try {
+            if (scanLock == null) scanLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "francleint:approche");
+            if (!scanLock.isHeld()) scanLock.acquire(125_000);
+        } catch (Exception ignored) { }
+        arriveScanUntil = now + 120_000;
+        startProximity();
+        scheduleProxTick(125_000);
+    }
+
+    // Téléphone resté connecté toute la nuit (ex. dans la chambre au-dessus) : petite écoute de 6 s
+    // toutes les 45 s tant que l'écran dort — c'est quand tu descends que le signal devient fort.
+    static final String PROX_TICK = "fr.francleint.os.PROX";
+    private volatile boolean phoneHere = false;
+
+    private PendingIntent proxIntent() {
+        return PendingIntent.getBroadcast(this, 7, new Intent(PROX_TICK).setPackage(getPackageName()),
+                Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
+    }
+
+    private void scheduleProxTick(long inMs) {
+        try {
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+            long at = System.currentTimeMillis() + inMs;
+            if (Build.VERSION.SDK_INT >= 23) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, proxIntent());
+            else am.setExact(AlarmManager.RTC_WAKEUP, at, proxIntent());
+        } catch (Exception ignored) { }
+    }
+
+    private void cancelProxTick() {
+        try { ((AlarmManager) getSystemService(ALARM_SERVICE)).cancel(proxIntent()); } catch (Exception ignored) { }
+    }
+
+    private void proxTick() {
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        if (!phoneHere || pm == null || pm.isInteractive() || !prefs.getBoolean("wakeOnPhone", true)) return;
+        try {
+            if (scanLock == null) scanLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "francleint:approche");
+            if (!scanLock.isHeld()) scanLock.acquire(7_000);
+        } catch (Exception ignored) { }
+        arriveScanUntil = System.currentTimeMillis() + 6_000;
+        startProximity();
+        h.postDelayed(this::stopProximityIfDone, 6_100);
+        scheduleProxTick(45_000);
+    }
+
+    private final ScanCallback prox = new ScanCallback() {
+        @Override public void onScanResult(int type, ScanResult r) {
+            if (r.getScanRecord() == null || r.getScanRecord().getManufacturerSpecificData(0x004C) == null) return;   // appareils Apple
+            int rssi = r.getRssi();
+            if (rssi > lastRssi) lastRssi = rssi;
+            if (arriveScanUntil > 0 && rssi >= wakeRssi()) { arriveScanUntil = 0; stopProximity(); wakeForArrival(); }
+        }
+    };
+
+    private void startProximity() {
+        try {
+            BluetoothLeScanner sc = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
+            if (sc == null || measuring) return;
+            lastRssi = -127;
+            measuring = true;
+            sc.startScan(null, new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), prox);
+            h.postDelayed(this::stopProximityIfDone, 121_000);
+        } catch (Exception e) { measuring = false; }
+    }
+
+    private void stopProximityIfDone() { if (System.currentTimeMillis() >= arriveScanUntil) stopProximity(); }
+
+    private void stopProximity() {
+        try { BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner().stopScan(prox); } catch (Exception ignored) { }
+        measuring = false;
+        try { if (scanLock != null && scanLock.isHeld()) scanLock.release(); } catch (Exception ignored) { }
+    }
+
+    private void wakeForArrival() {
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        try {
+            if (arrival != null && arrival.isHeld()) arrival.release();
+            arrival = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "francleint:arrivee");
+            arrival.acquire(120_000);   // 2 min : si le contact n'est pas mis, l'écran se rendort tout seul
+        } catch (Exception ignored) { }
+        screenOffAt = 0;
+        startedAt = System.currentTimeMillis();
+        HomeActivity.welcome(this);
+    }
+
+    /** Réglage : « je suis à côté de la voiture » → on mesure 8 s et on règle le seuil un peu en dessous. */
+    void calibrate() {
+        arriveScanUntil = 0;
+        startProximity();
+        h.postDelayed(() -> {
+            if (lastRssi > -110) prefs.edit().putInt("wakeRssi", lastRssi - 6).apply();
+            stopProximity();
+        }, 8000);
+    }
+
+    void setWakeOnPhone(boolean on) { prefs.edit().putBoolean("wakeOnPhone", on).apply(); }
+
+    // Contact mis : l'écran se rallume après une veille → accueil (LED + animation « Bonjour »)
+    private long screenOffAt = 0;
+    private final BroadcastReceiver screen = new BroadcastReceiver() {
+        @Override public void onReceive(Context c, Intent i) {
+            String a = i.getAction();
+            if (PROX_TICK.equals(a)) { proxTick(); return; }
+            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(a) || BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(a)) {
+                phoneEvent(i, BluetoothDevice.ACTION_ACL_CONNECTED.equals(a));
+                return;
+            }
+            if (Intent.ACTION_SCREEN_OFF.equals(a)) { screenOffAt = System.currentTimeMillis(); if (phoneHere) scheduleProxTick(45_000); return; }
+            cancelProxTick();
+            if (screenOffAt == 0 || System.currentTimeMillis() - screenOffAt < 60_000) return;   // simple extinction rapide : rien
+            screenOffAt = 0;
+            startedAt = System.currentTimeMillis();
+            HomeActivity.welcome(c);
+        }
+    };
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) { return START_STICKY; }
@@ -147,6 +305,7 @@ public class AmbianceService extends Service {
     @Override
     public void onDestroy() {
         h.removeCallbacksAndMessages(null);
+        try { unregisterReceiver(screen); } catch (Exception ignored) { }
         removeOverlay();
         led.stop();
         instance = null;
@@ -437,6 +596,9 @@ public class AmbianceService extends Service {
             o.put("ambient", Math.round(ambient * 100));
             o.put("elevation", Math.round(elevation));
             o.put("weather", sky.summary);
+            if (!Double.isNaN(sky.temp)) o.put("temp", Math.round(sky.temp));
+            o.put("lat", lat);
+            o.put("lon", lon);
             o.put("lights", lights);
             o.put("call", inCall);
             o.put("speed", hasFix ? Math.round(speedKmh) : -1);
@@ -453,6 +615,10 @@ public class AmbianceService extends Service {
             o.put("dim", dimPct);
             o.put("dimOn", prefs.getBoolean("dim", true));
             o.put("sport", sport);
+            o.put("wakeOnPhone", prefs.getBoolean("wakeOnPhone", true));
+            o.put("wakeRssi", wakeRssi());
+            o.put("rssi", lastRssi);
+            o.put("measuring", measuring);
             o.put("accel", Math.round((System.currentTimeMillis() - accelAt < 2500 ? accel : 0) * 10) / 10.0);
             o.put("power", Math.round(power * 100));
             o.put("hp", System.currentTimeMillis() - accelAt < 1300 ? estHp : 0);

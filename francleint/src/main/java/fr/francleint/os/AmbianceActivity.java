@@ -105,6 +105,18 @@ public class AmbianceActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void calibrate() {
+            AmbianceService s = AmbianceService.instance;
+            if (s != null) s.calibrate();
+        }
+
+        @JavascriptInterface
+        public void setWakeOnPhone(boolean on) {
+            AmbianceService s = AmbianceService.instance;
+            if (s != null) s.setWakeOnPhone(on);
+        }
+
+        @JavascriptInterface
         public void setSport(boolean on) {
             AmbianceService s = AmbianceService.instance;
             if (s != null) s.setSport(on);

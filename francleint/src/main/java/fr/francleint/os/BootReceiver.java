@@ -9,5 +9,6 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context c, Intent i) {
         try { AmbianceService.start(c); } catch (Exception ignored) { }
+        if (!Intent.ACTION_MY_PACKAGE_REPLACED.equals(i.getAction())) HomeActivity.welcome(c);
     }
 }

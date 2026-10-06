@@ -35,13 +35,14 @@ class Sky {
     volatile double rain = 0;         // mm/h
     volatile int code = -1;           // code météo WMO
     volatile String summary = "inconnue";
+    volatile double temp = Double.NaN;   // °C
 
     /** À appeler hors du fil principal. */
     void refresh(double lat, double lon) {
         HttpURLConnection c = null;
         try {
             URL u = new URL(String.format(Locale.US,
-                    "https://api.open-meteo.com/v1/forecast?latitude=%.3f&longitude=%.3f&current=cloud_cover,precipitation,weather_code",
+                    "https://api.open-meteo.com/v1/forecast?latitude=%.3f&longitude=%.3f&current=cloud_cover,precipitation,weather_code,temperature_2m",
                     lat, lon));
             c = (HttpURLConnection) u.openConnection();
             c.setConnectTimeout(8000);
@@ -55,6 +56,7 @@ class Sky {
             cloud = cur.optInt("cloud_cover", -1);
             rain = cur.optDouble("precipitation", 0);
             code = cur.optInt("weather_code", -1);
+            temp = cur.optDouble("temperature_2m", Double.NaN);
             weatherAt = System.currentTimeMillis();
             summary = describe();
         } catch (Exception e) {

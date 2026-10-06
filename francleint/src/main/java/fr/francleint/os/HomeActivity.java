@@ -34,6 +34,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -52,6 +53,36 @@ public class HomeActivity extends Activity {
     private WebView web;
     private SharedPreferences prefs;
     private static boolean autoLaunched = false;
+    static final long WELCOME_MS = 3600;   // durée de l'animation « Bonjour »
+    private boolean welcomeQueued = false, pageReady = false;
+    private final Handler ui = new Handler(Looper.getMainLooper());
+
+    /** Ouvre l'écran d'accueil avec l'animation de bienvenue (démarrage ou contact mis). */
+    static void welcome(Context c) {
+        Intent i = new Intent(c, HomeActivity.class);
+        i.putExtra("welcome", true);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        try { c.startActivity(i); } catch (Exception ignored) { }
+    }
+
+    private void handleWelcome(Intent i) {
+        boolean firstBoot = !autoLaunched && SystemClock.elapsedRealtime() < 5 * 60_000;
+        if (!(i != null && i.getBooleanExtra("welcome", false)) && !firstBoot) return;
+        autoLaunched = true;
+        if (i != null) i.removeExtra("welcome");
+        if (pageReady) web.evaluateJavascript("window.welcome && window.welcome()", null);
+        else welcomeQueued = true;
+        ui.removeCallbacksAndMessages(null);
+        // CarPlay s'ouvre pile à la fin de l'animation
+        if (prefs.getBoolean("autoCarplay", true)) ui.postDelayed(() -> launchFirst(CARPLAY), WELCOME_MS);
+    }
+
+    @Override
+    protected void onNewIntent(Intent i) {
+        super.onNewIntent(i);
+        setIntent(i);
+        handleWelcome(i);
+    }
 
     @Override
     protected void onCreate(Bundle b) {
@@ -71,17 +102,20 @@ public class HomeActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setAllowFileAccess(true);
         web.setWebChromeClient(new WebChromeClient());
+        web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView v, String url) {
+                pageReady = true;
+                if (welcomeQueued) { welcomeQueued = false; v.evaluateJavascript("window.welcome && window.welcome()", null); }
+            }
+        });
         web.setBackgroundColor(0xFF0A0F0C);
         web.addJavascriptInterface(new HomeBridge(), "Home");
         web.loadUrl("file:///android_asset/www/home/index.html");
         setContentView(web);
         immersive();
 
-        // Juste après le démarrage de l'écran : on ouvre CarPlay tout seul.
-        if (!autoLaunched && prefs.getBoolean("autoCarplay", true) && SystemClock.elapsedRealtime() < 5 * 60_000) {
-            autoLaunched = true;
-            new Handler(Looper.getMainLooper()).postDelayed(() -> launchFirst(CARPLAY), 4000);
-        }
+        // Démarrage ou contact mis : animation « Bonjour » puis CarPlay tout seul.
+        handleWelcome(getIntent());
     }
 
     @Override
@@ -207,12 +241,24 @@ public class HomeActivity extends Activity {
     class HomeBridge {
 
         @JavascriptInterface
+        public void setSport(boolean on) {
+            AmbianceService a = AmbianceService.instance;
+            if (a != null) a.setSport(on);
+        }
+
+        @JavascriptInterface
         public String status() {
             try {
                 JSONObject o = new JSONObject();
                 AmbianceService a = AmbianceService.instance;
                 o.put("ambient", a == null ? -1 : Math.round(a.ambient * 100));
                 o.put("context", a == null ? "" : a.context);
+                if (a != null) {
+                    try {
+                        JSONObject x = new JSONObject(a.status());
+                        for (String k : new String[]{"speed", "power", "sport", "ledColor", "hp", "weather", "temp", "lat", "lon", "context", "ledLevel"}) if (x.has(k)) o.put(k, x.get(k));
+                    } catch (Exception ignored) { }
+                }
 
                 // iPhone connecté (Bluetooth audio ou téléphone)
                 boolean bt = false;
