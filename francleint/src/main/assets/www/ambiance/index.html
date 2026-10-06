@@ -95,6 +95,7 @@ footer { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1.25rem;
       <div class="row"><span>Phares</span><b id="lights">—</b></div>
       <div class="row"><span>Vitesse</span><b id="speed">—</b></div>
       <div class="row"><span>Boîtier LED</span><b id="ledState">—</b></div>
+      <div class="row"><span>Filtre de nuit</span><b id="dimTxt">—</b></div>
     </section>
   </main>
 
@@ -119,7 +120,10 @@ footer { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1.25rem;
     </div>
   </footer>
 
-  <button class="cta" id="allow" style="position:absolute; right:1.75rem; top:1.5rem; display:none">Autoriser la luminosité de l'écran</button>
+  <div style="position:absolute; right:1.75rem; top:1.5rem; display:flex; gap:.6rem">
+    <button class="cta" id="allowOverlay" style="display:none">Autoriser le filtre de nuit</button>
+    <button class="cta" id="allow" style="display:none">Autoriser la luminosité</button>
+  </div>
 </div>
 
 <div class="sheet" id="sheet">
@@ -163,7 +167,9 @@ function render() {
   $('sun').textContent = s.elevation != null ? (s.elevation >= 0 ? s.elevation + '° au-dessus' : (-s.elevation) + '° sous l\'horizon') : '—';
   $('wx').textContent = s.weather || '—';
   $('lights').textContent = s.lights ? 'allumés' : 'éteints';
-  $('speed').textContent = s.speed >= 0 ? s.speed + ' km/h' : 'pas de GPS';
+  $('speed').textContent = s.speed >= 0 ? s.speed + ' km/h' : (s.locOn === false ? 'localisation coupée' : 'en attente du signal GPS');
+  $('dimTxt').textContent = s.canOverlay === false ? 'à autoriser' : (s.dimOn === false ? 'désactivé' : (s.dim > 0 ? s.dim + ' %' : 'inactif (il fait clair)'));
+  $('allowOverlay').style.display = s.canOverlay === false ? 'block' : 'none';
   $('ledState').textContent = (s.ledName ? s.ledName + ' · ' : '') + (s.ledState || '—');
   var c = s.ledColor || '#000000', a = Math.max(.15, (s.ledLevel || 0) / 100);
   $('orb').style.background = 'radial-gradient(circle at 50% 50%, ' + c + ' 0%, ' + c + '55 35%, transparent 70%)';
@@ -195,6 +201,7 @@ document.addEventListener('click', function (e) {
   else if (t.id === 'closeSheet') { $('sheet').classList.remove('on'); }
   else if (t.id === 'rescan') { if (NATIVE) Amb.ledReset(); }
   else if (t.id === 'allow') { if (NATIVE) Amb.allowScreen(); }
+  else if (t.id === 'allowOverlay') { if (NATIVE) Amb.allowOverlay(); }
   else if (t.id === 'quit') { if (NATIVE) Amb.quit(); }
   render();
 });
