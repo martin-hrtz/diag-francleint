@@ -44,10 +44,26 @@ public class AmbianceService extends Service {
     static final int[] NIGHT = {20, 170, 85};      // nuit : vert sapin (version LED)
     static final int[] ROAD = {25, 70, 220};       // autoroute : bleu nuit
 
-    // Mode sport : réagit à l'ACCÉLÉRATION (réglé pour une Clio 4 0.9 TCe 75 ch, 0-100 en ~14,5 s)
-    static final double ACC_START = 0.30;  // m/s² : en dessous, conduite normale → rien ne change
-    static final double ACC_FULL = 1.80;   // m/s² : pied au plancher en 1re/2e → effet maximum
-    static final int[] POWER = {255, 20, 0};
+    // Mode sport : réagit à l'ACCÉLÉRATION (réglé pour une Clio 4 0.9 TCe 75 ch)
+    //   +1 km/h par seconde  → début de l'effet
+    //   +5 km/h par seconde  → rouge (≈ 2e/3e rapport à 5000 tr/min)
+    static final double ACC_START = 0.25;  // m/s²
+    static final double ACC_FULL = 1.40;   // m/s²
+    static final double HUE_BASE = 225;    // bleu en roulant
+    static final double HUE_SPAN = 135;    // bleu → violet → magenta → rouge (225° → 360°)
+
+    /** Couleur pure (jamais de blanc) à partir d'une teinte en degrés. */
+    static int[] hue(double h) {
+        h = ((h % 360) + 360) % 360;
+        double x = 1 - Math.abs((h / 60) % 2 - 1);
+        double r, g, b;
+        if (h < 60) { r = 1; g = x; b = 0; } else if (h < 120) { r = x; g = 1; b = 0; }
+        else if (h < 180) { r = 0; g = 1; b = x; } else if (h < 240) { r = 0; g = x; b = 1; }
+        else if (h < 300) { r = x; g = 0; b = 1; } else { r = 1; g = 0; b = x; }
+        return new int[]{(int) Math.round(r * 255), (int) Math.round(g * 255), (int) Math.round(b * 255)};
+    }
+
+    private volatile boolean sportActive = false;   // on roule, mode sport, rien de prioritaire
 
     private double lastGpsV = -1;          // dernière vitesse GPS (m/s)
     private long lastGpsT = 0;
@@ -149,8 +165,7 @@ public class AmbianceService extends Service {
                         long t = loc.getTime();
                         double dt = (t - lastGpsT) / 1000.0;
                         if (lastGpsV >= 0 && dt > 0.3 && dt < 3) {
-                            double a = (loc.getSpeed() - lastGpsV) / dt;
-                            accel = accel * 0.4 + a * 0.6;       // lisse les sauts du GPS
+                            accel = (loc.getSpeed() - lastGpsV) / dt;   // brut : aucun lissage = aucun retard ajouté
                             accelAt = System.currentTimeMillis();
                         }
                         lastGpsV = loc.getSpeed(); lastGpsT = t;
@@ -241,7 +256,7 @@ public class AmbianceService extends Service {
         }
         ambient = a;
 
-        double level = 0.06 + 0.94 * a;          // nuit 6 % → plein soleil 100 %
+        double level = 0.02 + 0.98 * a;          // nuit 2 % (minimum) → plein soleil 100 %
         int[] color;
         if (welcome) {
             color = WARM;
@@ -254,6 +269,9 @@ public class AmbianceService extends Service {
         } else if (parked) {
             color = parkColor();
             context = "à l'arrêt";
+        } else if (sport && (hasFix && speedKmh > 5 || sim.startsWith("acc"))) {
+            color = hue(HUE_BASE);                 // en roulant : bleu, l'accélération pousse vers le rouge
+            context = "conduite";
         } else if (highway) {
             color = ROAD;
             level = Math.min(level, 0.6);
@@ -265,11 +283,12 @@ public class AmbianceService extends Service {
             color = DAY;
             context = a < 0.5 ? "jour gris" : "jour";
         }
+        sportActive = "conduite".equals(context);
         targetColor = color;
         targetLevel = clamp(level, 0, 1);
 
         // Luminosité de l'écran : 12 % la nuit → 100 % en plein soleil
-        setScreen(0.12 + 0.88 * a);
+        setScreen(0.04 + 0.96 * a);
     }
 
     // ---------- Fondus, 10 fois par seconde ----------
@@ -280,18 +299,18 @@ public class AmbianceService extends Service {
             double k = blinker ? 1.0 : 0.30; // clignotant : instantané ; sinon fondu ≈ 0,1 s (invisible)
             int[] tc = blinker ? TURN : targetColor;
             double tl = blinker ? Math.max(targetLevel, 0.5) : targetLevel;
-            // Accélération : la lumière monte (et vire au rouge si on appuie fort)
+            // Accélération → teinte (bleu → violet → magenta → rouge), intensité inchangée
             long now = System.currentTimeMillis();
-            double acc = "acc1".equals(sim) ? 0.9 : "acc2".equals(sim) ? 2.0
-                    : (now - accelAt < 2500 ? accel : 0);
-            double want = sport && !blinker ? clamp((acc - ACC_START) / (ACC_FULL - ACC_START), 0, 1) : 0;
-            if (want > power) power = want;                           // monte instantanément
-            else power += (want - power) * 0.06;                      // redescend en ~0,5 s
-            if (power > 0.01) {
-                double top = ambient < 0.2 ? 0.55 : 1.0;                // la nuit on n'éblouit pas
-                tl = tl + (Math.max(top, tl) - tl) * power;
-                double r = Math.pow(power, 1.6) * 0.85;                   // le rouge n'arrive qu'en appuyant fort
-                tc = new int[]{(int) (tc[0] + (POWER[0] - tc[0]) * r), (int) (tc[1] + (POWER[1] - tc[1]) * r), (int) (tc[2] + (POWER[2] - tc[2]) * r)};
+            double acc = "acc1".equals(sim) ? 0.8 : "acc2".equals(sim) ? 1.6
+                    : (now - accelAt < 1300 ? accel : 0);
+            double want = sportActive && !blinker
+                    ? Math.pow(clamp((acc - ACC_START) / (ACC_FULL - ACC_START), 0, 1), 0.8) : 0;
+            // Glisse entre deux mesures GPS au lieu de sauter : tout le dégradé en ≈ 0,4 s
+            if (want > power) power = Math.min(want, power + 0.075);
+            else power = Math.max(want, power - 0.045);
+            if (sportActive && !blinker) {
+                tc = hue(HUE_BASE + HUE_SPAN * power);
+                k = 1.0;                                 // la teinte est déjà progressive : pas de mélange RGB (évite le blanc)
             }
             cr += (tc[0] - cr) * k;
             cg += (tc[1] - cg) * k;
@@ -342,13 +361,13 @@ public class AmbianceService extends Service {
     void setSport(boolean on) { sport = on; prefs.edit().putBoolean("sport", on).apply(); }
 
     private void setScreen(double v) {
-        // Le vrai rétroéclairage descend jusqu'à 30 % (le contraste reste bon).
+        // Le vrai rétroéclairage descend jusqu'à 25 % (le contraste reste bon).
         // En dessous, le filtre sombre prend le relais, seulement la nuit.
         boolean canWrite = Build.VERSION.SDK_INT < 23 || Settings.System.canWrite(this);
-        if (canWrite) targetDim = clamp((0.30 - v) / 0.30, 0, 1) * 0.55;
+        if (canWrite) targetDim = clamp((0.30 - v) / 0.30, 0, 1) * 0.70;
         else targetDim = clamp(1 - v, 0, 1) * 0.6;
         if (!canWrite) return;
-        v = Math.max(v, 0.30);
+        v = Math.max(v, 0.25);
         int target = (int) Math.round(clamp(v, 0.05, 1) * 255);
         if (lastScreen < 0) lastScreen = target;
         long now = System.currentTimeMillis();
