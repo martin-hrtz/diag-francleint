@@ -66,7 +66,9 @@ public class HomeActivity extends Activity {
     }
 
     private void handleWelcome(Intent i) {
-        boolean firstBoot = !autoLaunched && SystemClock.elapsedRealtime() < 5 * 60_000;
+        // Premier affichage de l'appli depuis son lancement : démarrage OU réveil après la veille
+        // (la veille « QuickBoot » de l'écran ferme francleint ; au réveil, Android le relance comme écran d'accueil).
+        boolean firstBoot = !autoLaunched;
         if (!(i != null && i.getBooleanExtra("welcome", false)) && !firstBoot) return;
         autoLaunched = true;
         if (i != null) i.removeExtra("welcome");

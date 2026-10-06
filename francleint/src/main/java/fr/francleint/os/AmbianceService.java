@@ -97,6 +97,9 @@ public class AmbianceService extends Service {
     private long lastGpsT = 0;
     private volatile double accel = 0;     // accélération mesurée (m/s²)
     private volatile long accelAt = 0;
+    // Anticipation : la mesure GPS décrit la seconde PASSÉE. On prolonge la tendance (jerk) pour estimer l'effort MAINTENANT.
+    private volatile double prevAccel = 0, jerk = 0, lastVm = 0;
+    private static final double LOOKAHEAD = 0.6;     // s gagnées sur le GPS (≈ moitié de l'intervalle + délai de la puce)
     private double power = 0;              // 0 → 1, lissé
     static final int[] TURN = {255, 100, 0};       // clignotant : orange
 
@@ -341,9 +344,12 @@ public class AmbianceService extends Service {
                         long t = loc.getTime();
                         double dt = (t - lastGpsT) / 1000.0;
                         if (lastGpsV >= 0 && dt > 0.3 && dt < 3) {
-                            accel = (loc.getSpeed() - lastGpsV) / dt;   // brut : aucun lissage = aucun retard ajouté
+                            double a = (loc.getSpeed() - lastGpsV) / dt;        // brut : aucun lissage = aucun retard ajouté
+                            jerk = (System.currentTimeMillis() - accelAt < 2500) ? clamp((a - accel) / dt, -6, 6) : 0;
+                            prevAccel = accel; accel = a;
                             accelAt = System.currentTimeMillis();
                             double vm = (loc.getSpeed() + lastGpsV) / 2;        // vitesse moyenne sur l'intervalle
+                            lastVm = loc.getSpeed();
                             effort = accel > 0 ? clamp(accel / aMax(vm), 0, 1) : 0;
                             estHp = accel > 0 ? (int) Math.round((MASS * accel + resist(vm)) * vm / ETA / 735.5) : 0;
                         }
@@ -470,6 +476,17 @@ public class AmbianceService extends Service {
         setScreen(0.04 + 0.96 * a);
     }
 
+    /** Effort estimé à l'instant présent : dernière mesure + tendance prolongée de LOOKAHEAD s (plafonnée, jamais d'effort inventé à l'arrêt). */
+    private double predictedEffort(long now) {
+        double since = (now - accelAt) / 1000.0;
+        double ahead = Math.min(since + LOOKAHEAD, 1.0);
+        double a = accel + jerk * ahead;
+        if (accel <= 0 && a > 0) a = Math.min(a, 0.8);           // reprise d'accélération : on anticipe, mais prudemment
+        a = clamp(a, Math.min(0, accel), Math.max(accel * 1.6, accel + 0.8));
+        double v = Math.max(lastVm + a * since, 0.5);
+        return a > 0 ? clamp(a / aMax(v), 0, 1) : 0;
+    }
+
     // ---------- Fondus, 10 fois par seconde ----------
 
     private final Runnable fade = new Runnable() {
@@ -481,7 +498,7 @@ public class AmbianceService extends Service {
             // Accélération → teinte (bleu → violet → magenta → rouge), intensité inchangée
             long now = System.currentTimeMillis();
             double eff = "acc1".equals(sim) ? 0.45 : "acc2".equals(sim) ? 0.9
-                    : (now - accelAt < 1300 ? effort : 0);
+                    : (now - accelAt < 1300 ? predictedEffort(now) : 0);
             double want = sportActive && !blinker
                     ? clamp((eff - EFFORT_START) / (EFFORT_RED - EFFORT_START), 0, 1) : 0;
             // Monte en glissant (≈ 0,4 s pour tout le dégradé), redescend doucement (≈ 2,5 s du rouge au bleu).
