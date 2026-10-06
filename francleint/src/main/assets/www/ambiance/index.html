@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ambiance francleint</title>
+<style>
+@font-face { font-family: "Inst"; src: url("../fonts/InstrumentSans.ttf") format("truetype"); font-weight: 400 700; font-stretch: 75% 100%; }
+:root {
+  --bg: #0A0F0C; --surface: #121915; --surface-2: #1C2520; --line: #212A25;
+  --ink: #EEF2EE; --ink-2: #9BA8A0; --accent: #2F5D46; --accent-hi: #86B896;
+  --ease: cubic-bezier(.22,1,.36,1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { font-size: calc(100vh / 45); }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Inst", system-ui, sans-serif; user-select: none; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; transition: transform 180ms var(--ease), background 180ms var(--ease); }
+button:active { transform: scale(.97); }
+
+.app { height: 100%; padding: 1.5rem 1.75rem 1.75rem; display: grid; grid-template-rows: 2.75rem minmax(0,1fr) auto; gap: 1.25rem;
+  background-image: radial-gradient(56rem 32rem at 12% 0%, rgba(80,140,104,.14), transparent 70%); }
+header { display: flex; align-items: center; justify-content: space-between; }
+.brand { font-size: 1.4rem; font-weight: 700; }
+.top-actions { display: flex; gap: .75rem; }
+.ghost { height: 2.75rem; padding: 0 1.1rem; border-radius: 999px; font-size: 1.15rem; font-weight: 600; color: var(--ink-2); border: 1px solid var(--line); }
+
+main { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 1.25rem; min-height: 0; }
+.hero { position: relative; border-radius: 1.75rem; background: var(--surface); border: 1px solid var(--line); padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+.orb { position: absolute; right: -6rem; top: -6rem; width: 26rem; height: 26rem; border-radius: 50%; transition: background 900ms var(--ease), opacity 900ms var(--ease); }
+.label { position: relative; font-size: 1.25rem; font-weight: 500; color: var(--ink-2); }
+.ctx { position: relative; font-size: 6.5rem; font-weight: 600; font-stretch: 75%; letter-spacing: -.02em; line-height: .95; text-transform: capitalize; }
+.levels { position: relative; display: flex; gap: 2.5rem; }
+.levels b { display: block; font-size: 3rem; font-weight: 600; font-stretch: 75%; font-variant-numeric: tabular-nums; }
+.levels span { font-size: 1.2rem; font-weight: 500; color: var(--ink-2); }
+
+.inputs { border-radius: 1.75rem; background: var(--surface); border: 1px solid var(--line); padding: .5rem 1.5rem; display: flex; flex-direction: column; justify-content: space-around; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.6rem; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row span { font-size: 1.2rem; font-weight: 500; color: var(--ink-2); }
+.row b { font-size: 1.3rem; font-weight: 600; text-align: right; }
+.bar { width: 9rem; height: .5rem; border-radius: .5rem; background: var(--surface-2); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 100%; background: var(--accent-hi); transform-origin: left; transition: transform 600ms var(--ease); }
+.with-bar { display: flex; align-items: center; gap: 1rem; }
+
+footer { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1.25rem; align-items: center; }
+.chips { display: flex; gap: .6rem; flex-wrap: wrap; }
+.chip { height: 3.4rem; padding: 0 1.25rem; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 1.15rem; font-weight: 600; }
+.chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.park { display: flex; align-items: center; gap: .6rem; }
+.park span { font-size: 1.1rem; color: var(--ink-2); margin-right: .25rem; }
+.sw { width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 2px solid transparent; }
+.sw.on { border-color: var(--ink); }
+.cta { height: 3.4rem; padding: 0 1.4rem; border-radius: 999px; background: var(--accent); color: #fff; font-size: 1.15rem; font-weight: 600; }
+
+.sheet { position: absolute; inset: 0; background: rgba(5,8,6,.86); display: none; align-items: center; justify-content: center; }
+.sheet.on { display: flex; }
+.panel { width: 52rem; max-height: 36rem; border-radius: 1.75rem; background: var(--surface); border: 1px solid var(--line); padding: 1.75rem; display: flex; flex-direction: column; gap: 1rem; }
+.panel h2 { font-size: 1.8rem; font-weight: 600; }
+.panel p { font-size: 1.1rem; color: var(--ink-2); }
+.list { overflow-y: auto; display: flex; flex-direction: column; gap: .5rem; }
+.dev { display: flex; justify-content: space-between; align-items: center; min-height: 3.2rem; padding: 0 1rem; border-radius: 1rem; background: var(--surface-2); font-size: 1.15rem; text-align: left; }
+.dev small { color: var(--ink-2); font-size: .95rem; }
+.mono { font-family: monospace; font-size: .95rem; color: var(--ink-2); word-break: break-all; }
+.panel-actions { display: flex; gap: .75rem; justify-content: flex-end; }
+@media (prefers-reduced-motion: reduce) { * { transition-duration: 1ms !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span class="brand">francleint · ambiance</span>
+    <div class="top-actions">
+      <button class="ghost" id="btBtn">Bluetooth</button>
+      <button class="ghost" id="quit">Fermer</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="Ce que font les LED">
+      <div class="orb" id="orb"></div>
+      <p class="label">En ce moment</p>
+      <p class="ctx" id="ctx">—</p>
+      <div class="levels">
+        <div><b id="led">—</b><span>LED</span></div>
+        <div><b id="screen">—</b><span>Écran</span></div>
+      </div>
+    </section>
+
+    <section class="inputs" aria-label="Ce que voit le moteur">
+      <div class="row"><span>Lumière dehors</span><div class="with-bar"><div class="bar"><i id="ambBar"></i></div><b id="amb">—</b></div></div>
+      <div class="row"><span>Soleil</span><b id="sun">—</b></div>
+      <div class="row"><span>Météo</span><b id="wx">—</b></div>
+      <div class="row"><span>Phares</span><b id="lights">—</b></div>
+      <div class="row"><span>Vitesse</span><b id="speed">—</b></div>
+      <div class="row"><span>Boîtier LED</span><b id="ledState">—</b></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="chips" id="chips">
+      <button class="chip" data-sim="auto">Auto</button>
+      <button class="chip" data-sim="soleil">Soleil</button>
+      <button class="chip" data-sim="pluie">Pluie</button>
+      <button class="chip" data-sim="nuit">Nuit</button>
+      <button class="chip" data-sim="autoroute">Autoroute</button>
+      <button class="chip" data-sim="arret">À l'arrêt</button>
+      <button class="chip" data-sim="appel">Appel</button>
+      <button class="chip" data-sim="accueil">Accueil</button>
+    </div>
+    <div class="park" id="park">
+      <span>À l'arrêt</span>
+      <button class="sw" data-c="#FFB070" style="background:#FFB070" aria-label="Blanc chaud"></button>
+      <button class="sw" data-c="#14AA55" style="background:#14AA55" aria-label="Vert"></button>
+      <button class="sw" data-c="#1946DC" style="background:#1946DC" aria-label="Bleu"></button>
+      <button class="sw" data-c="#9B5CFF" style="background:#9B5CFF" aria-label="Violet"></button>
+      <button class="sw" data-c="#FF3B30" style="background:#FF3B30" aria-label="Rouge"></button>
+    </div>
+  </footer>
+
+  <button class="cta" id="allow" style="position:absolute; right:1.75rem; top:1.5rem; display:none">Autoriser la luminosité de l'écran</button>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="panel">
+    <h2>Bluetooth</h2>
+    <p id="btInfo">Appareils vus autour de l'écran. Touche ton boîtier LED s'il n'a pas été trouvé tout seul. Ferme Lotus Lantern avant : le boîtier n'accepte qu'une connexion à la fois.</p>
+    <p class="mono" id="gatt"></p>
+    <div class="list" id="devices"></div>
+    <div class="panel-actions">
+      <button class="ghost" id="rescan">Rechercher à nouveau</button>
+      <button class="cta" id="closeSheet">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var NATIVE = typeof window.Amb !== 'undefined';
+var $ = function (id) { return document.getElementById(id); };
+var demo = { context: 'nuit', sim: 'auto', ambient: 4, elevation: -14, weather: 'pluie', lights: true, call: false, speed: 72, gps: true,
+  ledLevel: 8, ledColor: '#14AA55', screen: 15, canWrite: false, ledState: 'connecté', ledName: 'ELK-BLEDOM', ledReady: true, gatt: '', seen: [{ addr: 'BE:58:30:00:12:34', name: 'ELK-BLEDOM' }], park: '#FFB070' };
+
+function status() { try { return NATIVE ? JSON.parse(Amb.status()) : demo; } catch (e) { return {}; } }
+
+function render() {
+  var s = status();
+  $('ctx').textContent = s.context || '—';
+  $('led').textContent = s.ledLevel != null ? s.ledLevel + ' %' : '—';
+  $('screen').textContent = s.screen >= 0 ? s.screen + ' %' : 'auto';
+  $('amb').textContent = s.ambient != null ? s.ambient + ' %' : '—';
+  $('ambBar').style.transform = 'scaleX(' + ((s.ambient || 0) / 100) + ')';
+  $('sun').textContent = s.elevation != null ? (s.elevation >= 0 ? s.elevation + '° au-dessus' : (-s.elevation) + '° sous l\'horizon') : '—';
+  $('wx').textContent = s.weather || '—';
+  $('lights').textContent = s.lights ? 'allumés' : 'éteints';
+  $('speed').textContent = s.speed >= 0 ? s.speed + ' km/h' : 'pas de GPS';
+  $('ledState').textContent = (s.ledName ? s.ledName + ' · ' : '') + (s.ledState || '—');
+  var c = s.ledColor || '#000000', a = Math.max(.15, (s.ledLevel || 0) / 100);
+  $('orb').style.background = 'radial-gradient(circle at 50% 50%, ' + c + ' 0%, ' + c + '55 35%, transparent 70%)';
+  $('orb').style.opacity = a;
+  $('allow').style.display = s.canWrite === false ? 'block' : 'none';
+  [].forEach.call(document.querySelectorAll('.chip'), function (b) { b.classList.toggle('on', b.dataset.sim === (s.sim || 'auto')); });
+  [].forEach.call(document.querySelectorAll('.sw'), function (b) { b.classList.toggle('on', (s.park || '').toUpperCase() === b.dataset.c.toUpperCase()); });
+  if ($('sheet').classList.contains('on')) renderDevices(s);
+}
+
+function renderDevices(s) {
+  $('gatt').textContent = s.gatt ? 'Services du boîtier : ' + s.gatt : '';
+  var list = $('devices'), html = '';
+  (s.seen || []).forEach(function (d) {
+    html += '<button class="dev" data-addr="' + d.addr + '"><span>' + (d.name || 'sans nom') + '</span><small>' + d.addr + '</small></button>';
+  });
+  list.innerHTML = html || '<p class="label">Aucun appareil vu pour l\'instant…</p>';
+}
+
+document.addEventListener('click', function (e) {
+  var t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.sim) { NATIVE ? Amb.sim(t.dataset.sim) : (demo.sim = t.dataset.sim); }
+  else if (t.dataset.c) { NATIVE ? Amb.park(t.dataset.c) : (demo.park = t.dataset.c); }
+  else if (t.dataset.addr) { if (NATIVE) Amb.ledConnect(t.dataset.addr); $('sheet').classList.remove('on'); }
+  else if (t.id === 'btBtn') { $('sheet').classList.add('on'); renderDevices(status()); }
+  else if (t.id === 'closeSheet') { $('sheet').classList.remove('on'); }
+  else if (t.id === 'rescan') { if (NATIVE) Amb.ledReset(); }
+  else if (t.id === 'allow') { if (NATIVE) Amb.allowScreen(); }
+  else if (t.id === 'quit') { if (NATIVE) Amb.quit(); }
+  render();
+});
+
+render();
+setInterval(render, 500);
+</script>
+</body>
+</html>
