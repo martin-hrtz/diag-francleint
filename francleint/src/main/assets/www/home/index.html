@@ -77,6 +77,7 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
 .item b { display: block; font-size: 1.3rem; font-weight: 600; }
 .item span { display: block; margin-top: .2rem; font-size: 1.05rem; color: var(--ink-2); }
 .item svg { width: 1.5rem; height: 1.5rem; stroke: var(--ink-2); flex: none; }
+.pill { height: 2.6rem; padding: 0 1.1rem; border-radius: 999px; background: var(--accent); color: #fff; font-size: 1.05rem; font-weight: 600; display: inline-flex; align-items: center; flex: none; }
 .toggle { width: 3.5rem; height: 2rem; border-radius: 999px; background: var(--surface-2); position: relative; flex: none; transition: background 200ms var(--ease); }
 .toggle i { position: absolute; top: .25rem; left: .25rem; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--ink-2); transition: transform 200ms var(--ease), background 200ms var(--ease); }
 .toggle.on { background: var(--accent); }
@@ -165,6 +166,8 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
     <button class="item" data-open="bluetooth"><span><b>Bluetooth</b><span>Appareils connectés</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="home"><span><b>Écran d'accueil par défaut</b><span>Choisir francleint ou l'ancien</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="stock"><span><b>Ancien écran d'origine</b><span>Radio, réglages voiture du fabricant</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" id="upd"><span><b>Mises à jour</b><span id="updTxt">Vérifier</span></span><span class="pill" id="updBtn">Vérifier</span></button>
+    <button class="item" data-open="miravision"><span><b>Couleurs et contraste</b><span>MiraVision, le réglage caché de l'écran</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="android"><span><b>Réglages Android</b><span>Tous les paramètres</span></span><svg><use href="#i-chev"/></svg></button>
   </div>
 </section>
@@ -237,10 +240,22 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
     else if (t.dataset.open) { if (NATIVE) Home.open(t.dataset.open); }
     else if (t.dataset.media) { if (NATIVE) Home.media(t.dataset.media); setTimeout(refresh, 400); }
     else if (t.dataset.pkg) { if (NATIVE) Home.launch(t.dataset.pkg); }
+    else if (t.id === 'upd') { if (NATIVE) { if ($('updBtn').textContent === 'Installer') Home.updateInstall(); else Home.updateCheck(); updStart(); } }
     else if (t.id === 'autoCp') { var on = !$('autoCpT').classList.contains('on'); if (NATIVE) Home.setAutoCarplay(on); $('autoCpT').classList.toggle('on', on); }
   });
 
-  tick(); refresh();
+  var updTimer = null;
+  function updRefresh() {
+    if (!NATIVE) return;
+    var u = {}; try { u = JSON.parse(Home.updateStatus()); } catch (e) { }
+    var txt = u.state || ('Version 1.' + u.current);
+    if (u.progress >= 0) txt = 'Téléchargement… ' + u.progress + ' %';
+    $('updTxt').textContent = txt;
+    $('updBtn').textContent = u.available ? 'Installer' : 'Vérifier';
+  }
+  function updStart() { clearInterval(updTimer); updTimer = setInterval(updRefresh, 700); setTimeout(function () { clearInterval(updTimer); }, 120000); }
+
+  tick(); refresh(); updRefresh();
   setInterval(tick, 5000);
   setInterval(refresh, 2000);
 })();
