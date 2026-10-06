@@ -64,14 +64,15 @@ body[data-theme="day"] .hero, body[data-theme="day"] .tile, body[data-theme="day
 body[data-theme="day"] .switch.on::after { background: #fff; }
 body[data-theme="day"] .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21,17,.06); }
 button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
-button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+*:focus { outline: none !important; }
+button:focus { outline: none !important; }
 .num { font-stretch: 75%; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 
 /* ───── Coque : rail + vue ───── */
 .app { height: 100%; display: grid; grid-template-columns: 7.5rem minmax(0,1fr); grid-template-rows: 100%; }
 .rail { display: flex; flex-direction: column; align-items: stretch;  padding: var(--s-4) var(--s-2); border-right: 1px solid var(--line); background: var(--bg); }
-.mark { height: 3.25rem; display: grid; place-items: center; margin-bottom: var(--s-3); }
-.mark span { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 1.35rem; background: var(--surface-2); color: var(--ink);
+.mark { height: 3.25rem; display: flex; align-items: center; justify-content: center; margin-bottom: var(--s-3); }
+.mark span { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.35rem; background: var(--surface-2); color: var(--ink);
   box-shadow: 0 0 0 2px var(--live), 0 0 1.25rem -.25rem var(--live); transition: box-shadow var(--dur-slow) var(--ease-out); }
 .tab { height: 5.25rem; border-radius: var(--r-md); display: flex; flex-direction: column; align-items: center; justify-content: center;  color: var(--ink-3);
   font-size: 1rem; font-weight: 600; transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
