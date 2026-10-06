@@ -62,21 +62,24 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 .date { margin-top: .5rem; font-size: 1.4rem; font-weight: 500; color: var(--ink-2); }
 
 /* Instruments (passager) : jauge d'effort en arc, vitesse au centre */
-.gauge { position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; min-height: 0; }
-.gauge::before { content: ""; position: absolute; left: 50%; top: 50%; width: 30rem; height: 30rem; margin: -15rem 0 0 -15rem; border-radius: 50%;
+.gauge { position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1.5rem 1.75rem 1.25rem; min-height: 0; }
+.gauge::before { content: ""; position: absolute; left: 50%; top: 58%; width: 30rem; height: 30rem; margin: -15rem 0 0 -15rem; border-radius: 50%;
   background: radial-gradient(closest-side, var(--live), transparent 100%); opacity: var(--gop, .10); transition: opacity 500ms var(--ease), background 500ms var(--ease); pointer-events: none; }
-.ring { position: relative; width: 25rem; height: 25rem; flex: none; }
+.ring { position: relative; width: 21rem; height: 21rem; flex: none; margin-bottom: -.75rem; }
 .ring svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .ring .trk { fill: none; stroke: var(--surface-2); stroke-width: 10; stroke-linecap: round; }
 .ring .val { fill: none; stroke: var(--live); stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray 300ms var(--ease), stroke 500ms var(--ease); }
 .ring .tick { stroke: var(--line); stroke-width: 2; }
-.ring .mid { position: absolute; left: 0; right: 0; top: 50%; margin-top: -5.6rem; text-align: center; }
-.ring .spd { display: block; font-size: 8.5rem; font-weight: 600; font-stretch: 75%; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.ring .mid { position: absolute; left: 0; right: 0; top: 50%; margin-top: -4.6rem; text-align: center; }
+.ring .spd { display: block; font-size: 7rem; font-weight: 600; font-stretch: 75%; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
 .ring .unit { display: block; margin-top: .2rem; font-size: 1.15rem; font-weight: 600; color: var(--ink-2); letter-spacing: .04em; }
-.ring .foot { position: absolute; left: 0; right: 0; bottom: 2.6rem; text-align: center; }
-.ring .foot b { font-size: 2rem; font-weight: 600; font-stretch: 80%; font-variant-numeric: tabular-nums; }
-.ring .foot b small { font-size: 1.05rem; color: var(--ink-2); margin-left: .1rem; }
-.ring .foot span { display: block; margin-top: .15rem; font-size: .95rem; font-weight: 600; color: var(--ink-3); }
+.stats { position: relative; width: 100%; display: flex; }
+.stats div { flex: 1; min-width: 0; text-align: center; }
+.stats div + div { border-left: 1px solid var(--line); }
+.stats span { display: block; font-size: 1rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.stats b { display: block; margin-top: .3rem; font-size: 2.6rem; font-weight: 600; font-stretch: 75%; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stats b small { font-size: 1.1rem; font-weight: 600; color: var(--ink-2); margin-left: .15rem; }
+.stats .eff b { color: var(--live); transition: color 500ms var(--ease); }
 
 /* Bas gauche (conducteur) : CarPlay compact + mode sport */
 .dock { display: flex; min-width: 0; }
@@ -227,13 +230,17 @@ button:focus { outline: none !important; }
       </div>
     </div>
     <section class="gauge" aria-label="Ta conduite">
+      <div class="stats">
+        <div class="eff"><span>Effort moteur</span><b id="dEff">—</b></div>
+        <div><span>Puissance</span><b id="dHp">—</b></div>
+        <div><span>Couple aux roues</span><b id="dNm">—</b></div>
+      </div>
       <div class="ring">
         <svg viewBox="0 0 200 200" aria-hidden="true">
           <circle class="trk" cx="100" cy="100" r="88" stroke-dasharray="414.7 552.9" transform="rotate(135 100 100)"/>
           <circle class="val" id="dArc" cx="100" cy="100" r="88" stroke-dasharray="0 552.9" transform="rotate(135 100 100)"/>
         </svg>
         <div class="mid"><b class="spd" id="dSpeed">—</b><span class="unit">km/h</span></div>
-        <div class="foot"><b id="dEff">—</b><span id="dEffLbl">effort moteur</span></div>
       </div>
     </section>
     <div class="dock">
@@ -362,7 +369,11 @@ button:focus { outline: none !important; }
     var on = s.sport !== false, pw = on ? (s.power || 0) : 0;
     $('dSpeed').textContent = s.speed >= 0 ? s.speed : '—';
     $('dEff').innerHTML = on ? pw + '<small>%</small>' : 'off';
-    $('dEffLbl').textContent = on ? (s.hp > 0 ? '≈ ' + s.hp + ' ch' : 'effort moteur') : 'mode sport coupé';
+    // Puissance estimée (ch) → force aux roues → couple aux roues (rendement 0,85 · roue 185/65 R15 ≈ 0,31 m)
+    var v = (s.speed || 0) / 3.6, hp = on && s.hp > 0 ? s.hp : 0;
+    var nm = hp > 0 && v > 2 ? Math.round(hp * 735.5 * 0.85 / v * 0.31) : 0;
+    $('dHp').innerHTML = on ? hp + '<small>ch</small>' : '—';
+    $('dNm').innerHTML = on ? nm + '<small>N·m</small>' : '—';
     $('dArc').setAttribute('stroke-dasharray', (414.7 * pw / 100).toFixed(1) + ' 552.9');
     document.querySelector('.gauge').style.setProperty('--gop', (0.06 + 0.22 * pw / 100).toFixed(2));
     $('sportSw').classList.toggle('on', on);
