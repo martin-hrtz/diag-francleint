@@ -105,6 +105,12 @@ public class AmbianceActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void setSport(boolean on) {
+            AmbianceService s = AmbianceService.instance;
+            if (s != null) s.setSport(on);
+        }
+
+        @JavascriptInterface
         public void ledReset() {
             AmbianceService s = AmbianceService.instance;
             if (s != null) s.ledReset();
