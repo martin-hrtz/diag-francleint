@@ -8,14 +8,16 @@
 /* Base : maquette 1280×720, 1rem = 16 px à 720 px de haut */
 @font-face { font-family: "Inst"; src: url("../fonts/InstrumentSans.ttf") format("truetype"); font-weight: 400 700; font-stretch: 75% 100%; }
 :root {
-  --bg: #0A0F0C; --surface: #121915; --surface-2: #1C2520; --line: #212A25;
-  --ink: #EEF2EE; --ink-2: #9BA8A0; --accent: #2F5D46; --accent-hi: #86B896;
-  --glow: rgba(80,140,104,.16);
+  /* NUIT (défaut) — mêmes jetons que l'écran Ambiance */
+  --bg: #040706; --surface: #0A0F0C; --surface-2: #111813; --line: #18211B;
+  --ink: #C3CDC6; --ink-2: #7D8A82; --ink-3: #56625A; --accent: #2F6E4C; --accent-hi: #6FA787;
+  --live: #3F8F63; --glow: rgba(63,143,99,.10);
   --ease: cubic-bezier(.22,1,.36,1);
 }
 body.jour {
-  --bg: #ECEEEA; --surface: #FFFFFF; --surface-2: #E7ECE8; --line: #DADFD9;
-  --ink: #111915; --ink-2: #56625B; --accent-hi: #2F5D46; --glow: rgba(47,93,70,.07);
+  /* JOUR */
+  --bg: #EEF0EB; --surface: #FFFFFF; --surface-2: #E6EAE5; --line: #D8DED7;
+  --ink: #0E1511; --ink-2: #4A5750; --ink-3: #74817A; --accent: #2E7A52; --accent-hi: #2E7A52; --glow: rgba(46,122,82,.06);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html { font-size: calc(100vh / 45); }
@@ -29,40 +31,75 @@ svg { display: block; }
   background-image: radial-gradient(56rem 32rem at 12% 0%, var(--glow), transparent 70%); }
 .page.on { display: grid; }
 
-/* ACCUEIL */
-#home { grid-template-rows: 2.75rem minmax(0,1fr) 6.5rem; gap: 1.25rem; }
-header { display: flex; align-items: center; justify-content: space-between; }
-.brand { font-size: 1.375rem; font-weight: 700; letter-spacing: -.01em; }
-.status { display: flex; align-items: center; gap: 1.75rem; font-size: 1.25rem; font-weight: 500; color: var(--ink-2); }
-.status span { display: flex; align-items: center; gap: .625rem; }
-.status svg { width: 1.375rem; height: 1.375rem; stroke: var(--ink-2); }
-main { display: grid; grid-template-columns: minmax(0,7fr) minmax(0,5fr); gap: 1.25rem; min-height: 0; }
-.left { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; padding: .5rem .25rem 0; }
+/* ACCUEIL — Hallmark · macrostructure: Cockpit (rail + horloge + CarPlay + conduite) · même système que l'écran Ambiance */
+#home { padding: 0; display: none; background-image: none; }
+#home.on { display: block; }
+#home .rail { position: absolute; left: 0; top: 0; bottom: 0; width: 7.5rem; z-index: 5; background: var(--bg);
+  transition: transform 420ms cubic-bezier(.22,1,.36,1), opacity 420ms cubic-bezier(.22,1,.36,1); }
+#home .dash { position: absolute; inset: 0; padding-left: 8.75rem; transition: padding-left 420ms cubic-bezier(.22,1,.36,1); }
+body.full #home .rail { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+body.full #home .dash { padding-left: 1.75rem; }
+.rail { display: flex; flex-direction: column; gap: .75rem; padding: 1.25rem .75rem; border-right: 1px solid var(--line); }
+.mark { height: 3.25rem; display: grid; place-items: center; margin-bottom: .5rem; }
+.mark span { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 1.35rem; background: var(--surface-2); color: var(--ink);
+  box-shadow: 0 0 0 2px var(--live), 0 0 1.25rem -.25rem var(--live); transition: box-shadow 700ms var(--ease); }
+.tab { height: 4.6rem; border-radius: 1.1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3rem; color: var(--ink-3); font-size: .95rem; font-weight: 600; }
+.tab svg { width: 1.6rem; height: 1.6rem; stroke: currentColor; }
+.tab.on { background: var(--surface-2); color: var(--ink); }
+.tab:active { background: var(--surface-2); }
+body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21,17,.06); }
+
+.dash { min-width: 0; min-height: 0; padding: 1.25rem 1.75rem 1.25rem 1.25rem; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); grid-template-rows: minmax(0,1fr) auto; gap: 1.25rem;
+  background-image: radial-gradient(48rem 30rem at 0% 0%, var(--glow), transparent 70%); }
+.clockbox { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; padding: .25rem .25rem 0; }
+.status { display: flex; align-items: center; gap: 1.5rem; font-size: 1.1rem; font-weight: 500; color: var(--ink-2); }
+.status span { display: flex; align-items: center; gap: .5rem; }
+.status svg { width: 1.2rem; height: 1.2rem; stroke: var(--ink-2); }
 .hello { font-size: 1.5rem; font-weight: 500; color: var(--ink-2); }
-.clock { margin-top: .25rem; font-size: 11.5rem; font-weight: 500; font-stretch: 75%; letter-spacing: -.02em; line-height: .92; font-variant-numeric: tabular-nums; }
-.date { margin-top: .875rem; font-size: 1.5rem; font-weight: 500; color: var(--ink-2); }
-.now { height: 7rem; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 0 1.25rem; display: flex; align-items: center; gap: 1.125rem; }
-.art { width: 4.5rem; height: 4.5rem; border-radius: .875rem; background: var(--surface-2); display: grid; place-items: center; flex: none; }
-.art svg { width: 1.9rem; height: 1.9rem; stroke: var(--accent-hi); }
+.hello b { color: var(--ink); font-weight: 600; }
+.clock { margin-top: .25rem; font-size: 9.5rem; font-weight: 500; font-stretch: 75%; letter-spacing: -.02em; line-height: .9; font-variant-numeric: tabular-nums; }
+.date { margin-top: .5rem; font-size: 1.4rem; font-weight: 500; color: var(--ink-2); }
+.infos { margin-top: 1.75rem; display: flex; gap: 0; }
+.info { padding: 0 1.75rem; border-left: 1px solid var(--line); min-width: 0; }
+.info:first-child { padding-left: 0; border-left: 0; }
+.info span { display: flex; align-items: center; gap: .45rem; font-size: 1rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.info span svg { width: 1.15rem; height: 1.15rem; stroke: var(--ink-2); }
+.info b { display: flex; align-items: center; gap: .6rem; margin-top: .35rem; font-size: 2rem; font-weight: 600; font-stretch: 80%; line-height: 1; white-space: nowrap; }
+.info b small { font-size: 1.1rem; font-weight: 500; color: var(--ink-2); font-stretch: 100%; }
+.info b i { width: .9rem; height: .9rem; border-radius: 50%; background: var(--live); box-shadow: 0 0 .8rem var(--live); flex: none; }
+
+.now { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.art { width: 4.25rem; height: 4.25rem; border-radius: .9rem; background: var(--surface-2); display: grid; place-items: center; flex: none; }
+.art svg { width: 1.8rem; height: 1.8rem; stroke: var(--accent-hi); }
 .track { flex: 1; min-width: 0; }
-.track b { display: block; font-size: 1.5rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.track span { display: block; margin-top: .25rem; font-size: 1.25rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ctl { width: 4rem; height: 4rem; border-radius: 50%; display: grid; place-items: center; flex: none; }
-.ctl svg { width: 1.75rem; height: 1.75rem; stroke: var(--ink); }
-.play { width: 5rem; height: 5rem; background: var(--ink); }
-.play svg { stroke: var(--bg); width: 1.9rem; height: 1.9rem; }
-.carplay { position: relative; overflow: hidden; border-radius: 1.75rem; background: var(--accent); color: #fff; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; text-align: left; }
-.ring { position: absolute; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); }
-.carplay .ico { width: 2.75rem; height: 2.75rem; stroke: #fff; }
-.cp-bottom { display: flex; align-items: flex-end; justify-content: space-between; width: 100%; gap: 1rem; }
-.cp-title { display: block; font-size: 3.5rem; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
-.cp-sub { display: block; margin-top: .75rem; font-size: 1.25rem; font-weight: 500; color: rgba(255,255,255,.82); }
-.arrow { width: 4.75rem; height: 4.75rem; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; }
-.arrow svg { width: 1.9rem; height: 1.9rem; stroke: var(--accent); }
-nav { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); overflow: hidden; }
-nav button { display: flex; align-items: center; justify-content: center; gap: .875rem; font-size: 1.375rem; font-weight: 600; }
-nav button + button { border-left: 1px solid var(--line); }
-nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
+.track b { display: block; font-size: 1.4rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track span { display: block; margin-top: .2rem; font-size: 1.1rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ctl { width: 3.75rem; height: 3.75rem; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.ctl svg { width: 1.6rem; height: 1.6rem; stroke: var(--ink); }
+.play { width: 4.75rem; height: 4.75rem; background: var(--ink); }
+.play svg { stroke: var(--bg); width: 1.8rem; height: 1.8rem; }
+
+.carplay { position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--accent); color: #fff; padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; text-align: left; min-height: 0; }
+.carplay::before { content: ""; position: absolute; right: -30%; top: -45%; width: 30rem; height: 30rem; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 65%); pointer-events: none; }
+.carplay .ico { width: 2.5rem; height: 2.5rem; stroke: #fff; position: relative; }
+.cp-bottom { position: relative; display: flex; align-items: flex-end; justify-content: space-between; width: 100%; gap: 1rem; }
+.cp-title { display: block; font-size: 4.6rem; font-weight: 600; font-stretch: 85%; letter-spacing: -.02em; line-height: 1; }
+.cp-sub { display: block; margin-top: .6rem; font-size: 1.15rem; font-weight: 500; color: rgba(255,255,255,.8); }
+.arrow { width: 4.5rem; height: 4.5rem; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; }
+.arrow svg { width: 1.8rem; height: 1.8rem; stroke: var(--accent); }
+
+.drive { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem 1.1rem; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) auto; gap: 1rem; align-items: center; text-align: left; }
+.drive .st span { display: block; font-size: 1rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.drive .st { align-self: start; }
+.drive .st b { display: block; margin-top: .3rem; font-size: 2.6rem; font-weight: 600; font-stretch: 75%; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.drive .st b small { font-size: 1.1rem; color: var(--ink-2); margin-left: .1rem; font-weight: 600; }
+.drive .st i { display: block; margin-top: .55rem; height: .35rem; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.drive .st i em { display: block; height: 100%; border-radius: inherit; background: var(--live); transform-origin: left; transform: scaleX(0); transition: transform 500ms var(--ease); }
+.sport { display: flex; flex-direction: column; align-items: center; gap: .45rem; font-size: .95rem; font-weight: 600; color: var(--ink-2); }
+.sw2 { width: 4.5rem; height: 2.6rem; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); position: relative; transition: background 240ms var(--ease); }
+.sw2::after { content: ""; position: absolute; top: .3rem; left: .3rem; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--ink-2); transition: transform 240ms var(--ease), background 240ms var(--ease); }
+.sw2.on { background: var(--accent); border-color: var(--accent); }
+.sw2.on::after { transform: translateX(1.85rem); background: #fff; }
 
 /* PAGES INTERNES */
 .sub { grid-template-rows: 2.75rem minmax(0,1fr); gap: 1.25rem; }
@@ -83,6 +120,32 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
 .toggle.on { background: var(--accent); }
 .toggle.on i { transform: translateX(1.5rem); background: #fff; }
 @media (prefers-reduced-motion: reduce) { * { transition-duration: 1ms !important; } }
+
+/* ───── Bienvenue v3 : « Bonsoir Martin » qui se révèle comme une mise au point (flou → net, interlettrage qui se resserre),
+   un reflet de lumière passe sur le prénom, une lueur douce monte du bas. 3,4 s. ───── */
+#welcomeFx { position: fixed; inset: 0; z-index: 100; background: #030504; display: none; place-items: center; overflow: hidden; }
+#welcomeFx.on { display: grid; animation: hl-out 600ms cubic-bezier(.65,0,.35,1) 2850ms forwards; }
+#welcomeFx .hl-glow { position: absolute; left: 50%; bottom: -38rem; width: 80rem; height: 56rem; margin-left: -40rem; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(79,191,133,.42), rgba(79,191,133,.10) 55%, transparent 100%); opacity: 0; transform: translateY(6rem) scale(.85); }
+#welcomeFx.on .hl-glow { animation: hl-glow 2600ms cubic-bezier(.22,1,.36,1) 80ms forwards; }
+#welcomeFx .hl-stage { position: relative; }
+#welcomeFx .hl-word { font-size: 8.5rem; font-weight: 600; font-stretch: 75%; line-height: 1; white-space: nowrap; color: #EDF2EE;
+  letter-spacing: .14em; opacity: 0; filter: blur(16px); transform: translateY(.8rem); }
+#welcomeFx.on .hl-word { animation: hl-focus 1400ms cubic-bezier(.16,1,.3,1) 220ms forwards; }
+#welcomeFx .hl-word .g { color: #87958D; font-weight: 500; }
+#welcomeFx .hl-word .n { background: linear-gradient(100deg, #EDF2EE 0%, #EDF2EE 40%, #FFFFFF 48%, #BFF0D4 50%, #FFFFFF 52%, #EDF2EE 60%, #EDF2EE 100%);
+  background-size: 300% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent; }
+#welcomeFx.on .hl-word .n { animation: hl-sheen 1300ms cubic-bezier(.65,0,.35,1) 1250ms forwards; }
+#welcomeFx .hl-brand { position: absolute; left: 0; right: 0; bottom: 2.5rem; text-align: center; font-size: 1.1rem; font-weight: 600; letter-spacing: .04em; color: #4F5B53; opacity: 0; }
+#welcomeFx.on .hl-brand { animation: hl-fade 900ms ease-out 1400ms forwards; }
+@keyframes hl-focus { to { opacity: 1; filter: blur(0); letter-spacing: -.02em; transform: translateY(0); } }
+@keyframes hl-sheen { to { background-position: 0% 0; } }
+@keyframes hl-glow { 45% { opacity: 1; } to { opacity: .75; transform: translateY(0) scale(1); } }
+@keyframes hl-fade { to { opacity: 1; } }
+@keyframes hl-out { to { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  #welcomeFx.on .hl-word, #welcomeFx.on .hl-word .n, #welcomeFx.on .hl-glow, #welcomeFx.on .hl-brand { animation-duration: 1ms; animation-delay: 0ms; }
+}
 </style>
 </head>
 <body>
@@ -106,45 +169,54 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
 
 <!-- ACCUEIL -->
 <section class="page on" id="home">
-  <header>
-    <span class="brand">francleint</span>
-    <div class="status">
-      <span id="stPhone"><svg><use href="#i-bt"/></svg><em id="stPhoneTxt" style="font-style:normal">iPhone</em></span>
-      <span id="stWifi"><svg><use href="#i-wifi"/></svg><em id="stWifiTxt" style="font-style:normal">—</em></span>
-    </div>
-  </header>
-  <main>
-    <div class="left">
+  <nav class="rail" aria-label="Raccourcis">
+    <div class="mark"><span>f</span></div>
+    <button class="tab on" data-page="home"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></svg>Accueil</button>
+    <button class="tab" data-open="radio"><svg><use href="#i-radio"/></svg>Radio</button>
+    <button class="tab" data-open="camera"><svg><use href="#i-cam"/></svg>Caméra</button>
+    <button class="tab" data-open="ambiance"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>Ambiance</button>
+    <button class="tab" data-page="apps"><svg><use href="#i-apps"/></svg>Applis</button>
+    <div style="flex:1"></div>
+    <button class="tab" data-page="settings"><svg><use href="#i-gear"/></svg>Réglages</button>
+  </nav>
+  <div class="dash">
+    <div class="clockbox">
+      <div class="status">
+        <span id="stPhone"><svg><use href="#i-bt"/></svg><em id="stPhoneTxt" style="font-style:normal">iPhone</em></span>
+        <span id="stWifi"><svg><use href="#i-wifi"/></svg><em id="stWifiTxt" style="font-style:normal">—</em></span>
+      </div>
       <div>
-        <p class="hello" id="hello">Bonjour Martin</p>
+        <p class="hello" id="hello">Bonjour <b>Martin</b></p>
         <p class="clock" id="clock">--:--</p>
         <p class="date" id="date"></p>
+        <div class="infos">
+          <div class="info"><span><svg id="wxIco" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>Météo</span><b id="iWx">—</b></div>
+          <div class="info"><span><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 3v3M4.9 8.9 7 11M19.1 8.9 17 11"/></svg><em id="iSunLbl" style="font-style:normal">Soleil</em></span><b id="iSun">—</b></div>
+          <div class="info"><span>Ambiance</span><b><i></i><em id="iCtx" style="font-style:normal">—</em></b></div>
+        </div>
       </div>
-      <section class="now" aria-label="Lecture en cours">
-        <div class="art"><svg><use href="#i-note"/></svg></div>
-        <div class="track"><b id="title">Rien en lecture</b><span id="artist">Lance CarPlay pour écouter</span></div>
-        <button class="ctl" data-media="prev" aria-label="Morceau précédent"><svg><use href="#i-prev"/></svg></button>
-        <button class="ctl play" data-media="play" aria-label="Lecture ou pause"><svg><use id="playIcon" href="#i-playtri"/></svg></button>
-        <button class="ctl" data-media="next" aria-label="Morceau suivant"><svg><use href="#i-next"/></svg></button>
-      </section>
     </div>
     <button class="carplay" data-open="carplay">
-      <span class="ring" style="right:-7.5rem;top:-7.5rem;width:22.5rem;height:22.5rem" aria-hidden="true"></span>
-      <span class="ring" style="right:-3.75rem;top:-3.75rem;width:15rem;height:15rem;border-color:rgba(255,255,255,.16)" aria-hidden="true"></span>
-      <span class="ring" style="right:0;top:0;width:7.5rem;height:7.5rem;border-color:rgba(255,255,255,.22)" aria-hidden="true"></span>
-      <svg class="ico"><use href="#i-screen"/></svg>
+      <span></span>
       <span class="cp-bottom">
-        <span><span class="cp-title">CarPlay</span><span class="cp-sub">Musique · GPS · Appels</span></span>
+        <span><span class="cp-title">CarPlay</span></span>
         <span class="arrow"><svg><use href="#i-arrow"/></svg></span>
       </span>
     </button>
-  </main>
-  <nav aria-label="Raccourcis">
-    <button data-open="radio"><svg><use href="#i-radio"/></svg>Radio</button>
-    <button data-open="camera"><svg><use href="#i-cam"/></svg>Caméra</button>
-    <button data-page="apps"><svg><use href="#i-apps"/></svg>Applis</button>
-    <button data-page="settings"><svg><use href="#i-gear"/></svg>Réglages</button>
-  </nav>
+    <section class="now" aria-label="Lecture en cours">
+      <div class="art"><svg><use href="#i-note"/></svg></div>
+      <div class="track"><b id="title">Rien en lecture</b><span id="artist">Lance CarPlay pour écouter</span></div>
+      <button class="ctl" data-media="prev" aria-label="Morceau précédent"><svg><use href="#i-prev"/></svg></button>
+      <button class="ctl play" data-media="play" aria-label="Lecture ou pause"><svg><use id="playIcon" href="#i-playtri"/></svg></button>
+      <button class="ctl" data-media="next" aria-label="Morceau suivant"><svg><use href="#i-next"/></svg></button>
+    </section>
+    <section class="drive" aria-label="Ta conduite">
+      <div class="st"><span>Vitesse</span><b id="dSpeed">—</b></div>
+      <div class="st"><span>Effort moteur</span><b id="dEff">—</b><i><em id="dEffBar"></em></i></div>
+      <div class="st"><span>Lumière</span><b id="dAmb">—</b></div>
+      <div class="sport"><button class="sw2" id="sportSw" aria-label="Mode sport"></button>Mode sport</div>
+    </section>
+  </div>
 </section>
 
 <!-- APPLIS -->
@@ -181,6 +253,7 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
 
   function show(id) {
     current = id;
+    if (id !== 'home') document.body.classList.remove('full'); else wake();
     [].forEach.call(document.querySelectorAll('.page'), function (p) { p.classList.toggle('on', p.id === id); });
     if (id === 'apps') loadApps();
   }
@@ -192,11 +265,34 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
     var d = new Date(), h = d.getHours();
     $('clock').textContent = pad(h) + ':' + pad(d.getMinutes());
     $('date').textContent = JOURS[d.getDay()] + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()];
-    $('hello').textContent = (h >= 18 || h < 5 ? 'Bonsoir' : 'Bonjour') + ' Martin';
+    $('hello').innerHTML = (h >= 5 && h < 12 ? 'Bonjour' : h >= 12 && h < 18 ? 'Bon après-midi' : 'Bonsoir') + ' <b>Martin</b>';
   }
 
+  // Lever / coucher du soleil (formules NOAA simplifiées, hors ligne)
+  function sunTimes(lat, lon, d) {
+    var start = new Date(d.getFullYear(), 0, 0), n = Math.floor((d - start) / 864e5);
+    var g = 2 * Math.PI / 365 * (n - 1);
+    var eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+    var dec = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+    var la = lat * Math.PI / 180;
+    var ha = Math.acos(Math.cos(90.833 * Math.PI / 180) / (Math.cos(la) * Math.cos(dec)) - Math.tan(la) * Math.tan(dec)) * 180 / Math.PI;
+    function at(min) { return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0) + min * 60000); }
+    return { rise: at(720 - 4 * (lon + ha) - eq), set: at(720 - 4 * (lon - ha) - eq) };
+  }
+
+  // Barre de gauche : disparaît après 8 s sans toucher, un toucher la fait revenir (ce toucher ne déclenche rien d'autre)
+  var idleT = null;
+  function wake() { document.body.classList.remove('full'); clearTimeout(idleT); idleT = setTimeout(function () { if (current === 'home') document.body.classList.add('full'); }, 8000); }
+  var swallow = false;
+  document.addEventListener('pointerdown', function (e) {
+    if (document.body.classList.contains('full') && current === 'home') { swallow = true; e.preventDefault(); }
+    wake();
+  }, true);
+  document.addEventListener('click', function (e) { if (swallow) { swallow = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  wake();
+
   function status() {
-    if (!NATIVE) return { ambient: 60, phone: true, wifi: '5 GHz', mediaAllowed: false, autoCarplay: true };
+    if (!NATIVE) { var q = location.search; return { weather: /night/.test(q) ? 'pluie' : 'dégagé', temp: /night/.test(q) ? 9 : 17, lat: 47.24, lon: 6.02, context: /night/.test(q) ? 'conduite' : 'jour', ambient: /night/.test(q) ? 4 : 60, phone: true, wifi: '5 GHz', mediaAllowed: true, title: 'Nuit blanche', artist: 'Lomepal', playing: true, autoCarplay: true, speed: 72, power: /night/.test(q) ? 62 : 18, sport: true, ledColor: /night/.test(q) ? '#9B2BFF' : '#2B5BFF' }; }
     try { return JSON.parse(Home.status()); } catch (e) { return {}; }
   }
 
@@ -205,6 +301,27 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
     var h = new Date().getHours();
     var jour = s.ambient >= 0 ? s.ambient >= 25 : (h >= 8 && h < 19);
     document.body.classList.toggle('jour', jour);
+    if (s.ledColor) document.documentElement.style.setProperty('--live', s.ledColor);
+    $('dSpeed').innerHTML = s.speed >= 0 ? s.speed + '<small>km/h</small>' : '—';
+    $('dEff').innerHTML = s.sport === false ? 'off' : (s.power || 0) + '<small>%</small>';
+    $('dEffBar').style.transform = 'scaleX(' + ((s.sport === false ? 0 : (s.power || 0)) / 100) + ')';
+    $('dAmb').innerHTML = s.ambient >= 0 ? s.ambient + '<small>%</small>' : '—';
+    $('sportSw').classList.toggle('on', s.sport !== false);
+    var wx = (s.weather || '').toLowerCase();
+    $('iWx').innerHTML = (s.temp != null ? s.temp + '°' : '—') + (wx && wx.indexOf('indispo') < 0 && wx !== 'inconnue' ? ' <small>' + wx.charAt(0).toUpperCase() + wx.slice(1) + '</small>' : '');
+    var night = h < 7 || h >= 20;
+    $('wxIco').innerHTML = /pluie|bruine|orage|averse/.test(wx) ? '<path d="M7 15a4 4 0 1 1 1-7.9A5 5 0 0 1 18 9a3.5 3.5 0 0 1-.5 7H7z"/><path d="M9 19l-1 2M13 19l-1 2M17 19l-1 2"/>'
+      : /nuag|couvert|brouill/.test(wx) ? '<path d="M7 18a4 4 0 1 1 1-7.9A5 5 0 0 1 18 11a3.5 3.5 0 0 1-.5 7H7z"/>'
+      : night ? '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'
+      : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M5 19l1.4-1.4M17.6 6.4 19 5"/>';
+    if (s.lat != null) {
+      var t = sunTimes(s.lat, s.lon, new Date()), now = new Date();
+      var up = now > t.rise && now < t.set;
+      $('iSunLbl').textContent = up ? 'Coucher du soleil' : 'Lever du soleil';
+      var nx = up ? t.set : (now < t.rise ? t.rise : sunTimes(s.lat, s.lon, new Date(now.getTime() + 864e5)).rise);
+      $('iSun').textContent = pad(nx.getHours()) + ':' + pad(nx.getMinutes());
+    }
+    $('iCtx').textContent = s.context ? s.context.charAt(0).toUpperCase() + s.context.slice(1) : '—';
     $('stPhoneTxt').textContent = s.phone ? 'iPhone' : 'Pas de téléphone';
     $('stWifi').style.display = s.wifi ? 'flex' : 'none';
     $('stWifiTxt').textContent = s.wifi || '';
@@ -240,6 +357,7 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
     else if (t.dataset.media) { if (NATIVE) Home.media(t.dataset.media); setTimeout(refresh, 400); }
     else if (t.dataset.pkg) { if (NATIVE) Home.launch(t.dataset.pkg); }
     else if (t.id === 'upd') { if (NATIVE) { if ($('updBtn').textContent === 'Installer') Home.updateInstall(); else Home.updateCheck(); updStart(); } }
+    else if (t.id === 'sportSw') { var sp = !t.classList.contains('on'); if (NATIVE) Home.setSport(sp); t.classList.toggle('on', sp); }
     else if (t.id === 'autoCp') { var on = !$('autoCpT').classList.contains('on'); if (NATIVE) Home.setAutoCarplay(on); $('autoCpT').classList.toggle('on', on); }
   });
 
@@ -257,6 +375,31 @@ nav svg { width: 1.875rem; height: 1.875rem; stroke: var(--accent-hi); }
   tick(); refresh(); updRefresh();
   setInterval(tick, 5000);
   setInterval(refresh, 2000);
+})();
+</script>
+
+<!-- Bienvenue -->
+<div id="welcomeFx" aria-hidden="true">
+  <div class="hl-glow"></div>
+  <div class="hl-stage">
+    <div class="hl-word" id="hlWord"></div>
+  </div>
+  <p class="hl-brand">francleint</p>
+</div>
+<script>
+(function () {
+  var NAME = 'Martin';
+  function greet() {
+    var h = new Date().getHours();
+    return h >= 5 && h < 12 ? 'Bonjour' : h >= 12 && h < 18 ? 'Bon après-midi' : 'Bonsoir';
+  }
+  window.welcome = function () {
+    var el = document.getElementById('welcomeFx');
+    document.getElementById('hlWord').innerHTML = '<span class="g">' + greet() + '</span> <span class="n">' + NAME + '</span>';
+    el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+    setTimeout(function () { el.classList.remove('on'); }, 3500);
+  };
+  if (/[?&]welcome=1/.test(location.search)) window.welcome();
 })();
 </script>
 </body>
