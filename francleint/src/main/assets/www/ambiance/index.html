@@ -95,6 +95,7 @@ footer { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 1.2
       <div class="row"><span>Météo</span><b id="wx">—</b></div>
       <div class="row"><span>Phares</span><b id="lights">—</b></div>
       <div class="row"><span>Vitesse</span><b id="speed">—</b></div>
+      <div class="row"><span>Mode sport (couleur selon la vitesse)</span><button class="chip" id="sportBtn">—</button></div>
       <div class="row"><span>Boîtier LED</span><b id="ledState">—</b></div>
       <div class="row"><span>Filtre de nuit</span><b id="dimTxt">—</b></div>
     </section>
@@ -111,6 +112,10 @@ footer { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 1.2
       <button class="chip" data-sim="appel">Appel</button>
       <button class="chip" data-sim="accueil">Accueil</button>
       <button class="chip" data-sim="clignotant">Clignotant</button>
+      <button class="chip" data-sim="v30">30 km/h</button>
+      <button class="chip" data-sim="v50">50 km/h</button>
+      <button class="chip" data-sim="v90">90 km/h</button>
+      <button class="chip" data-sim="v130">130 km/h</button>
     </div>
     <div class="park">
       <span>Test LED</span>
@@ -178,6 +183,7 @@ function render() {
   $('wx').textContent = s.weather || '—';
   $('lights').textContent = s.lights ? 'allumés' : 'éteints';
   $('speed').textContent = s.speed >= 0 ? s.speed + ' km/h' : (s.locOn === false ? 'localisation coupée' : 'en attente du signal GPS');
+  var sb = $('sportBtn'); sb.textContent = s.sport === false ? 'coupé' : 'activé'; sb.classList.toggle('on', s.sport !== false); sb.dataset.on = s.sport === false ? '0' : '1';
   $('dimTxt').textContent = s.canOverlay === false ? 'à autoriser' : (s.dimOn === false ? 'désactivé' : (s.dim > 0 ? s.dim + ' %' : 'inactif (il fait clair)'));
   $('allowOverlay').style.display = s.canOverlay === false ? 'block' : 'none';
   $('ledState').textContent = (s.ledName ? s.ledName + ' · ' : '') + (s.ledState || '—');
@@ -210,6 +216,7 @@ document.addEventListener('click', function (e) {
   else if (t.dataset.addr) { if (NATIVE) Amb.ledConnect(t.dataset.addr); $('sheet').classList.remove('on'); }
   else if (t.id === 'btBtn') { $('sheet').classList.add('on'); renderDevices(status()); }
   else if (t.id === 'closeSheet') { $('sheet').classList.remove('on'); }
+  else if (t.id === 'sportBtn') { var on = t.dataset.on !== '1'; NATIVE ? Amb.setSport(on) : (demo.sport = on); }
   else if (t.id === 'rescan') { if (NATIVE) Amb.ledReset(); }
   else if (t.id === 'allow') { if (NATIVE) Amb.allowScreen(); }
   else if (t.id === 'allowOverlay') { if (NATIVE) Amb.allowOverlay(); }
