@@ -18,6 +18,25 @@ android {
         versionName "1.${buildNumber}"
     }
 
+    // Clé de signature FIXE (fournie par les secrets GitHub) : indispensable pour que
+    // le bouton « Mises à jour » de l'appli puisse installer par-dessus l'ancienne version.
+    signingConfigs {
+        fixe {
+            def ks = System.getenv('FR_KEYSTORE')
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv('FR_KS_PASS')
+                keyAlias 'francleint'
+                keyPassword System.getenv('FR_KS_PASS')
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            if (System.getenv('FR_KEYSTORE')) signingConfig signingConfigs.fixe
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
