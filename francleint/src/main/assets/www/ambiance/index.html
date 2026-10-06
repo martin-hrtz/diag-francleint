@@ -180,7 +180,7 @@ function render() {
   $('sun').textContent = s.elevation != null ? (s.elevation >= 0 ? s.elevation + '° au-dessus' : (-s.elevation) + '° sous l\'horizon') : '—';
   $('wx').textContent = s.weather || '—';
   $('lights').textContent = s.lights ? 'allumés' : 'éteints';
-  $('speed').textContent = s.speed >= 0 ? s.speed + ' km/h' + (s.power > 0 ? ' · boost ' + s.power + ' %' : '') : (s.locOn === false ? 'localisation coupée' : 'en attente du signal GPS');
+  $('speed').textContent = s.speed >= 0 ? s.speed + ' km/h' + (s.hp > 0 ? ' · ≈ ' + s.hp + ' ch' : '') + (s.power > 0 ? ' · effort ' + s.power + ' %' : '') : (s.locOn === false ? 'localisation coupée' : 'en attente du signal GPS');
   var sb = $('sportBtn'); sb.textContent = s.sport === false ? 'coupé' : 'activé'; sb.classList.toggle('on', s.sport !== false); sb.dataset.on = s.sport === false ? '0' : '1';
   $('dimTxt').textContent = s.canOverlay === false ? 'à autoriser' : (s.dimOn === false ? 'désactivé' : (s.dim > 0 ? s.dim + ' %' : 'inactif (il fait clair)'));
   $('allowOverlay').style.display = s.canOverlay === false ? 'block' : 'none';
