@@ -5,159 +5,346 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ambiance francleint</title>
 <style>
+/* Hallmark · macrostructure: Cockpit (side-rail + live hero + gauge tiles) · nav: N3 side-rail · footer: none (écran embarqué)
+ * genre: atmospheric · theme: custom (vibe: "habitacle de nuit, vert sapin, la lumière des LED comme seul accent")
+ * paper ≈ oklch(15% .012 160) · accent = couleur réelle des LED (dynamique) · display: Instrument Sans condensé · body: Instrument Sans
+ * axes: dark / grotesk-condensed / chromatic-green · motion: crossfade d'onglet · lueur des LED · toggle
+ * Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4
+ * Note : couleurs en hex (équivalents OKLCH en commentaire) — la WebView Android 9 de l'écran ne lit pas oklch().
+ */
 @font-face { font-family: "Inst"; src: url("../fonts/InstrumentSans.ttf") format("truetype"); font-weight: 400 700; font-stretch: 75% 100%; }
 :root {
-  --bg: #0A0F0C; --surface: #121915; --surface-2: #1C2520; --line: #212A25;
-  --ink: #EEF2EE; --ink-2: #9BA8A0; --accent: #2F5D46; --accent-hi: #86B896;
-  --ease: cubic-bezier(.22,1,.36,1);
+  --bg:        #0A0F0D; /* oklch(15% .012 160) */
+  --surface:   #111814; /* oklch(19% .014 160) */
+  --surface-2: #18211C; /* oklch(23% .016 160) */
+  --line:      #222C26; /* oklch(27% .014 160) */
+  --ink:       #EDF2EE; /* oklch(95% .008 160) */
+  --ink-2:     #A3B0A8; /* oklch(73% .018 160) */
+  --ink-3:     #6E7C74; /* oklch(56% .02 160) */
+  --brand:     #3F8F63; /* oklch(58% .11 155) — vert francleint */
+  --warn:      #E9A23B; /* oklch(76% .14 70) */
+  --live:      #14AA55; /* couleur actuelle des LED, mise à jour en direct */
+  --font: "Inst", system-ui, sans-serif;
+  --r-lg: 1.5rem; --r-md: 1.1rem; --r-pill: 999px;
+  --s-1: .5rem; --s-2: .75rem; --s-3: 1rem; --s-4: 1.25rem; --s-5: 1.75rem; --s-6: 2.25rem;
+  --ease-out: cubic-bezier(.22,1,.36,1); --ease-in-out: cubic-bezier(.65,0,.35,1);
+  --dur-fast: 160ms; --dur: 240ms; --dur-slow: 700ms;
+}
+/* NUIT : encore plus sombre, textes adoucis (pas de blanc pur qui éblouit), lueur des LED discrète */
+body[data-theme="night"] {
+  --bg:        #040706; /* oklch(10% .008 160) */
+  --surface:   #0A0F0C; /* oklch(14% .01 160) */
+  --surface-2: #111813; /* oklch(18% .012 160) */
+  --line:      #18211B; /* oklch(22% .012 160) */
+  --ink:       #C3CDC6; /* oklch(83% .012 160) — pas de blanc pur la nuit */
+  --ink-2:     #7D8A82; /* oklch(60% .016 160) */
+  --ink-3:     #56625A; /* oklch(46% .016 160) */
+  --brand:     #2F6E4C; /* oklch(48% .09 155) */
+  --glow-op: .22;
+}
+/* JOUR : papier clair, lisible en plein soleil, contrastes forts */
+body[data-theme="day"] {
+  --bg:        #EEF0EB; /* oklch(95% .006 130) */
+  --surface:   #FFFFFF;
+  --surface-2: #E6EAE5; /* oklch(93% .008 140) */
+  --line:      #D8DED7; /* oklch(89% .01 140) */
+  --ink:       #0E1511; /* oklch(18% .015 160) */
+  --ink-2:     #4A5750; /* oklch(43% .018 160) */
+  --ink-3:     #74817A; /* oklch(57% .016 160) */
+  --brand:     #2E7A52; /* oklch(52% .11 155) */
+  --warn:      #B86E0E; /* oklch(58% .14 65) */
+  --glow-op: .16;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { font-size: calc(100vh / 45); }
-html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Inst", system-ui, sans-serif; user-select: none; }
-button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; transition: transform 180ms var(--ease), background 180ms var(--ease); }
-button:active { transform: scale(.97); }
+html { font-size: calc(100vh / 45); overflow-x: clip; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--font); user-select: none; }
+body { transition: background-color 900ms var(--ease-out), color 900ms var(--ease-out); }
+.rail, .hero, .tile, .card, .sim, .panel, .simbar { transition: background-color 900ms var(--ease-out), border-color 900ms var(--ease-out); }
+body[data-theme="day"] .hero, body[data-theme="day"] .tile, body[data-theme="day"] .card { box-shadow: 0 1px 2px rgba(14,21,17,.05); }
+body[data-theme="day"] .switch.on::after { background: #fff; }
+body[data-theme="day"] .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21,17,.06); }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.num { font-stretch: 75%; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 
-.app { height: 100%; padding: 1.5rem 1.75rem 1.75rem; display: grid; grid-template-rows: 2.75rem minmax(0,1fr) auto; gap: 1.25rem;
-  background-image: radial-gradient(56rem 32rem at 12% 0%, rgba(80,140,104,.14), transparent 70%); }
-header { display: flex; align-items: center; justify-content: space-between; }
-.brand { font-size: 1.4rem; font-weight: 700; }
-.top-actions { display: flex; gap: .75rem; }
-.ghost { height: 2.75rem; padding: 0 1.1rem; border-radius: 999px; font-size: 1.15rem; font-weight: 600; color: var(--ink-2); border: 1px solid var(--line); }
+/* ───── Coque : rail + vue ───── */
+.app { height: 100%; display: grid; grid-template-columns: 7.5rem minmax(0,1fr); grid-template-rows: 100%; }
+.rail { display: flex; flex-direction: column; align-items: stretch; gap: var(--s-2); padding: var(--s-4) var(--s-2); border-right: 1px solid var(--line); background: var(--bg); }
+.mark { height: 3.25rem; display: grid; place-items: center; margin-bottom: var(--s-3); }
+.mark span { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 1.35rem; background: var(--surface-2); color: var(--ink);
+  box-shadow: 0 0 0 2px var(--live), 0 0 1.25rem -.25rem var(--live); transition: box-shadow var(--dur-slow) var(--ease-out); }
+.tab { height: 5.25rem; border-radius: var(--r-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35rem; color: var(--ink-3);
+  font-size: 1rem; font-weight: 600; transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
+.tab svg { width: 1.75rem; height: 1.75rem; }
+.tab:active { background: var(--surface-2); }
+.tab.on { background: var(--surface-2); color: var(--ink); }
+.rail .grow { flex: 1; }
+.tab .dot { position: relative; }
+.tab .dot::after { content: ""; position: absolute; right: -.15rem; top: -.15rem; width: .6rem; height: .6rem; border-radius: 50%; background: var(--ink-3); box-shadow: 0 0 0 2px var(--bg); }
+.tab .dot.ok::after { background: var(--brand); }
+.tab .dot.ko::after { background: var(--warn); }
 
-main { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 1.25rem; min-height: 0; }
-.hero { position: relative; border-radius: 1.75rem; background: var(--surface); border: 1px solid var(--line); padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
-.orb { position: absolute; right: -6rem; top: -6rem; width: 26rem; height: 26rem; border-radius: 50%; transition: background 900ms var(--ease), opacity 900ms var(--ease); }
-.label { position: relative; font-size: 1.25rem; font-weight: 500; color: var(--ink-2); }
-.ctx { position: relative; font-size: 6.5rem; font-weight: 600; font-stretch: 75%; letter-spacing: -.02em; line-height: .95; text-transform: capitalize; }
-.levels { position: relative; display: flex; gap: 2.5rem; }
-.levels b { display: block; font-size: 3rem; font-weight: 600; font-stretch: 75%; font-variant-numeric: tabular-nums; }
-.levels span { font-size: 1.2rem; font-weight: 500; color: var(--ink-2); }
+.view { height: 100%; min-width: 0; min-height: 0; padding: var(--s-4) var(--s-5) var(--s-4) var(--s-4); display: none; }
+.view.on { display: grid; animation: in var(--dur) var(--ease-out); }
+@keyframes in { from { opacity: 0; } to { opacity: 1; } }
 
-.inputs { border-radius: 1.75rem; background: var(--surface); border: 1px solid var(--line); padding: .5rem 1.5rem; display: flex; flex-direction: column; justify-content: space-around; }
-.row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.6rem; border-bottom: 1px solid var(--line); }
-.row:last-child { border-bottom: 0; }
-.row span { font-size: 1.2rem; font-weight: 500; color: var(--ink-2); }
-.row b { font-size: 1.3rem; font-weight: 600; text-align: right; }
-.bar { width: 9rem; height: .5rem; border-radius: .5rem; background: var(--surface-2); overflow: hidden; }
-.bar i { display: block; height: 100%; width: 100%; background: var(--accent-hi); transform-origin: left; transition: transform 600ms var(--ease); }
-.with-bar { display: flex; align-items: center; gap: 1rem; }
+/* ───── Bandeau simulation ───── */
+.simbar { display: none; align-items: center; justify-content: space-between; gap: var(--s-3); height: 3.5rem; padding: 0 .5rem 0 var(--s-4); border-radius: var(--r-pill);
+  background: var(--surface-2); border: 1px solid var(--warn); }
+.simbar.on { display: flex; }
+.simbar p { font-size: 1.15rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.simbar p span { color: var(--warn); }
 
-footer { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 1.25rem; align-items: center; }
-.chips .chip { padding: 0 1rem; }
-.chips { display: flex; gap: .6rem; flex-wrap: wrap; }
-.chip { height: 3.4rem; padding: 0 1.25rem; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 1.15rem; font-weight: 600; }
-.chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.park { display: flex; align-items: center; gap: .6rem; }
-.park span { font-size: 1.1rem; color: var(--ink-2); margin-right: .25rem; }
-.sw { width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 2px solid transparent; }
-.sw.on { border-color: var(--ink); }
-.cta { height: 3.4rem; padding: 0 1.4rem; border-radius: 999px; background: var(--accent); color: #fff; font-size: 1.15rem; font-weight: 600; }
+/* ───── Vue Direct ───── */
+#v-live { grid-template-rows: auto minmax(0,1fr) auto; gap: var(--s-4); }
+#v-live:not(.simulating) { grid-template-rows: minmax(0,1fr) auto; }
+.live { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); gap: var(--s-4); min-height: 0; }
 
-.sheet { position: absolute; inset: 0; background: rgba(5,8,6,.86); display: none; align-items: center; justify-content: center; }
-.sheet.on { display: flex; }
-.panel { width: 52rem; max-height: 36rem; border-radius: 1.75rem; background: var(--surface); border: 1px solid var(--line); padding: 1.75rem; display: flex; flex-direction: column; gap: 1rem; }
-.panel h2 { font-size: 1.8rem; font-weight: 600; }
+.hero { position: relative; overflow: hidden; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); padding: var(--s-5);
+  display: grid; grid-template-rows: auto minmax(0,1fr) auto; }
+.hero .glow { position: absolute; inset: auto -30% -55% auto; width: 34rem; height: 34rem; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at center, var(--live) 0%, transparent 62%); opacity: var(--glow-op, .3); transition: background var(--dur-slow) var(--ease-out), opacity var(--dur-slow) var(--ease-out); }
+.eyebrow { position: relative; display: flex; align-items: center; gap: var(--s-2); font-size: 1.15rem; font-weight: 500; color: var(--ink-2); }
+.eyebrow i { width: .75rem; height: .75rem; border-radius: 50%; background: var(--live); box-shadow: 0 0 .75rem var(--live); transition: background var(--dur-slow) var(--ease-out); }
+.ctx { position: relative; align-self: center; font-size: 6.25rem; font-weight: 650; font-stretch: 75%; line-height: .92; letter-spacing: -.025em; overflow-wrap: anywhere; min-width: 0; }
+.ctx::first-letter { text-transform: uppercase; }
+.hero-foot { position: relative; display: flex; gap: var(--s-6); }
+.kv b { display: block; font-size: 2.6rem; font-weight: 600; line-height: 1; }
+.kv span { display: block; margin-top: .35rem; font-size: 1.05rem; font-weight: 500; color: var(--ink-2); }
+
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); grid-template-rows: repeat(2, minmax(0,1fr)); gap: var(--s-4); min-height: 0; }
+.tile { border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); padding: var(--s-4); display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+.tile span { font-size: 1.1rem; font-weight: 500; color: var(--ink-2); }
+.tile b { font-size: 3.4rem; font-weight: 600; line-height: 1; }
+.tile b small { font-size: 1.4rem; font-weight: 600; color: var(--ink-2); margin-left: .15rem; }
+.tile em { font-style: normal; font-size: 1rem; font-weight: 500; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+.switch.sm { width: 3.9rem; height: 2.3rem; }
+.switch.sm::after { width: 1.6rem; height: 1.6rem; }
+.switch.sm.on::after { transform: translateX(1.6rem); }
+.meter { height: .45rem; border-radius: var(--r-pill); background: var(--surface-2); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 100%; border-radius: inherit; background: var(--ink-2); transform-origin: left; transform: scaleX(0); transition: transform 500ms var(--ease-out); }
+.meter.live i { background: var(--live); }
+
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: var(--s-4); padding: 0 var(--s-2); }
+.fact span { display: block; font-size: 1rem; font-weight: 500; color: var(--ink-3); }
+.fact b { display: block; margin-top: .2rem; font-size: 1.25rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ───── Vue Réglages ───── */
+#v-set { grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--s-4); align-content: start; }
+.card { border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); padding: var(--s-2) var(--s-4); }
+.card h2 { font-size: 1.05rem; font-weight: 600; color: var(--ink-3); padding: var(--s-3) 0 var(--s-1); }
+.row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); min-height: 5rem; padding: .85rem 0; border-top: 1px solid var(--line); }
+.card h2 + .row { border-top: 0; }
+.row .t { min-width: 0; }
+.row .t b { display: block; font-size: 1.3rem; font-weight: 600; }
+.row .t span { display: block; margin-top: .2rem; font-size: 1rem; color: var(--ink-2); }
+.switch { flex: none; width: 4.75rem; height: 2.75rem; border-radius: var(--r-pill); background: var(--surface-2); border: 1px solid var(--line); position: relative; transition: background var(--dur) var(--ease-out); }
+.switch::after { content: ""; position: absolute; top: .3rem; left: .3rem; width: 2rem; height: 2rem; border-radius: 50%; background: var(--ink-2); transition: transform var(--dur) var(--ease-out), background var(--dur) var(--ease-out); }
+.switch.on { background: var(--brand); border-color: var(--brand); }
+.switch.on::after { transform: translateX(2rem); background: #fff; }
+.seg { flex: none; display: flex; gap: .3rem; padding: .3rem; border-radius: var(--r-pill); background: var(--surface-2); }
+.seg button { min-width: 3.5rem; height: 2.75rem; padding: 0 var(--s-3); border-radius: var(--r-pill); font-size: 1.15rem; font-weight: 600; color: var(--ink-2); transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
+.seg button.on { background: var(--ink); color: var(--bg); }
+.swatches { flex: none; display: flex; gap: .6rem; }
+.sw { width: 3rem; height: 3rem; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out); }
+.sw:active { transform: scale(.94); }
+.sw.on { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink); }
+.btn { flex: none; height: 3.25rem; padding: 0 var(--s-4); border-radius: var(--r-pill); font-size: 1.15rem; font-weight: 600; background: var(--surface-2); border: 1px solid var(--line); white-space: nowrap; }
+.btn:active { background: var(--line); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+.state { flex: none; font-size: 1.15rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+
+/* ───── Vue Tester ───── */
+#v-test { grid-template-rows: auto auto auto; gap: var(--s-4); align-content: start; }
+.hint { font-size: 1.1rem; color: var(--ink-2); }
+.sims { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: var(--s-2); }
+.sim { height: 4.25rem; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); font-size: 1.2rem; font-weight: 600; padding: 0 var(--s-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background var(--dur-fast) var(--ease-out); }
+.sim:active { background: var(--surface-2); }
+.sim.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.ledtest { display: flex; align-items: center; gap: var(--s-4); }
+.ledtest .sw { width: 3.75rem; height: 3.75rem; }
+
+/* ───── Feuille Bluetooth ───── */
+.sheet { position: fixed; inset: 0; background: rgba(4,7,5,.72); display: none; align-items: center; justify-content: center; z-index: 10; }
+.sheet.on { display: flex; animation: in var(--dur) var(--ease-out); }
+.panel { width: 54rem; max-height: 38rem; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); padding: var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }
+.panel h2 { font-size: 1.9rem; font-weight: 650; font-stretch: 85%; }
 .panel p { font-size: 1.1rem; color: var(--ink-2); }
-.list { overflow-y: auto; display: flex; flex-direction: column; gap: .5rem; }
-.dev { display: flex; justify-content: space-between; align-items: center; min-height: 3.2rem; padding: 0 1rem; border-radius: 1rem; background: var(--surface-2); font-size: 1.15rem; text-align: left; }
-.dev small { color: var(--ink-2); font-size: .95rem; }
-.mono { font-family: monospace; font-size: .95rem; color: var(--ink-2); word-break: break-all; }
-.test { display: flex; align-items: center; gap: .6rem; }
-.test span { font-size: 1.1rem; color: var(--ink-2); }
-.panel-actions { display: flex; gap: .75rem; justify-content: flex-end; }
-@media (prefers-reduced-motion: reduce) { * { transition-duration: 1ms !important; } }
+.list { overflow-y: auto; display: flex; flex-direction: column; gap: var(--s-1); min-height: 0; }
+.dev { display: flex; justify-content: space-between; align-items: center; min-height: 3.75rem; padding: 0 var(--s-4); border-radius: var(--r-md); background: var(--surface-2); font-size: 1.2rem; font-weight: 600; text-align: left; }
+.dev small { color: var(--ink-3); font-size: 1rem; font-weight: 500; }
+.mono { font-family: monospace; font-size: .95rem; color: var(--ink-3); word-break: break-all; }
+.panel-actions { display: flex; gap: var(--s-2); justify-content: flex-end; }
+
+@media (prefers-reduced-motion: reduce) { *, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; } }
 </style>
 </head>
-<body>
+<body data-theme="night">
 <div class="app">
-  <header>
-    <span class="brand">francleint · ambiance</span>
-    <div class="top-actions">
-      <button class="ghost" id="btBtn">Bluetooth</button>
-      <button class="ghost" id="quit">Fermer</button>
+
+  <nav class="rail" aria-label="Sections">
+    <div class="mark"><span>f</span></div>
+    <button class="tab on" data-view="live" aria-label="Direct">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      Direct
+    </button>
+    <button class="tab" data-view="set" aria-label="Réglages">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      Réglages
+    </button>
+    <button class="tab" data-view="test" aria-label="Tester">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/></svg>
+      Tester
+    </button>
+    <div class="grow"></div>
+    <button class="tab" id="btBtn" aria-label="Bluetooth">
+      <svg class="dot" id="btDot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 4V3l5 4L7 17"/></svg>
+      LED
+    </button>
+    <button class="tab" id="quit" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      Fermer
+    </button>
+  </nav>
+
+  <!-- DIRECT -->
+  <main class="view on" id="v-live">
+    <div class="simbar" id="simbar">
+      <p>Simulation en cours : <span id="simName">—</span></p>
+      <button class="btn primary" data-sim="auto">Revenir en Auto</button>
     </div>
-  </header>
 
-  <main>
-    <section class="hero" aria-label="Ce que font les LED">
-      <div class="orb" id="orb"></div>
-      <p class="label">En ce moment</p>
-      <p class="ctx" id="ctx">—</p>
-      <div class="levels">
-        <div><b id="led">—</b><span>LED</span></div>
-        <div><b id="screen">—</b><span>Écran</span></div>
-      </div>
-    </section>
+    <div class="live">
+      <section class="hero" aria-label="Ce que font les LED">
+        <div class="glow" id="glow"></div>
+        <p class="eyebrow"><i></i>En ce moment</p>
+        <p class="ctx" id="ctx">—</p>
+        <div class="hero-foot">
+          <div class="kv"><b class="num" id="led">—</b><span>LED</span></div>
+          <div class="kv"><b class="num" id="screen">—</b><span>Écran</span></div>
+        </div>
+      </section>
 
-    <section class="inputs" aria-label="Ce que voit le moteur">
-      <div class="row"><span>Lumière dehors</span><div class="with-bar"><div class="bar"><i id="ambBar"></i></div><b id="amb">—</b></div></div>
-      <div class="row"><span>Soleil</span><b id="sun">—</b></div>
-      <div class="row"><span>Météo</span><b id="wx">—</b></div>
-      <div class="row"><span>Phares</span><b id="lights">—</b></div>
-      <div class="row"><span>Vitesse</span><b id="speed">—</b></div>
-      <div class="row"><span>Mode sport (réagit à l'accélération)</span><button class="chip" id="sportBtn">—</button></div>
-      <div class="row"><span>Boîtier LED</span><b id="ledState">—</b></div>
-      <div class="row"><span>Filtre de nuit</span><b id="dimTxt">—</b></div>
+      <section class="tiles" aria-label="Ce que voit l'appli">
+        <div class="tile">
+          <span>Lumière dehors</span>
+          <b class="num" id="amb">—</b>
+          <div class="meter"><i id="ambBar"></i></div>
+        </div>
+        <div class="tile">
+          <span>Vitesse</span>
+          <b class="num" id="speed">—</b>
+          <em id="speedSub">—</em>
+        </div>
+        <div class="tile">
+          <div class="tile-head"><span>Effort moteur</span><button class="switch sm" id="sportBtn2" aria-label="Mode sport"></button></div>
+          <b class="num" id="effort">—</b>
+          <div class="meter live"><i id="effBar"></i></div>
+        </div>
+        <div class="tile">
+          <span>Filtre de nuit</span>
+          <b class="num" id="dim">—</b>
+          <em id="dimSub">—</em>
+        </div>
+      </section>
+    </div>
+
+    <section class="facts" aria-label="Détails">
+      <div class="fact"><span>Phares</span><b id="lights">—</b></div>
+      <div class="fact"><span>Météo</span><b id="wx">—</b></div>
+      <div class="fact"><span>Soleil</span><b id="sun">—</b></div>
+      <div class="fact"><span>Boîtier LED</span><b id="ledState">—</b></div>
     </section>
   </main>
 
-  <footer>
-    <div class="chips" id="chips">
-      <button class="chip" data-sim="auto">Auto</button>
-      <button class="chip" data-sim="soleil">Soleil</button>
-      <button class="chip" data-sim="pluie">Pluie</button>
-      <button class="chip" data-sim="nuit">Nuit</button>
-      <button class="chip" data-sim="autoroute">Autoroute</button>
-      <button class="chip" data-sim="arret">À l'arrêt</button>
-      <button class="chip" data-sim="appel">Appel</button>
-      <button class="chip" data-sim="accueil">Accueil</button>
-      <button class="chip" data-sim="clignotant">Clignotant</button>
-      <button class="chip" data-sim="acc1">Accélération</button>
-      <button class="chip" data-sim="acc2">Plein gaz</button>
-    </div>
-    <div class="park">
-      <span>Test LED</span>
-      <button class="sw" data-test="#FF0000" style="background:#FF0000" aria-label="Test rouge"></button>
-      <button class="sw" data-test="#00FF00" style="background:#00FF00" aria-label="Test vert"></button>
-      <button class="sw" data-test="#0000FF" style="background:#0000FF" aria-label="Test bleu"></button>
-      <button class="chip" data-proto="0">A</button>
-      <button class="chip" data-proto="1">B</button>
-    </div>
-    <div class="park" id="park">
-      <span>À l'arrêt</span>
-      <button class="sw" data-c="#FFB070" style="background:#FFB070" aria-label="Blanc chaud"></button>
-      <button class="sw" data-c="#14AA55" style="background:#14AA55" aria-label="Vert"></button>
-      <button class="sw" data-c="#1946DC" style="background:#1946DC" aria-label="Bleu"></button>
-      <button class="sw" data-c="#9B5CFF" style="background:#9B5CFF" aria-label="Violet"></button>
-      <button class="sw" data-c="#FF3B30" style="background:#FF3B30" aria-label="Rouge"></button>
-    </div>
-  </footer>
+  <!-- RÉGLAGES -->
+  <main class="view" id="v-set">
+    <section class="card">
+      <h2>Conduite</h2>
+      <div class="row">
+        <div class="t"><b>Mode sport</b><span>Bleu en roulant, vire au rouge quand tu pousses le moteur</span></div>
+        <button class="switch" id="sportBtn" aria-label="Mode sport"></button>
+      </div>
+      <div class="row">
+        <div class="t"><b>Réveil à l'arrivée</b><span>L'écran s'allume quand ton iPhone arrive près de la voiture</span></div>
+        <button class="switch" id="wakeBtn" aria-label="Réveil à l'arrivée"></button>
+      </div>
+      <div class="row">
+        <div class="t"><b>Distance de réveil</b><span id="rssiTxt">Mets-toi à 1,5 m de la voiture et touche Régler</span></div>
+        <button class="btn" id="calib">Régler</button>
+      </div>
+      <div class="row">
+        <div class="t"><b>Couleur à l'arrêt</b><span>Après 1 minute immobile</span></div>
+        <div class="swatches" id="park">
+          <button class="sw" data-c="#FFB070" style="background:#FFB070" aria-label="Blanc chaud"></button>
+          <button class="sw" data-c="#14AA55" style="background:#14AA55" aria-label="Vert"></button>
+          <button class="sw" data-c="#1946DC" style="background:#1946DC" aria-label="Bleu"></button>
+          <button class="sw" data-c="#9B5CFF" style="background:#9B5CFF" aria-label="Violet"></button>
+          <button class="sw" data-c="#FF3B30" style="background:#FF3B30" aria-label="Rouge"></button>
+        </div>
+      </div>
+    </section>
 
-  <div style="position:absolute; right:1.75rem; top:1.5rem; display:flex; gap:.6rem">
-    <button class="cta" id="allowOverlay" style="display:none">Autoriser le filtre de nuit</button>
-    <button class="cta" id="allow" style="display:none">Autoriser la luminosité</button>
-  </div>
+    <section class="card">
+      <h2>Écran et boîtier</h2>
+      <div class="row">
+        <div class="t"><b>Luminosité automatique</b><span id="allowTxt">Réglée selon l'heure et la météo</span></div>
+        <button class="btn primary" id="allow" style="display:none">Autoriser</button>
+        <span class="state" id="allowOk">active</span>
+      </div>
+      <div class="row">
+        <div class="t"><b>Filtre de nuit</b><span id="overlayTxt">Assombrit l'écran sous le minimum</span></div>
+        <button class="btn primary" id="allowOverlay" style="display:none">Autoriser</button>
+        <span class="state" id="overlayOk">actif</span>
+      </div>
+      <div class="row">
+        <div class="t"><b>Langage du boîtier LED</b><span>Si les LED ne réagissent pas, essaie l'autre</span></div>
+        <div class="seg"><button data-proto="0">A</button><button data-proto="1">B</button></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- TESTER -->
+  <main class="view" id="v-test">
+    <p class="hint">Simule une situation pour voir les LED réagir. Pense à remettre <b>Auto</b> avant de partir.</p>
+    <div class="sims">
+      <button class="sim" data-sim="auto">Auto</button>
+      <button class="sim" data-sim="soleil">Soleil</button>
+      <button class="sim" data-sim="pluie">Pluie</button>
+      <button class="sim" data-sim="nuit">Nuit</button>
+      <button class="sim" data-sim="autoroute">Autoroute</button>
+      <button class="sim" data-sim="arret">À l'arrêt</button>
+      <button class="sim" data-sim="appel">Appel</button>
+      <button class="sim" data-sim="accueil">Accueil</button>
+      <button class="sim" data-sim="clignotant">Clignotant</button>
+      <button class="sim" data-sim="acc1">Accélération</button>
+      <button class="sim" data-sim="acc2">Plein gaz</button>
+    </div>
+    <section class="card">
+      <div class="row" style="border-top:0">
+        <div class="t"><b>Tester le boîtier LED</b><span>Impose une couleur 8 secondes</span></div>
+        <div class="ledtest">
+          <button class="sw" data-test="#FF0000" style="background:#FF0000" aria-label="Test rouge"></button>
+          <button class="sw" data-test="#00FF00" style="background:#00FF00" aria-label="Test vert"></button>
+          <button class="sw" data-test="#0000FF" style="background:#0000FF" aria-label="Test bleu"></button>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
 
+<!-- BLUETOOTH -->
 <div class="sheet" id="sheet">
   <div class="panel">
-    <h2>Bluetooth</h2>
-    <p id="btInfo">Appareils vus autour de l'écran. Touche ton boîtier LED s'il n'a pas été trouvé tout seul. Ferme Lotus Lantern avant : le boîtier n'accepte qu'une connexion à la fois.</p>
-    <div class="test">
-      <span>Test</span>
-      <button class="chip" data-test="#FF0000">Rouge</button>
-      <button class="chip" data-test="#00FF00">Vert</button>
-      <button class="chip" data-test="#0000FF">Bleu</button>
-      <span style="margin-left:auto">Langage</span>
-      <button class="chip" data-proto="0">A</button>
-      <button class="chip" data-proto="1">B</button>
-    </div>
-    <p class="label" id="testHint">Touche Rouge : si rien ne change en 2 s, passe en langage B et réessaie.</p>
+    <h2>Boîtier LED</h2>
+    <p>Appareils vus autour de l'écran. Touche ton boîtier s'il n'a pas été trouvé tout seul. Ferme Lotus Lantern avant : le boîtier n'accepte qu'une connexion à la fois.</p>
     <p class="mono" id="gatt"></p>
     <div class="list" id="devices"></div>
     <div class="panel-actions">
-      <button class="ghost" id="rescan">Rechercher à nouveau</button>
-      <button class="cta" id="closeSheet">OK</button>
+      <button class="btn" id="rescan">Rechercher à nouveau</button>
+      <button class="btn primary" id="closeSheet">OK</button>
     </div>
   </div>
 </div>
@@ -165,56 +352,92 @@ footer { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 1.2
 <script>
 var NATIVE = typeof window.Amb !== 'undefined';
 var $ = function (id) { return document.getElementById(id); };
-var demo = { context: 'nuit', sim: 'auto', ambient: 4, elevation: -14, weather: 'pluie', lights: true, call: false, speed: 72, gps: true,
-  ledLevel: 8, ledColor: '#14AA55', screen: 15, canWrite: false, ledState: 'connecté', ledName: 'ELK-BLEDOM', ledReady: true, gatt: '', seen: [{ addr: 'BE:58:30:00:12:34', name: 'ELK-BLEDOM' }], park: '#FFB070' };
+var SIMS = { soleil: 'Soleil', pluie: 'Pluie', nuit: 'Nuit', autoroute: 'Autoroute', arret: 'À l\'arrêt', appel: 'Appel', accueil: 'Accueil', clignotant: 'Clignotant', acc1: 'Accélération', acc2: 'Plein gaz' };
+var demo = { wakeOnPhone: true, wakeRssi: -65, rssi: -127, context: 'conduite', sim: 'auto', ambient: 4, elevation: -14, weather: 'pluie', lights: true, speed: 72, hp: 48, power: 62, sport: true,
+  ledLevel: 2, ledColor: '#9B2BFF', screen: 25, canWrite: true, canOverlay: true, dimOn: true, dim: 58, proto: 0,
+  ledState: 'connecté', ledName: 'ELK-BLEDOM', ledReady: true, gatt: '', seen: [{ addr: 'BE:58:30:00:12:34', name: 'ELK-BLEDOM' }], park: '#FFB070' };
+try { var q = new URLSearchParams(location.search); if (q.get('view')) setTimeout(function () { show(q.get('view')); }, 0); if (q.get('sim')) demo.sim = q.get('sim'); if (q.get('day')) { demo.ambient = 82; demo.lights = false; demo.dim = 0; demo.ledLevel = 82; demo.screen = 90; demo.weather = 'soleil'; demo.elevation = 34; demo.ledColor = '#2B5BFF'; demo.power = 18; } if (q.get('sheet')) setTimeout(function () { $('sheet').classList.add('on'); renderDevices(demo); }, 0); } catch (e) {}
 
 function status() { try { return NATIVE ? JSON.parse(Amb.status()) : demo; } catch (e) { return {}; } }
+function pct(v) { return v != null && v >= 0 ? v + '<small>%</small>' : '—'; }
+function set(id, html) { var el = $(id); if (el.innerHTML !== html) el.innerHTML = html; }
+
+function show(v) {
+  [].forEach.call(document.querySelectorAll('.view'), function (el) { el.classList.toggle('on', el.id === 'v-' + v); });
+  [].forEach.call(document.querySelectorAll('.tab[data-view]'), function (el) { el.classList.toggle('on', el.dataset.view === v); });
+}
 
 function render() {
   var s = status();
-  $('ctx').textContent = s.context || '—';
-  $('led').textContent = s.ledLevel != null ? s.ledLevel + ' %' : '—';
-  $('screen').textContent = s.screen >= 0 ? s.screen + ' %' : 'auto';
-  $('amb').textContent = s.ambient != null ? s.ambient + ' %' : '—';
+  var c = s.ledColor || '#3F8F63';
+  document.documentElement.style.setProperty('--live', c);
+  var day = s.ambient != null ? (s.ambient >= 25 && !s.lights) : (new Date().getHours() >= 8 && new Date().getHours() < 19);
+  if (document.body.getAttribute('data-theme') !== (day ? 'day' : 'night')) document.body.setAttribute('data-theme', day ? 'day' : 'night');
+
+  set('ctx', s.context || '—');
+  set('led', pct(s.ledLevel));
+  set('screen', s.screen >= 0 ? pct(s.screen) : 'auto');
+  set('amb', pct(s.ambient));
   $('ambBar').style.transform = 'scaleX(' + ((s.ambient || 0) / 100) + ')';
-  $('sun').textContent = s.elevation != null ? (s.elevation >= 0 ? s.elevation + '° au-dessus' : (-s.elevation) + '° sous l\'horizon') : '—';
-  $('wx').textContent = s.weather || '—';
-  $('lights').textContent = s.lights ? 'allumés' : 'éteints';
-  $('speed').textContent = s.speed >= 0 ? s.speed + ' km/h' + (s.hp > 0 ? ' · ≈ ' + s.hp + ' ch' : '') + (s.power > 0 ? ' · effort ' + s.power + ' %' : '') : (s.locOn === false ? 'localisation coupée' : 'en attente du signal GPS');
-  var sb = $('sportBtn'); sb.textContent = s.sport === false ? 'coupé' : 'activé'; sb.classList.toggle('on', s.sport !== false); sb.dataset.on = s.sport === false ? '0' : '1';
-  $('dimTxt').textContent = s.canOverlay === false ? 'à autoriser' : (s.dimOn === false ? 'désactivé' : (s.dim > 0 ? s.dim + ' %' : 'inactif (il fait clair)'));
-  $('allowOverlay').style.display = s.canOverlay === false ? 'block' : 'none';
-  $('ledState').textContent = (s.ledName ? s.ledName + ' · ' : '') + (s.ledState || '—');
-  var c = s.ledColor || '#000000', a = Math.max(.15, (s.ledLevel || 0) / 100);
-  $('orb').style.background = 'radial-gradient(circle at 50% 50%, ' + c + ' 0%, ' + c + '55 35%, transparent 70%)';
-  $('orb').style.opacity = a;
-  $('allow').style.display = s.canWrite === false ? 'block' : 'none';
-  [].forEach.call(document.querySelectorAll('.chip'), function (b) { b.classList.toggle('on', b.dataset.sim === (s.sim || 'auto')); });
+
+  var gps = s.speed >= 0;
+  set('speed', gps ? s.speed + '<small>km/h</small>' : '—');
+  $('speedSub').textContent = gps ? (s.hp > 0 ? '≈ ' + s.hp + ' ch en ce moment' : 'GPS OK') : (s.locOn === false ? 'Localisation coupée' : 'En attente du GPS');
+  set('effort', s.sport === false ? 'off' : pct(s.power || 0));
+  $('effBar').style.transform = 'scaleX(' + ((s.sport === false ? 0 : (s.power || 0)) / 100) + ')';
+
+  var dimOff = s.canOverlay === false || s.dimOn === false;
+  set('dim', dimOff ? 'off' : pct(s.dim || 0));
+  $('dimSub').textContent = s.canOverlay === false ? 'À autoriser dans Réglages' : (s.dimOn === false ? 'Désactivé' : (s.dim > 0 ? 'Écran assombri' : 'Inutile, il fait clair'));
+
+  $('lights').textContent = s.lights ? 'Allumés' : 'Éteints';
+  $('wx').textContent = s.weather ? s.weather.charAt(0).toUpperCase() + s.weather.slice(1) : '—';
+  $('sun').textContent = s.elevation != null ? (s.elevation >= 0 ? s.elevation + '° haut' : (-s.elevation) + '° sous l\'horizon') : '—';
+  $('ledState').textContent = s.ledState ? s.ledState.charAt(0).toUpperCase() + s.ledState.slice(1) : '—';
+  var dot = $('btDot'); dot.classList.toggle('ok', !!s.ledReady); dot.classList.toggle('ko', !s.ledReady);
+
+  var sim = s.sim || 'auto';
+  $('v-live').classList.toggle('simulating', sim !== 'auto');
+  $('simbar').classList.toggle('on', sim !== 'auto');
+  $('simName').textContent = SIMS[sim] || sim;
+  [].forEach.call(document.querySelectorAll('button.sim'), function (b) { b.classList.toggle('on', b.dataset.sim === sim); });
+
+  var wb = $('wakeBtn'); wb.classList.toggle('on', s.wakeOnPhone !== false); wb.dataset.on = s.wakeOnPhone === false ? '0' : '1';
+  $('rssiTxt').textContent = s.measuring ? 'Mesure en cours… signal ' + s.rssi + ' dBm' :
+    (s.wakeRssi != null ? 'Seuil ' + s.wakeRssi + ' dBm · ≈ ' + (s.wakeRssi >= -60 ? '1 m' : s.wakeRssi >= -68 ? '1,5 à 2 m' : '3 m et plus') : 'Mets-toi à 1,5 m de la voiture et touche Régler');
+  ['sportBtn', 'sportBtn2'].forEach(function (id) { var sb = $(id); sb.classList.toggle('on', s.sport !== false); sb.dataset.on = s.sport === false ? '0' : '1'; });
   [].forEach.call(document.querySelectorAll('.sw[data-c]'), function (b) { b.classList.toggle('on', (s.park || '').toUpperCase() === b.dataset.c.toUpperCase()); });
   [].forEach.call(document.querySelectorAll('[data-proto]'), function (b) { b.classList.toggle('on', String(s.proto || 0) === b.dataset.proto); });
+  $('allow').style.display = s.canWrite === false ? 'block' : 'none';
+  $('allowOk').style.display = s.canWrite === false ? 'none' : 'block';
+  $('allowOverlay').style.display = s.canOverlay === false ? 'block' : 'none';
+  $('overlayOk').style.display = s.canOverlay === false ? 'none' : 'block';
   if ($('sheet').classList.contains('on')) renderDevices(s);
 }
 
 function renderDevices(s) {
   $('gatt').textContent = s.gatt ? 'Services du boîtier : ' + s.gatt : '';
-  [].forEach.call(document.querySelectorAll('[data-proto]'), function (b) { b.classList.toggle('on', String(s.proto || 0) === b.dataset.proto); });
-  var list = $('devices'), html = '';
+  var html = '';
   (s.seen || []).forEach(function (d) {
     html += '<button class="dev" data-addr="' + d.addr + '"><span>' + (d.name || 'sans nom') + '</span><small>' + d.addr + '</small></button>';
   });
-  list.innerHTML = html || '<p class="label">Aucun appareil vu pour l\'instant…</p>';
+  var list = $('devices'), next = html || '<p>Aucun appareil vu pour l\'instant…</p>';
+  if (list.innerHTML !== next) list.innerHTML = next;
 }
 
 document.addEventListener('click', function (e) {
   var t = e.target.closest('button'); if (!t) return;
-  if (t.dataset.test) { if (NATIVE) Amb.ledTest(t.dataset.test); }
-  else if (t.dataset.proto) { if (NATIVE) Amb.ledProto(parseInt(t.dataset.proto, 10)); }
+  if (t.dataset.view) show(t.dataset.view);
+  else if (t.dataset.test) { if (NATIVE) Amb.ledTest(t.dataset.test); }
+  else if (t.dataset.proto) { if (NATIVE) Amb.ledProto(parseInt(t.dataset.proto, 10)); else demo.proto = +t.dataset.proto; }
   else if (t.dataset.sim) { NATIVE ? Amb.sim(t.dataset.sim) : (demo.sim = t.dataset.sim); }
   else if (t.dataset.c) { NATIVE ? Amb.park(t.dataset.c) : (demo.park = t.dataset.c); }
   else if (t.dataset.addr) { if (NATIVE) Amb.ledConnect(t.dataset.addr); $('sheet').classList.remove('on'); }
   else if (t.id === 'btBtn') { $('sheet').classList.add('on'); renderDevices(status()); }
   else if (t.id === 'closeSheet') { $('sheet').classList.remove('on'); }
-  else if (t.id === 'sportBtn') { var on = t.dataset.on !== '1'; NATIVE ? Amb.setSport(on) : (demo.sport = on); }
+  else if (t.id === 'calib') { if (NATIVE) Amb.calibrate(); }
+  else if (t.id === 'wakeBtn') { var w = t.dataset.on !== '1'; NATIVE ? Amb.setWakeOnPhone(w) : (demo.wakeOnPhone = w); }
+  else if (t.id === 'sportBtn' || t.id === 'sportBtn2') { var on = t.dataset.on !== '1'; NATIVE ? Amb.setSport(on) : (demo.sport = on); }
   else if (t.id === 'rescan') { if (NATIVE) Amb.ledReset(); }
   else if (t.id === 'allow') { if (NATIVE) Amb.allowScreen(); }
   else if (t.id === 'allowOverlay') { if (NATIVE) Amb.allowOverlay(); }
