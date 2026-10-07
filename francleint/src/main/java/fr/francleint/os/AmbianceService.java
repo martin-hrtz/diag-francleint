@@ -340,17 +340,23 @@ public class AmbianceService extends Service {
                 @Override public void onLocationChanged(Location loc) {
                     lat = loc.getLatitude(); lon = loc.getLongitude(); hasFix = true;
                     speedKmh = loc.hasSpeed() ? loc.getSpeed() * 3.6 : speedKmh;
-                    if (LocationManager.GPS_PROVIDER.equals(loc.getProvider()) && loc.hasSpeed()) {
+                    // Point GPS imprécis (> 25 m) : ignoré pour l'effort, sinon il crée des « faux » coups d'accélérateur
+                    if (LocationManager.GPS_PROVIDER.equals(loc.getProvider()) && loc.hasSpeed()
+                            && !(loc.hasAccuracy() && loc.getAccuracy() > 25)) {
                         long t = loc.getTime();
                         double dt = (t - lastGpsT) / 1000.0;
                         if (lastGpsV >= 0 && dt > 0.3 && dt < 3) {
-                            double a = (loc.getSpeed() - lastGpsV) / dt;        // brut : aucun lissage = aucun retard ajouté
-                            jerk = (System.currentTimeMillis() - accelAt < 2500) ? clamp((a - accel) / dt, -6, 6) : 0;
-                            prevAccel = accel; accel = a;
+                            double a = (loc.getSpeed() - lastGpsV) / dt;
+                            // Anti-fantômes : léger lissage (60 % nouvelle mesure) + zone morte de ±0,15 m/s² (bruit GPS)
+                            boolean fresh = System.currentTimeMillis() - accelAt < 2500;
+                            double af = fresh ? 0.6 * a + 0.4 * accel : a;
+                            if (Math.abs(af) < 0.15) af = 0;
+                            prevAccel = accel; accel = af;
                             accelAt = System.currentTimeMillis();
                             double vm = (loc.getSpeed() + lastGpsV) / 2;        // vitesse moyenne sur l'intervalle
                             lastVm = loc.getSpeed();
-                            effort = accel > 0 ? clamp(accel / aMax(vm), 0, 1) : 0;
+                            // Plancher 0,7 m/s² : à haute vitesse le max réel est faible, le bruit GPS y paraissait énorme
+                            effort = accel > 0 ? clamp(accel / Math.max(aMax(vm), 0.7), 0, 1) : 0;
                             estHp = accel > 0 ? (int) Math.round((MASS * accel + resist(vm)) * vm / ETA / 735.5) : 0;
                         }
                         lastGpsV = loc.getSpeed(); lastGpsT = t;
@@ -478,13 +484,9 @@ public class AmbianceService extends Service {
 
     /** Effort estimé à l'instant présent : dernière mesure + tendance prolongée de LOOKAHEAD s (plafonnée, jamais d'effort inventé à l'arrêt). */
     private double predictedEffort(long now) {
-        double since = (now - accelAt) / 1000.0;
-        double ahead = Math.min(since + LOOKAHEAD, 1.0);
-        double a = accel + jerk * ahead;
-        if (accel <= 0 && a > 0) a = Math.min(a, 0.8);           // reprise d'accélération : on anticipe, mais prudemment
-        a = clamp(a, Math.min(0, accel), Math.max(accel * 1.6, accel + 0.8));
-        double v = Math.max(lastVm + a * since, 0.5);
-        return a > 0 ? clamp(a / aMax(v), 0, 1) : 0;
+        // L'anticipation par tendance a été retirée : elle prolongeait l'accélération après le lâcher de pédale
+        // (et l'inverse). On affiche la dernière mesure fiable, tenue jusqu'à la suivante.
+        return effort;
     }
 
     // ---------- Fondus, 10 fois par seconde ----------
@@ -498,7 +500,7 @@ public class AmbianceService extends Service {
             // Accélération → teinte (bleu → violet → magenta → rouge), intensité inchangée
             long now = System.currentTimeMillis();
             double eff = "acc1".equals(sim) ? 0.45 : "acc2".equals(sim) ? 0.9
-                    : (now - accelAt < 1300 ? predictedEffort(now) : 0);
+                    : (now - accelAt < 2200 ? predictedEffort(now) : 0);   // un point GPS en retard ne fait plus « retomber » la couleur
             double want = sportActive && !blinker
                     ? clamp((eff - EFFORT_START) / (EFFORT_RED - EFFORT_START), 0, 1) : 0;
             // Monte en glissant (≈ 0,4 s pour tout le dégradé), redescend doucement (≈ 2,5 s du rouge au bleu).
@@ -638,7 +640,7 @@ public class AmbianceService extends Service {
             o.put("measuring", measuring);
             o.put("accel", Math.round((System.currentTimeMillis() - accelAt < 2500 ? accel : 0) * 10) / 10.0);
             o.put("power", Math.round(power * 100));
-            o.put("hp", System.currentTimeMillis() - accelAt < 1300 ? estHp : 0);
+            o.put("hp", System.currentTimeMillis() - accelAt < 2200 ? estHp : 0);
             o.put("canOverlay", canOverlay());
             boolean locOn = false;
             try { locOn = ((LocationManager) getSystemService(LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER); } catch (Exception ignored) { }
