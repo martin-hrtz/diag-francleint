@@ -31,31 +31,25 @@ svg { display: block; }
   background-image: radial-gradient(56rem 32rem at 12% 0%, var(--glow), transparent 70%); }
 .page.on { display: grid; }
 
-/* ACCUEIL — Hallmark · macrostructure: Cockpit (rail + horloge + CarPlay + conduite) · même système que l'écran Ambiance */
+/* ACCUEIL — cockpit plein écran (plus de barre latérale) */
 #home { padding: 0; display: none; background-image: none; }
 #home.on { display: block; }
-#home .rail { position: absolute; left: 0; top: 0; bottom: 0; width: 7.5rem; z-index: 5; background: var(--bg);
-  transition: transform 420ms cubic-bezier(.22,1,.36,1), opacity 420ms cubic-bezier(.22,1,.36,1); }
-#home .dash { position: absolute; top: 0; right: 0; bottom: 0; left: 0; padding-left: 8.75rem; transition: padding-left 420ms cubic-bezier(.22,1,.36,1); }
-body.full #home .rail { transform: translateX(-100%); opacity: 0; pointer-events: none; }
-body.full #home .dash { padding-left: 1.75rem; }
-.rail { display: flex; flex-direction: column;  padding: 1.25rem .75rem; border-right: 1px solid var(--line); }
-.mark { height: 3.25rem; display: flex; align-items: center; justify-content: center; margin-bottom: .5rem; }
-.mark span { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.35rem; background: var(--surface-2); color: var(--ink);
-  box-shadow: 0 0 0 2px var(--live), 0 0 1.25rem -.25rem var(--live); transition: box-shadow 700ms var(--ease); }
-.tab { height: 4.6rem; border-radius: 1.1rem; display: flex; flex-direction: column; align-items: center; justify-content: center;  color: var(--ink-3); font-size: .95rem; font-weight: 600; }
-.tab svg { width: 1.6rem; height: 1.6rem; stroke: currentColor; }
-.tab.on { background: var(--surface-2); color: var(--ink); }
-.tab:active { background: var(--surface-2); }
-body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21,17,.06); }
+#home .dash { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
 
 /* Cockpit v2 · conducteur à gauche (heure, CarPlay, mode sport) · passager à droite (instruments, musique) */
-.dash { min-width: 0; min-height: 0; padding: 1.25rem 1.75rem 1.25rem 1.25rem; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: minmax(0,1fr) 7rem; grid-gap: 1.25rem; gap: 1.25rem;
+.dash { min-width: 0; min-height: 0; padding: 1.25rem 1.75rem; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: minmax(0,1fr) 7rem; grid-gap: 1.25rem; gap: 1.25rem;
   background-image: radial-gradient(48rem 30rem at 0% 0%, var(--glow), transparent 70%); }
-.clockbox { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; padding: .25rem .25rem 0; }
-.status { display: flex; align-items: center;  font-size: 1.1rem; font-weight: 500; color: var(--ink-2); }
-.status span { display: flex; align-items: center;  }
-.status svg { width: 1.2rem; height: 1.2rem; stroke: var(--ink-2); }
+.clockbox { display: flex; flex-direction: column; min-width: 0; padding: .25rem .25rem 0; }
+.top { display: flex; align-items: center; justify-content: space-between; }
+.status { display: flex; align-items: center; font-size: 1.05rem; font-weight: 600; color: var(--ink-2); }
+.chip { display: flex; align-items: center; height: 2.4rem; padding: 0 .9rem; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.chip i { width: .6rem; height: .6rem; border-radius: 50%; background: var(--ink-3); margin-right: .55rem; transition: background 400ms var(--ease); }
+.chip.ok i { background: #3FBF74; box-shadow: 0 0 .6rem rgba(63,191,116,.6); }
+.chip.ko i { background: #E0583A; }
+.chip svg { width: 1.1rem; height: 1.1rem; stroke: var(--ink-2); margin-right: .45rem; }
+.acts { display: flex; }
+.act { width: 3.6rem; height: 3.6rem; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
+.act svg { width: 1.55rem; height: 1.55rem; stroke: var(--ink); }
 .hello { font-size: 1.5rem; font-weight: 500; color: var(--ink-2); }
 .hello b { color: var(--ink); font-weight: 600; }
 .clock { margin-top: .25rem; font-size: 9.5rem; font-weight: 500; font-stretch: 75%; letter-spacing: -.02em; line-height: .9; font-variant-numeric: tabular-nums; }
@@ -89,17 +83,38 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 .cp-title { position: relative; font-size: 3rem; font-weight: 600; font-stretch: 85%; letter-spacing: -.02em; line-height: 1; }
 .arrow { position: relative; width: 4.5rem; height: 4.5rem; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex: none; }
 .arrow svg { width: 1.8rem; height: 1.8rem; stroke: var(--accent); }
-.sport { flex: none; width: 12.5rem; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 0 1.25rem; display: flex; align-items: center; justify-content: space-between; text-align: left; }
-.sport b { font-size: 1.2rem; font-weight: 600; line-height: 1.15; }
-.sport b small { display: block; font-size: .95rem; font-weight: 500; color: var(--ink-2); }
-.sw2 { flex: none; width: 4.5rem; height: 2.6rem; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); position: relative; transition: background 240ms var(--ease); }
-.sw2::after { content: ""; position: absolute; top: .3rem; left: .3rem; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--ink-2); transition: transform 240ms var(--ease), background 240ms var(--ease); }
-.sport.on .sw2 { background: var(--accent); border-color: var(--accent); }
-.sport.on .sw2::after { transform: translateX(1.85rem); background: #fff; }
+/* Mode sport : la tuile qui donne envie d'appuyer. Éteint : éclair qui pulse + reflet qui passe. Allumé : braise rouge → violet qui respire. */
+.sport { --hot: #FF4B2B; flex: none; width: 15rem; position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--surface);
+  border: 1px solid rgba(255,75,43,.55); padding: 0 1.25rem 0 1rem; display: flex; align-items: center; text-align: left; color: var(--ink);
+  transition: background 400ms var(--ease), border-color 400ms var(--ease), box-shadow 400ms var(--ease); }
+.sport::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.10), transparent); transform: skewX(-18deg); animation: sp-sheen 4.8s ease-in-out 1.2s infinite; }
+.sport .bolt { position: relative; flex: none; width: 3.8rem; height: 3.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,75,43,.14); margin-right: .9rem; }
+.sport .bolt::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; box-shadow: 0 0 0 0 rgba(255,75,43,.55); animation: sp-ping 2.4s cubic-bezier(.22,1,.36,1) infinite; }
+.sport .bolt svg { width: 1.9rem; height: 1.9rem; fill: var(--hot); stroke: none; }
+.sport b { display: block; font-size: 1.75rem; font-weight: 700; font-stretch: 75%; letter-spacing: .06em; line-height: 1; }
+.sport small { display: block; margin-top: .3rem; font-size: .95rem; font-weight: 600; color: var(--hot); letter-spacing: .02em; }
+.sport .meter { display: none; position: relative; height: .3rem; margin-top: .45rem; border-radius: 999px; background: rgba(255,255,255,.25); overflow: hidden; width: 6.5rem; }
+.sport .meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #fff; border-radius: 999px; transition: width 300ms var(--ease); }
+.sport.on { border-color: transparent; color: #fff; background: linear-gradient(125deg, #FF6A2B 0%, #F21E46 55%, #A21BFF 100%);
+  box-shadow: 0 .6rem 2.2rem -.8rem rgba(242,30,70,.85); animation: sp-breathe 2.6s ease-in-out infinite; }
+.sport.on .bolt { background: rgba(255,255,255,.22); }
+.sport.on .bolt::before { animation: none; }
+.sport.on .bolt svg { fill: #fff; }
+.sport.on small { color: rgba(255,255,255,.85); }
+.sport.on .meter { display: block; }
+@keyframes sp-ping { 0% { box-shadow: 0 0 0 0 rgba(255,75,43,.55); } 70%, 100% { box-shadow: 0 0 0 1.1rem rgba(255,75,43,0); } }
+@keyframes sp-sheen { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+@keyframes sp-breathe { 0%, 100% { box-shadow: 0 .6rem 2.2rem -.8rem rgba(242,30,70,.85); } 50% { box-shadow: 0 .6rem 2.8rem -.4rem rgba(162,27,255,.75); } }
+body.jour .sport.on { box-shadow: 0 .5rem 1.6rem -.6rem rgba(242,30,70,.6); }
 
 /* Musique (passager) */
-.now { border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 0 1rem 0 1.25rem; display: flex; align-items: center;  min-width: 0; }
-.art { width: 4.25rem; height: 4.25rem; border-radius: .9rem; background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex: none; }
+.now { position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 0 1rem 0 1.25rem; display: flex; align-items: center; min-width: 0; }
+.now .prog { position: absolute; left: 0; bottom: 0; height: .25rem; width: 0; background: var(--live); transition: width 2s linear, background 500ms var(--ease); }
+.art { position: relative; overflow: hidden; width: 4.75rem; height: 4.75rem; border-radius: .9rem; background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex: none; }
+.art img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+.art.has img { display: block; }
 .art svg { width: 1.8rem; height: 1.8rem; stroke: var(--accent-hi); }
 .track { flex: 1; min-width: 0; }
 .track b { display: block; font-size: 1.4rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -108,6 +123,29 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 .ctl svg { width: 1.6rem; height: 1.6rem; stroke: var(--ink); }
 .play { width: 4.75rem; height: 4.75rem; background: var(--ink); }
 .play svg { stroke: var(--bg); width: 1.8rem; height: 1.8rem; }
+
+
+/* Mode conduite : au-dessus de 30 km/h, l'accueil se simplifie */
+body.drive .acts, body.drive .hello, body.drive .date, body.drive #stWifi { display: none; }
+body.drive .stats div:not(.eff) { display: none; }
+body.drive .stats b { font-size: 3.4rem; }
+body.drive .ring { transform: scale(1.12); transform-origin: 50% 40%; }
+body.drive .clock { font-size: 8rem; }
+.ring { transition: transform 600ms var(--ease); }
+
+/* Mode Showroom : plein écran, couleurs synchronisées avec les LED, toucher pour quitter */
+#show { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 90; background: #020303; display: none; align-items: center; justify-content: center; overflow: hidden; }
+#show.on { display: flex; }
+#show .blob { position: absolute; left: 50%; top: 50%; width: 70rem; height: 70rem; margin: -35rem 0 0 -35rem; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255,40,40,.75), rgba(255,40,40,.18) 55%, transparent 100%); animation: sh-hue 9s linear infinite, sh-breathe 4.4s ease-in-out infinite; }
+#show .word { position: relative; text-align: center; color: #fff; }
+#show .word b { display: block; font-size: 9rem; font-weight: 700; font-stretch: 75%; letter-spacing: -.02em; line-height: 1; }
+#show .word span { display: block; margin-top: 1.2rem; font-size: 1.3rem; font-weight: 600; letter-spacing: .3em; color: rgba(255,255,255,.65); }
+#show .exit { position: absolute; bottom: 2rem; left: 0; right: 0; text-align: center; font-size: 1.05rem; font-weight: 600; color: rgba(255,255,255,.4); }
+@keyframes sh-hue { from { -webkit-filter: hue-rotate(0deg); filter: hue-rotate(0deg); } to { -webkit-filter: hue-rotate(360deg); filter: hue-rotate(360deg); } }
+@keyframes sh-breathe { 0%, 100% { opacity: .8; } 50% { opacity: 1; } }
+.toast { position: fixed; left: 50%; bottom: 9rem; z-index: 95; transform: translateX(-50%); padding: .9rem 1.4rem; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 1.1rem; font-weight: 600; opacity: 0; transition: opacity 300ms var(--ease); pointer-events: none; }
+.toast.on { opacity: 1; }
 
 /* PAGES INTERNES */
 .sub { grid-template-rows: 2.75rem minmax(0,1fr); grid-gap: 1.25rem; gap: 1.25rem; }
@@ -156,7 +194,7 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
   #welcomeFx.on .hl-word, #welcomeFx.on .hl-word .n, #welcomeFx.on .hl-glow, #welcomeFx.on .hl-brand { animation-duration: 1ms; animation-delay: 0ms; }
 }
 
-.item .pill { margin-top: 0; color: #fff; font-size: 1.05rem; }
+.item .pill { display: flex; margin-top: 0; color: #fff; font-size: 1.05rem; }
 .item .pstate { flex: none; margin-top: 0; height: 2.6rem; padding: 0 1.1rem; border-radius: 999px; font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; background: var(--accent); color: #fff; }
 .item .pstate.ok { background: none; color: var(--accent-hi); padding: 0 .25rem; }
 
@@ -165,25 +203,14 @@ body.jour .tab.on { background: var(--surface); box-shadow: 0 1px 2px rgba(14,21
 button:focus { outline: none !important; }
 
 /* Compat WebView Android 9 : remplace le « gap » des flex (non supporté) */
-.rail > * + * { margin-top: .75rem; }
-.rail > :only-child { margin-bottom: .75rem; }
-.tab > * + * { margin-top: .3rem; }
-.tab > :only-child { margin-bottom: .3rem; }
-.status > * + * { margin-left: 1.5rem; }
-.status > :only-child { margin-right: 1.5rem; }
-.status span > * + * { margin-left: .5rem; }
-.status span > :only-child { margin-right: .5rem; }
-.info span > * + * { margin-left: .45rem; }
-.info span > :only-child { margin-right: .45rem; }
-.info b > * + * { margin-left: .6rem; }
-.info b > :only-child { margin-right: 0; }
-.info b small { margin-left: .5rem; }
+.status > * + * { margin-left: .6rem; }
+.acts > * + * { margin-left: .75rem; }
 .now > * + * { margin-left: 1rem; }
 .now > :only-child { margin-right: 1rem; }
 .app > * + * { margin-top: .75rem; }
 .app > :only-child { margin-bottom: .75rem; }
 .item > * + * { margin-left: 1rem; }
-.item > :only-child { margin-right: 1rem; }
+.item .val { margin-top: 0; flex: none; font-size: 1.15rem; font-weight: 600; color: var(--accent-hi); }
 </style>
 </head>
 <body>
@@ -198,6 +225,9 @@ button:focus { outline: none !important; }
   <symbol id="i-playtri" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 4 20 12 8 20 8 4"/></symbol>
   <symbol id="i-screen" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="3"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="18" x2="12" y2="21"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.6l-1.9 8.9 9.7-12.1h-6.6z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
   <symbol id="i-radio" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/></symbol>
   <symbol id="i-cam" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></symbol>
   <symbol id="i-apps" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
@@ -207,23 +237,22 @@ button:focus { outline: none !important; }
 
 <!-- ACCUEIL -->
 <section class="page on" id="home">
-  <nav class="rail" aria-label="Raccourcis">
-    <div class="mark"><span>f</span></div>
-    <button class="tab on" data-page="home"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></svg>Accueil</button>
-    <button class="tab" data-open="radio"><svg><use href="#i-radio"/></svg>Radio</button>
-    <button class="tab" data-open="camera"><svg><use href="#i-cam"/></svg>Caméra</button>
-    <button class="tab" data-open="ambiance"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>Ambiance</button>
-    <button class="tab" data-page="apps"><svg><use href="#i-apps"/></svg>Applis</button>
-    <div style="flex:1"></div>
-    <button class="tab" data-page="settings"><svg><use href="#i-gear"/></svg>Réglages</button>
-  </nav>
   <div class="dash">
     <div class="clockbox">
-      <div class="status">
-        <span id="stPhone"><svg><use href="#i-bt"/></svg><em id="stPhoneTxt" style="font-style:normal">iPhone</em></span>
-        <span id="stWifi"><svg><use href="#i-wifi"/></svg><em id="stWifiTxt" style="font-style:normal">—</em></span>
+      <div class="top">
+        <div class="status">
+          <span class="chip" id="stGps"><i></i>GPS</span>
+          <span class="chip" id="stLed"><i></i>LED</span>
+          <span class="chip" id="stWifi"><svg><use href="#i-wifi"/></svg><em id="stWifiTxt" style="font-style:normal">—</em></span>
+        </div>
+        <div class="acts">
+          <button class="act" id="showBtn" aria-label="Mode Showroom"><svg><use href="#i-spark"/></svg></button>
+          <button class="act" data-open="ambiance" aria-label="Ambiance"><svg><use href="#i-sun"/></svg></button>
+          <button class="act" data-page="apps" aria-label="Applis"><svg><use href="#i-apps"/></svg></button>
+          <button class="act" data-page="settings" aria-label="Réglages"><svg><use href="#i-gear"/></svg></button>
+        </div>
       </div>
-      <div>
+      <div style="margin-top:auto">
         <p class="hello" id="hello">Bonjour <b>Martin</b></p>
         <p class="clock" id="clock">--:--</p>
         <p class="date" id="date"></p>
@@ -245,14 +274,15 @@ button:focus { outline: none !important; }
     </section>
     <div class="dock">
       <button class="carplay" data-open="carplay"><span class="cp-title">CarPlay</span><span class="arrow"><svg><use href="#i-arrow"/></svg></span></button>
-      <button class="sport" id="sportSw" aria-label="Mode sport"><b>Mode<small>sport</small></b><span class="sw2"></span></button>
+      <button class="sport" id="sportSw" aria-label="Mode sport"><span class="bolt"><svg><use href="#i-bolt"/></svg></span><span><b>SPORT</b><small id="sportTxt">Activer</small><span class="meter"><i id="sportMeter"></i></span></span></button>
     </div>
     <section class="now" aria-label="Lecture en cours">
-      <div class="art"><svg><use href="#i-note"/></svg></div>
+      <div class="art" id="art"><svg><use href="#i-note"/></svg><img id="artImg" alt=""></div>
       <div class="track"><b id="title">Rien en lecture</b><span id="artist">Lance CarPlay pour écouter</span></div>
       <button class="ctl" data-media="prev" aria-label="Morceau précédent"><svg><use href="#i-prev"/></svg></button>
       <button class="ctl play" data-media="play" aria-label="Lecture ou pause"><svg><use id="playIcon" href="#i-playtri"/></svg></button>
       <button class="ctl" data-media="next" aria-label="Morceau suivant"><svg><use href="#i-next"/></svg></button>
+      <span class="prog" id="prog"></span>
     </section>
   </div>
 </section>
@@ -283,19 +313,25 @@ button:focus { outline: none !important; }
   <div class="list">
     <button class="item" data-page="perms"><span><b>Autorisations</b><span id="permsTxt">Tout activer au même endroit</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="ambiance"><span><b>Ambiance</b><span>LED et luminosité de l'écran</span></span><svg><use href="#i-chev"/></svg></button>
-    <button class="item" data-open="diag"><span><b>Check-up de l'écran</b><span>Diagnostic et rapport</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" id="albumLed"><span><b>LED couleur de la pochette</b><span>Hors mode sport, les LED prennent la couleur du morceau</span></span><span class="toggle" id="albumLedT"><i></i></span></button>
+    <button class="item" id="albumUi"><span><b>Écran couleur de la pochette</b><span>Boutons et accents aux couleurs de l'album</span></span><span class="toggle" id="albumUiT"><i></i></span></button>
+    <button class="item" id="skyLed"><span><b>LED couleur du ciel</b><span>Doré au coucher du soleil, bleu à la tombée de la nuit</span></span><span class="toggle" id="skyLedT"><i></i></span></button>
+    <button class="item" id="driveMode"><span><b>Mode conduite</b><span>L'accueil se simplifie au-dessus de 30 km/h</span></span><span class="toggle" id="driveModeT"><i></i></span></button>
     <button class="item" id="autoCp"><span><b>CarPlay au démarrage</b><span>S'ouvre tout seul quand tu démarres</span></span><span class="toggle" id="autoCpT"><i></i></span></button>
-    <button class="item" data-open="media"><span><b>Afficher le morceau</b><span id="mediaTxt">Autoriser francleint à lire le titre</span></span><svg><use href="#i-chev"/></svg></button>
-    <button class="item" data-open="lock"><span><b>Verrouillage de l'écran</b><span>Enlever ou changer le mot de passe</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" id="welcomeOn"><span><b>Animation de bienvenue</b><span>« Bonsoir Martin » au démarrage</span></span><span class="toggle" id="welcomeT"><i></i></span></button>
+    <button class="item" id="theme"><span><b>Thème</b><span>Auto suit la lumière dehors</span></span><span class="val" id="themeTxt">Auto</span></button>
+    <button class="item" id="nameBtn"><span><b>Ton prénom</b><span>Affiché à l'accueil</span></span><span class="val" id="nameTxt">Martin</span></button>
+    <button class="item" data-open="diag"><span><b>Check-up de l'écran</b><span>Diagnostic et rapport</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="wifi"><span><b>Wi-Fi</b><span>Choisis un réseau en 5 GHz pour CarPlay</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="bluetooth"><span><b>Bluetooth</b><span>Appareils connectés</span></span><svg><use href="#i-chev"/></svg></button>
-    <button class="item" data-open="home"><span><b>Écran d'accueil par défaut</b><span>Choisir francleint ou l'ancien</span></span><svg><use href="#i-chev"/></svg></button>
-    <button class="item" data-open="stock"><span><b>Ancien écran d'origine</b><span>Radio, réglages voiture du fabricant</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" data-open="stock"><span><b>Écran d'origine</b><span>Réglages voiture du fabricant</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" id="upd"><span><b>Mises à jour</b><span id="updTxt">Vérifier</span></span><span class="pill" id="updBtn">Vérifier</span></button>
     <button class="item" data-open="android"><span><b>Réglages Android</b><span>Tous les paramètres</span></span><svg><use href="#i-chev"/></svg></button>
   </div>
 </section>
 
+<div id="show" aria-hidden="true"><div class="blob" id="showBlob"></div><div class="word"><b id="showName">francleint</b><span>MODE SHOWROOM</span></div><p class="exit">Touche l'écran pour quitter</p></div>
+<p class="toast" id="toast"></p>
 <script>
 (function () {
   var NATIVE = typeof window.Home !== 'undefined';
@@ -306,7 +342,6 @@ button:focus { outline: none !important; }
 
   function show(id) {
     current = id;
-    if (id !== 'home') document.body.classList.remove('full'); else wake();
     [].forEach.call(document.querySelectorAll('.page'), function (p) { p.classList.toggle('on', p.id === id); });
     if (id === 'apps') loadApps();
     if (id === 'perms' || id === 'settings') refreshPerms();
@@ -329,7 +364,8 @@ button:focus { outline: none !important; }
     var d = new Date(), h = d.getHours();
     $('clock').textContent = pad(h) + ':' + pad(d.getMinutes());
     $('date').textContent = JOURS[d.getDay()] + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()];
-    $('hello').innerHTML = (h >= 5 && h < 12 ? 'Bonjour' : h >= 12 && h < 18 ? 'Bon après-midi' : 'Bonsoir') + ' <b>Martin</b>';
+    var nm = (window.NAME === undefined ? 'Martin' : window.NAME).replace(/</g, '&lt;');
+    $('hello').innerHTML = (h >= 5 && h < 12 ? 'Bonjour' : h >= 12 && h < 18 ? 'Bon après-midi' : 'Bonsoir') + (nm ? ' <b>' + nm + '</b>' : '');
   }
 
   // Lever / coucher du soleil (formules NOAA simplifiées, hors ligne)
@@ -344,40 +380,68 @@ button:focus { outline: none !important; }
     return { rise: at(720 - 4 * (lon + ha) - eq), set: at(720 - 4 * (lon - ha) - eq) };
   }
 
-  // Barre de gauche : disparaît après 8 s sans toucher, un toucher la fait revenir (ce toucher ne déclenche rien d'autre)
-  var idleT = null;
-  function wake() { document.body.classList.remove('full'); clearTimeout(idleT); idleT = setTimeout(function () { if (current === 'home') document.body.classList.add('full'); }, 8000); }
-  var swallow = false;
-  document.addEventListener('pointerdown', function (e) {
-    if (document.body.classList.contains('full') && current === 'home') { swallow = true; e.preventDefault(); }
-    wake();
-  }, true);
-  document.addEventListener('click', function (e) { if (swallow) { swallow = false; e.stopPropagation(); e.preventDefault(); } }, true);
-  wake();
-
   function status() {
-    if (!NATIVE) { var q = location.search; return { weather: /night/.test(q) ? 'pluie' : 'dégagé', temp: /night/.test(q) ? 9 : 17, lat: 47.24, lon: 6.02, context: /night/.test(q) ? 'conduite' : 'jour', ambient: /night/.test(q) ? 4 : 60, phone: true, wifi: '5 GHz', mediaAllowed: true, title: 'Nuit blanche', artist: 'Lomepal', playing: true, autoCarplay: true, speed: 72, power: /night/.test(q) ? 62 : 18, sport: true, hp: 48, ledColor: /night/.test(q) ? '#9B2BFF' : '#2B5BFF' }; }
+    if (!NATIVE) { var q = location.search; return { weather: /night/.test(q) ? 'pluie' : 'dégagé', temp: /night/.test(q) ? 9 : 17, lat: 47.24, lon: 6.02, context: /night/.test(q) ? 'conduite' : 'jour', ambient: /night/.test(q) ? 4 : 60, phone: true, wifi: '5 GHz', gps: true, ledReady: !/night/.test(q), mediaAllowed: true, title: 'Nuit blanche', artist: 'Lomepal', playing: true, track: 'Nuit blanche|Lomepal', pos: 95000, dur: 212000, autoCarplay: true, name: 'Martin', welcomeOn: true, theme: 'auto', albumLed: true, albumUi: /album/.test(q), skyLed: true, driveMode: /drive/.test(q), price: '2.04', showroom: /show/.test(q), trip: /drive/.test(q) ? { now: { km: 4.2, min: 7, liters: 0.27 } } : { last: { km: 12.4, min: 19, maxKmh: 92, avgKmh: 48, maxEffort: 81, avgEffort: 14, liters: 0.71, l100: 5.7, endAt: Date.now() - 360000 } }, speed: /drive/.test(q) ? 88 : 72, power: /night/.test(q) ? 62 : 18, sport: !/off/.test(q), hp: 48, ledColor: /night/.test(q) ? '#9B2BFF' : '#2B5BFF' }; }
     try { return JSON.parse(Home.status()); } catch (e) { return {}; }
   }
 
+  var lastTrack = null, theme = 'auto', NAME = 'Martin', albumUi = false, price = 2.04, driveN = 0, tripClosed = 0;
+  function eur(l) { return (l * price).toFixed(2).replace('.', ','); }
+  function nf(v) { return ('' + v).replace('.', ','); }
+  var NOTES = [[8, 'zen', 'n1'], [16, 'fluide', 'n2'], [28, 'dynamique', 'n3'], [101, 'pilote', 'n4']];
+  // Écran couleur de la pochette : teinte dominante calculée sur l'image (canvas)
+  var albumRgb = null;
+  function albumColor() {
+    albumRgb = null;
+    var img = $('artImg'); if (!img.src || !img.naturalWidth) return;
+    try {
+      var c = document.createElement('canvas'); c.width = c.height = 24;
+      var x = c.getContext('2d'); x.drawImage(img, 0, 0, 24, 24);
+      var d = x.getImageData(0, 0, 24, 24).data, best = null, bs = 0;
+      for (var i = 0; i < d.length; i += 4) {
+        var r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+        var sat = mx ? (mx - mn) / mx : 0, sc = sat * mx;
+        if (mx > 60 && sat > .3 && sc > bs) { bs = sc; best = [r, g, b]; }
+      }
+      if (best) { var k = 230 / Math.max(best[0], best[1], best[2]); albumRgb = best.map(function (v) { return Math.round(v * k); }); }
+    } catch (e) { }
+  }
+  function applyAlbumUi() {
+    var st = document.body.style;   // sur body : le thème jour y redéfinit les couleurs
+    if (albumUi && albumRgb) {
+      var c = 'rgb(' + albumRgb.join(',') + ')';
+      st.setProperty('--accent', 'rgb(' + albumRgb.map(function (v) { return Math.round(v * .62); }).join(',') + ')');
+      st.setProperty('--accent-hi', c);
+      st.setProperty('--glow', 'rgba(' + albumRgb.join(',') + ',.10)');
+    } else { st.removeProperty('--accent'); st.removeProperty('--accent-hi'); st.removeProperty('--glow'); }
+  }
+  function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { t.classList.remove('on'); }, 2600); }
+  $('artImg').onload = function () { albumColor(); applyAlbumUi(); };
+  var THEMES = { auto: 'Auto', jour: 'Jour', nuit: 'Nuit' };
+  var MOCK_ART = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B2A6B"/><stop offset=".6" stop-color="#7A2BD8"/><stop offset="1" stop-color="#F2496A"/></linearGradient></defs><rect width="100" height="100" fill="url(#g)"/><circle cx="66" cy="38" r="16" fill="#FFD2A6" opacity=".9"/></svg>');
   function refresh() {
     var s = status();
     var h = new Date().getHours();
     var jour = s.ambient >= 0 ? s.ambient >= 25 : (h >= 8 && h < 19);
+    if (s.theme === 'jour') jour = true; else if (s.theme === 'nuit') jour = false;
     document.body.classList.toggle('jour', jour);
     if (s.ledColor) document.documentElement.style.setProperty('--live', s.ledColor);
     var on = s.sport !== false, pw = on ? (s.power || 0) : 0;
     $('dSpeed').textContent = s.speed >= 0 ? s.speed : '—';
-    $('dEff').innerHTML = on ? pw + '<small>%</small>' : 'off';
+    $('dEff').innerHTML = on ? pw + '<small>%</small>' : '—';
     // Puissance estimée (ch) → force aux roues → couple aux roues (rendement 0,85 · roue 185/65 R15 ≈ 0,31 m)
     var v = (s.speed || 0) / 3.6, hp = on && s.hp > 0 ? s.hp : 0;
     var nm = hp > 0 && v > 2 ? Math.round(hp * 735.5 * 0.85 / v * 0.31) : 0;
     $('dHp').innerHTML = on ? hp + '<small>ch</small>' : '—';
     $('dNm').innerHTML = on ? nm + '<small>N·m</small>' : '—';
     $('dArc').setAttribute('stroke-dasharray', (414.7 * pw / 100).toFixed(1) + ' 552.9');
+    $('dArc').style.opacity = pw >= 1 ? 1 : 0;
     document.querySelector('.gauge').style.setProperty('--gop', (0.06 + 0.22 * pw / 100).toFixed(2));
     $('sportSw').classList.toggle('on', on);
-    $('stPhoneTxt').textContent = s.phone ? 'iPhone' : 'Pas de téléphone';
+    $('sportTxt').textContent = on ? 'Actif · ' + pw + ' %' : 'Activer';
+    $('sportMeter').style.width = pw + '%';
+    $('stGps').className = 'chip ' + (s.gps ? 'ok' : 'ko');
+    $('stLed').className = 'chip ' + (s.ledReady ? 'ok' : 'ko');
     $('stWifi').style.display = s.wifi ? 'flex' : 'none';
     $('stWifiTxt').textContent = s.wifi || '';
     if (s.title) {
@@ -385,11 +449,38 @@ button:focus { outline: none !important; }
       $('artist').textContent = s.artist || '';
     } else {
       $('title').textContent = 'Rien en lecture';
-      $('artist').textContent = s.mediaAllowed ? 'Lance CarPlay pour écouter' : 'Réglages › Afficher le morceau';
+      $('artist').textContent = s.mediaAllowed ? 'Lance CarPlay pour écouter' : 'Réglages › Autorisations';
     }
+    // Pochette : rechargée seulement quand le morceau change
+    var tk = s.track || '';
+    if (tk !== lastTrack) {
+      lastTrack = tk;
+      var uri = '';
+      if (tk) { try { uri = NATIVE ? Home.art() : MOCK_ART; } catch (e) { } }
+      $('artImg').src = uri || '';
+      $('art').classList.toggle('has', !!uri);
+      if (!uri) { albumRgb = null; applyAlbumUi(); }
+    }
+    $('prog').style.width = s.dur > 0 ? (100 * s.pos / s.dur).toFixed(1) + '%' : '0';
     $('playIcon').setAttribute('href', s.playing ? '#i-pause' : '#i-playtri');
     $('autoCpT').classList.toggle('on', !!s.autoCarplay);
-    $('mediaTxt').textContent = s.mediaAllowed ? 'Autorisé ✓' : 'Autoriser francleint à lire le titre';
+    $('albumLedT').classList.toggle('on', !!s.albumLed);
+    $('albumUiT').classList.toggle('on', !!s.albumUi); albumUi = !!s.albumUi; applyAlbumUi();
+    $('skyLedT').classList.toggle('on', s.skyLed !== false);
+    $('driveModeT').classList.toggle('on', s.driveMode !== false);
+    price = parseFloat(s.price) || 2.04;
+    // Mode conduite : entre au-dessus de 30 km/h (2 mesures), sort sous 10 km/h (≈ 10 s)
+    var sp = s.speed > 0 ? s.speed : 0;
+    if (s.driveMode === false) driveN = 0;
+    else if (sp > 30) driveN = Math.min(driveN + 1, 2);
+    else if (sp < 10) driveN = driveN > 0 ? (driveN === 2 ? -4 : driveN + 1) : 0;
+    var drv = s.driveMode !== false && (driveN === 2 || driveN < 0);
+    document.body.classList.toggle('drive', drv);
+    if (!s.showroom && $('show').classList.contains('on')) $('show').classList.remove('on');
+    $('welcomeT').classList.toggle('on', s.welcomeOn !== false);
+    theme = s.theme || 'auto';
+    $('themeTxt').textContent = THEMES[theme] || 'Auto';
+    if (s.name !== undefined) { NAME = s.name || ''; window.NAME = NAME; $('nameTxt').textContent = NAME || '—'; }
   }
 
   var appsLoaded = false;
@@ -414,7 +505,17 @@ button:focus { outline: none !important; }
     else if (t.id === 'upd') { if (NATIVE) { if ($('updBtn').textContent === 'Installer') Home.updateInstall(); else Home.updateCheck(); updStart(); } }
     else if (t.id === 'sportSw') { var sp = !t.classList.contains('on'); if (NATIVE) Home.setSport(sp); t.classList.toggle('on', sp); setTimeout(refresh, 300); }
     else if (t.id === 'autoCp') { var on = !$('autoCpT').classList.contains('on'); if (NATIVE) Home.setAutoCarplay(on); $('autoCpT').classList.toggle('on', on); }
+    else if (t.id === 'albumUi') { albumUi = !$('albumUiT').classList.contains('on'); if (NATIVE) Home.setPref('albumUi', albumUi ? '1' : '0'); $('albumUiT').classList.toggle('on', albumUi); applyAlbumUi(); }
+    else if (t.id === 'skyLed') { var sk = !$('skyLedT').classList.contains('on'); if (NATIVE) Home.setPref('skyLed', sk ? '1' : '0'); $('skyLedT').classList.toggle('on', sk); }
+    else if (t.id === 'driveMode') { var dm = !$('driveModeT').classList.contains('on'); if (NATIVE) Home.setPref('driveMode', dm ? '1' : '0'); $('driveModeT').classList.toggle('on', dm); }
+    else if (t.id === 'showBtn') { var ok = NATIVE ? Home.showroom(true) : true; if (!ok) { toast('Arrête-toi pour lancer le Showroom'); } else { $('showBlob').style.animationDelay = (-(Date.now() % 9000)) + 'ms, 0ms'; $('showName').textContent = 'francleint'; $('show').classList.add('on'); } }
+    else if (t.id === 'albumLed') { var al = !$('albumLedT').classList.contains('on'); if (NATIVE) Home.setPref('albumLed', al ? '1' : '0'); $('albumLedT').classList.toggle('on', al); }
+    else if (t.id === 'welcomeOn') { var wo = !$('welcomeT').classList.contains('on'); if (NATIVE) Home.setPref('welcome', wo ? '1' : '0'); $('welcomeT').classList.toggle('on', wo); }
+    else if (t.id === 'theme') { theme = theme === 'auto' ? 'nuit' : theme === 'nuit' ? 'jour' : 'auto'; if (NATIVE) Home.setPref('theme', theme); $('themeTxt').textContent = THEMES[theme]; refresh(); }
+    else if (t.id === 'nameBtn') { var v = window.prompt('Ton prénom', NAME); if (v !== null) { v = v.trim().slice(0, 20); if (NATIVE) Home.setPref('name', v); NAME = v; window.NAME = v; $('nameTxt').textContent = v || '—'; tick(); } }
   });
+
+  $('show').addEventListener('click', function () { if (NATIVE) Home.showroom(false); $('show').classList.remove('on'); });
 
   var updTimer = null;
   function updRefresh() {
@@ -444,14 +545,14 @@ button:focus { outline: none !important; }
 </div>
 <script>
 (function () {
-  var NAME = 'Martin';
   function greet() {
     var h = new Date().getHours();
     return h >= 5 && h < 12 ? 'Bonjour' : h >= 12 && h < 18 ? 'Bon après-midi' : 'Bonsoir';
   }
   window.welcome = function () {
     var el = document.getElementById('welcomeFx');
-    document.getElementById('hlWord').innerHTML = '<span class="g">' + greet() + '</span> <span class="n">' + NAME + '</span>';
+    var nm = (window.NAME === undefined ? 'Martin' : window.NAME).replace(/</g, '&lt;');
+    document.getElementById('hlWord').innerHTML = '<span class="g">' + greet() + '</span>' + (nm ? ' <span class="n">' + nm + '</span>' : '');
     el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
     setTimeout(function () { el.classList.remove('on'); }, 3500);
   };
