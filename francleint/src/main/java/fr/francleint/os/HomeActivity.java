@@ -48,7 +48,6 @@ import java.util.List;
 public class HomeActivity extends Activity {
 
     static final String[] CARPLAY = {"com.suding.speedplay", "com.ts.carplayapp"};
-    static final String[] CAMERA = {"com.autochips.avmplayer"};
 
     private WebView web;
     private SharedPreferences prefs;
@@ -72,7 +71,8 @@ public class HomeActivity extends Activity {
         if (!(i != null && i.getBooleanExtra("welcome", false)) && !firstBoot) return;
         autoLaunched = true;
         if (i != null) i.removeExtra("welcome");
-        if (pageReady) web.evaluateJavascript("window.welcome && window.welcome()", null);
+        if (!prefs.getBoolean("welcome", true)) { /* animation désactivée dans les réglages */ }
+        else if (pageReady) web.evaluateJavascript("window.welcome && window.welcome()", null);
         else welcomeQueued = true;
         ui.removeCallbacksAndMessages(null);
         // CarPlay s'ouvre pile à la fin de l'animation
@@ -166,51 +166,13 @@ public class HomeActivity extends Activity {
         try { i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(i); return true; } catch (Exception e) { return false; }
     }
 
-    void launchRadio() {
-        Intent main = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
-        List<ResolveInfo> all = getPackageManager().queryIntentActivities(main, 0);
-        for (ResolveInfo r : all) {
-            String label = String.valueOf(r.loadLabel(getPackageManager())).toLowerCase();
-            String name = (r.activityInfo.packageName + "/" + r.activityInfo.name).toLowerCase();
-            if (label.contains("radio") || name.contains("radio")) {
-                Intent i = new Intent(Intent.ACTION_MAIN).setComponent(
-                        new ComponentName(r.activityInfo.packageName, r.activityInfo.name));
-                if (tryStart(i)) return;
-            }
-        }
-        if (!launchPkg("com.ts.MainUI")) toast("Radio introuvable");
-    }
-
-    void openLockSettings() {
-        Intent[] tries = {
-                new Intent("android.app.action.SET_NEW_PASSWORD"),
-                new Intent().setComponent(new ComponentName("com.android.settings", "com.android.settings.password.ChooseLockGeneric")),
-                new Intent().setComponent(new ComponentName("com.android.settings", "com.android.settings.ChooseLockGeneric")),
-                new Intent(Settings.ACTION_SECURITY_SETTINGS),
-        };
-        for (Intent i : tries) if (tryStart(i)) return;
-        toast("Menu de verrouillage introuvable");
-    }
-
     void toast(final String t) {
         runOnUiThread(() -> Toast.makeText(this, t, Toast.LENGTH_SHORT).show());
     }
 
     // ---------- Musique ----------
 
-    MediaController controller() {
-        try {
-            MediaSessionManager m = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
-            List<MediaController> list = m.getActiveSessions(new ComponentName(this, MediaListener.class));
-            for (MediaController c : list) {
-                PlaybackState st = c.getPlaybackState();
-                if (st != null && st.getState() == PlaybackState.STATE_PLAYING) return c;
-            }
-            return list.isEmpty() ? null : list.get(0);
-        } catch (SecurityException e) {
-            return null;
-        }
-    }
+    MediaController controller() { return Art.controller(this); }
 
     boolean mediaAllowed() {
         String s = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
@@ -258,7 +220,7 @@ public class HomeActivity extends Activity {
                 if (a != null) {
                     try {
                         JSONObject x = new JSONObject(a.status());
-                        for (String k : new String[]{"speed", "power", "sport", "ledColor", "hp", "weather", "temp", "lat", "lon", "context", "ledLevel"}) if (x.has(k)) o.put(k, x.get(k));
+                        for (String k : new String[]{"speed", "power", "sport", "ledColor", "hp", "weather", "temp", "lat", "lon", "context", "ledLevel", "gps", "ledReady", "ledState", "albumLed", "skyLed", "showroom", "trip"}) if (x.has(k)) o.put(k, x.get(k));
                     } catch (Exception ignored) { }
                 }
 
@@ -288,9 +250,24 @@ public class HomeActivity extends Activity {
                     o.put("title", md.getString(MediaMetadata.METADATA_KEY_TITLE));
                     o.put("artist", md.getString(MediaMetadata.METADATA_KEY_ARTIST));
                     PlaybackState st = c.getPlaybackState();
-                    o.put("playing", st != null && st.getState() == PlaybackState.STATE_PLAYING);
+                    boolean play = st != null && st.getState() == PlaybackState.STATE_PLAYING;
+                    o.put("playing", play);
+                    o.put("track", Art.key(md));
+                    long dur = md.getLong(MediaMetadata.METADATA_KEY_DURATION);
+                    if (st != null && dur > 0) {
+                        long pos = st.getPosition();
+                        if (play) pos += (long) ((SystemClock.elapsedRealtime() - st.getLastPositionUpdateTime()) * st.getPlaybackSpeed());
+                        o.put("pos", Math.max(0, Math.min(dur, pos)));
+                        o.put("dur", dur);
+                    }
                 }
                 o.put("autoCarplay", prefs.getBoolean("autoCarplay", true));
+                o.put("name", prefs.getString("name", "Martin"));
+                o.put("welcomeOn", prefs.getBoolean("welcome", true));
+                o.put("theme", prefs.getString("theme", "auto"));
+                o.put("price", prefs.getString("price", "2.04"));
+                o.put("albumUi", prefs.getBoolean("albumUi", false));
+                o.put("driveMode", prefs.getBoolean("driveMode", true));
                 return o.toString();
             } catch (Exception e) {
                 return "{}";
@@ -302,11 +279,8 @@ public class HomeActivity extends Activity {
             runOnUiThread(() -> {
                 switch (what) {
                     case "carplay": launchFirst(CARPLAY); break;
-                    case "radio": launchRadio(); break;
-                    case "camera": launchFirst(CAMERA); break;
                     case "ambiance": tryStart(new Intent(HomeActivity.this, AmbianceActivity.class)); break;
                     case "diag": tryStart(new Intent(HomeActivity.this, DiagActivity.class)); break;
-                    case "lock": openLockSettings(); break;
                     case "wifi": tryStart(new Intent(Settings.ACTION_WIFI_SETTINGS)); break;
                     case "bluetooth": tryStart(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS)); break;
                     case "android": tryStart(new Intent(Settings.ACTION_SETTINGS)); break;
@@ -411,6 +385,49 @@ public class HomeActivity extends Activity {
         @JavascriptInterface
         public void setAutoCarplay(boolean on) {
             prefs.edit().putBoolean("autoCarplay", on).apply();
+        }
+
+        /** Pochette du morceau en cours (data URI JPEG), "" si aucune. */
+        @JavascriptInterface
+        public String art() {
+            MediaController c = controller();
+            return c == null ? "" : Art.dataUri(Art.bitmap(c.getMetadata()));
+        }
+
+        /** Mode Showroom (LED en vague de couleurs). Renvoie false si on roule. */
+        @JavascriptInterface
+        public boolean showroom(boolean on) {
+            AmbianceService a = AmbianceService.instance;
+            return a != null && a.showroom(on);
+        }
+
+        /** Réglages simples de l'accueil. */
+        @JavascriptInterface
+        public void setPref(String key, String value) {
+            SharedPreferences.Editor e = prefs.edit();
+            switch (key) {
+                case "name": e.putString("name", value == null ? "" : value.trim()); break;
+                case "theme": e.putString("theme", value); break;
+                case "welcome": e.putBoolean("welcome", "1".equals(value)); break;
+                case "albumUi": e.putBoolean("albumUi", "1".equals(value)); break;
+                case "driveMode": e.putBoolean("driveMode", "1".equals(value)); break;
+                case "price": {
+                    try { Double.parseDouble(value); e.putString("price", value); } catch (Exception ignored) { return; }
+                    break;
+                }
+                case "skyLed": {
+                    AmbianceService a = AmbianceService.instance;
+                    if (a != null) a.setSkyLed("1".equals(value));
+                    break;
+                }
+                case "albumLed": {
+                    AmbianceService a = AmbianceService.instance;
+                    if (a != null) a.setAlbumLed("1".equals(value));
+                    break;
+                }
+                default: return;
+            }
+            e.apply();
         }
     }
 }
