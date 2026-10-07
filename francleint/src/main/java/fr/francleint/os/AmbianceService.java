@@ -113,6 +113,7 @@ public class AmbianceService extends Service {
     private final Handler h = new Handler(Looper.getMainLooper());
     private Led led;
     private final Sky sky = new Sky();
+    Trip trip;
     private SharedPreferences prefs;
 
     private long startedAt;
@@ -143,6 +144,7 @@ public class AmbianceService extends Service {
         instance = this;
         prefs = getSharedPreferences("ambiance", MODE_PRIVATE);
         sport = prefs.getBoolean("sport", true);
+        trip = new Trip(prefs);
         startForegroundCompat();
         startedAt = System.currentTimeMillis();
         led = new Led(this);
@@ -311,6 +313,7 @@ public class AmbianceService extends Service {
         try { unregisterReceiver(screen); } catch (Exception ignored) { }
         removeOverlay();
         led.stop();
+        if (trip != null) trip.save();
         instance = null;
         super.onDestroy();
     }
@@ -360,6 +363,9 @@ public class AmbianceService extends Service {
                             estHp = accel > 0 ? (int) Math.round((MASS * accel + resist(vm)) * vm / ETA / 735.5) : 0;
                         }
                         lastGpsV = loc.getSpeed(); lastGpsT = t;
+                        long nowMs = System.currentTimeMillis();
+                        boolean freshA = nowMs - accelAt < 2500;
+                        if (trip != null) trip.onFix(nowMs, loc.getSpeed(), freshA ? accel : 0, freshA ? effort : 0);
                     }
                 }
                 @Override public void onStatusChanged(String p, int s, Bundle e) { }
@@ -411,6 +417,8 @@ public class AmbianceService extends Service {
 
     private void decide() {
         long now = System.currentTimeMillis();
+        if (trip != null) trip.tick(now);
+        if (showroomUntil > 0 && (now > showroomUntil || speedKmh > 8)) showroomUntil = 0;   // on roule : fin du show
 
         if (now - lastWeather > 10 * 60_000) {
             lastWeather = now;
@@ -463,10 +471,16 @@ public class AmbianceService extends Service {
         } else if (sport && (hasFix && speedKmh > 5 || sim.startsWith("acc"))) {
             color = hue(HUE_BASE);                 // en roulant : bleu, l'accélération pousse vers le rouge
             context = "conduite";
+        } else if (albumNow() != null && "auto".equals(sim)) {
+            color = albumColor;                    // option : la couleur de la pochette du morceau en cours
+            context = "musique";
         } else if (highway) {
             color = ROAD;
             level = Math.min(level, 0.6);
             context = "autoroute";
+        } else if (prefs.getBoolean("skyLed", true) && "auto".equals(sim)) {
+            color = skyColor(elevation, a);            // option : les LED suivent la couleur du ciel
+            context = elevation > 10 ? "jour" : elevation > 0 ? "heure dorée" : elevation > -8 ? "heure bleue" : "nuit";
         } else if (a < 0.2) {
             color = NIGHT;
             context = a < 0.02 ? "nuit" : "crépuscule";
@@ -496,6 +510,19 @@ public class AmbianceService extends Service {
             blinker = System.currentTimeMillis() < blinkerUntil || "clignotant".equals(sim);
             double k = blinker ? 1.0 : 0.30; // clignotant : instantané ; sinon fondu ≈ 0,1 s (invisible)
             int[] tc = blinker ? TURN : targetColor;
+            boolean show = showroomUntil > 0;
+            if (show && !blinker) {
+                // Mode Showroom : vague de couleurs qui fait le tour du cercle en 9 s, avec une respiration
+                long tt = System.currentTimeMillis();
+                tc = hue((tt % 9000) / 9000.0 * 360);
+                double br = 0.75 + 0.25 * Math.sin(tt / 700.0);
+                cr = tc[0] * br; cg = tc[1] * br; cb = tc[2] * br; cl = 1;
+                led.color((int) Math.round(cr), (int) Math.round(cg), (int) Math.round(cb));
+                curDim += (0 - curDim) * 0.05;
+                applyOverlay();
+                h.postDelayed(this, 30);
+                return;
+            }
             double tl = blinker ? Math.max(targetLevel, 0.5) : targetLevel;
             // Accélération → teinte (bleu → violet → magenta → rouge), intensité inchangée
             long now = System.currentTimeMillis();
@@ -554,6 +581,58 @@ public class AmbianceService extends Service {
         if (overlay == null) return;
         try { ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(overlay); } catch (Exception ignored) { }
         overlay = null;
+    }
+
+    // ---------- Option : LED couleur du ciel ----------
+
+    static final int[] GOLD = {255, 140, 40};      // heure dorée
+    static final int[] DUSK = {255, 70, 90};       // coucher : rose-rouge
+    static final int[] BLUE = {40, 70, 255};       // heure bleue
+
+    static int[] mix(int[] x, int[] y, double t) {
+        t = Math.max(0, Math.min(1, t));
+        return new int[]{(int) Math.round(x[0] + (y[0] - x[0]) * t), (int) Math.round(x[1] + (y[1] - x[1]) * t), (int) Math.round(x[2] + (y[2] - x[2]) * t)};
+    }
+
+    /** Couleur du ciel selon la hauteur du soleil (°) : blanc froid → doré → rose → bleu → vert nuit. Ciel couvert : on reste neutre. */
+    static int[] skyColor(double elev, double light) {
+        if (elev > 12) return DAY;
+        if (elev > 4) return mix(GOLD, DAY, (elev - 4) / 8);
+        if (elev > 0) return mix(DUSK, GOLD, elev / 4);
+        if (elev > -6) return mix(BLUE, DUSK, (elev + 6) / 6);
+        if (elev > -12) return mix(NIGHT, BLUE, (elev + 12) / 6);
+        return NIGHT;
+    }
+
+    void setSkyLed(boolean on) { prefs.edit().putBoolean("skyLed", on).apply(); }
+
+    // ---------- Mode Showroom ----------
+
+    volatile long showroomUntil = 0;
+
+    /** Lance (10 min max) ou arrête le show. Refusé en roulant. */
+    boolean showroom(boolean on) {
+        if (on && speedKmh > 8) return false;
+        showroomUntil = on ? System.currentTimeMillis() + 10 * 60_000 : 0;
+        return true;
+    }
+
+    // ---------- Option : LED couleur de la pochette ----------
+
+    private volatile int[] albumColor = null;
+    private String albumKey = "";
+
+    void setAlbumLed(boolean on) { prefs.edit().putBoolean("albumLed", on).apply(); }
+
+    /** Couleur de la pochette si l'option est active et qu'un morceau joue ; sinon null. */
+    private int[] albumNow() {
+        if (!prefs.getBoolean("albumLed", false)) return null;
+        android.media.session.MediaController mc = Art.controller(this);
+        if (!Art.playing(mc)) return null;
+        android.media.MediaMetadata md = mc.getMetadata();
+        String k = Art.key(md);
+        if (!k.equals(albumKey)) { albumKey = k; albumColor = Art.vivid(Art.bitmap(md)); }
+        return albumColor;
     }
 
     void setDim(boolean on) { prefs.edit().putBoolean("dim", on).apply(); }
@@ -634,6 +713,10 @@ public class AmbianceService extends Service {
             o.put("dim", dimPct);
             o.put("dimOn", prefs.getBoolean("dim", true));
             o.put("sport", sport);
+            o.put("albumLed", prefs.getBoolean("albumLed", false));
+            o.put("skyLed", prefs.getBoolean("skyLed", true));
+            o.put("showroom", showroomUntil > 0);
+            if (trip != null) o.put("trip", trip.toJson());
             o.put("wakeOnPhone", prefs.getBoolean("wakeOnPhone", true));
             o.put("wakeRssi", wakeRssi());
             o.put("rssi", lastRssi);
