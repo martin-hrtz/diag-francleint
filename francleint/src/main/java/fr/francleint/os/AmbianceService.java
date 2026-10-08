@@ -51,6 +51,7 @@ public class AmbianceService extends Service {
 
     // Couleurs de base (pleine intensité)
     static final int[] WARM = {255, 150, 70};      // accueil
+    static final int[] AMBER = {255, 130, 20};     // signal « moteur chaud » : 2 clignotements
     static final int[] DAY = {190, 215, 255};      // jour : blanc froid
     static final int[] NIGHT = {20, 170, 85};      // nuit : vert sapin (version LED)
     static final int[] ROAD = {25, 70, 220};       // autoroute : bleu nuit
@@ -114,6 +115,8 @@ public class AmbianceService extends Service {
     private Led led;
     private final Sky sky = new Sky();
     Trip trip;
+    Engine engine;
+    private volatile long warmFlashAt = 0;
     private SharedPreferences prefs;
 
     private long startedAt;
@@ -145,6 +148,7 @@ public class AmbianceService extends Service {
         prefs = getSharedPreferences("ambiance", MODE_PRIVATE);
         sport = prefs.getBoolean("sport", true);
         trip = new Trip(prefs);
+        engine = new Engine(prefs);
         startForegroundCompat();
         startedAt = System.currentTimeMillis();
         led = new Led(this);
@@ -314,6 +318,7 @@ public class AmbianceService extends Service {
         removeOverlay();
         led.stop();
         if (trip != null) trip.save();
+        if (engine != null) engine.save(System.currentTimeMillis());
         instance = null;
         super.onDestroy();
     }
@@ -455,16 +460,26 @@ public class AmbianceService extends Service {
         }
         ambient = a;
 
+        // Moteur froid : LED bleues fixes, pas de mode sport. Chaud : 2 clignotements ambre puis sport activé tout seul.
+        if (engine.tick(now, hasFix && speedKmh > 5, sky.temp)) {
+            warmFlashAt = now;
+            setSport(true);
+        }
+        boolean cold = !engine.warm && "auto".equals(sim);
+
         double level = 0.02 + 0.98 * a;          // nuit 2 % (minimum) → plein soleil 100 %
         int[] color;
         if (welcome) {
-            color = WARM;
+            color = cold ? hue(HUE_BASE) : WARM;
             level = Math.max(level, 0.6) * Math.min(1, (now - startedAt) / 800.0);
             context = "accueil";
         } else if (call) {
             color = targetColor;                  // on fige la couleur
             level = level * 0.5;
             context = "appel";
+        } else if (cold) {
+            color = hue(HUE_BASE);                 // moteur froid : bleu, couleur bloquée
+            context = "moteur froid";
         } else if (parked) {
             color = parkColor();
             context = "à l'arrêt";
@@ -519,6 +534,17 @@ public class AmbianceService extends Service {
                 cr = tc[0] * br; cg = tc[1] * br; cb = tc[2] * br; cl = 1;
                 led.color((int) Math.round(cr), (int) Math.round(cg), (int) Math.round(cb));
                 curDim += (0 - curDim) * 0.05;
+                applyOverlay();
+                h.postDelayed(this, 30);
+                return;
+            }
+            long fl = System.currentTimeMillis() - warmFlashAt;
+            if (fl >= 0 && fl < 1500 && !blinker) {
+                // Moteur chaud : 2 clignotements ambre (allumé 350 ms, éteint 250 ms), puis on repart du noir
+                boolean on = fl < 350 || (fl >= 600 && fl < 950);
+                double v = on ? 1 : 0;
+                cr = AMBER[0] * v; cg = AMBER[1] * v; cb = AMBER[2] * v; cl = 1;
+                led.color((int) Math.round(cr), (int) Math.round(cg), (int) Math.round(cb));
                 applyOverlay();
                 h.postDelayed(this, 30);
                 return;
@@ -713,6 +739,11 @@ public class AmbianceService extends Service {
             o.put("dim", dimPct);
             o.put("dimOn", prefs.getBoolean("dim", true));
             o.put("sport", sport);
+            if (engine != null) {
+                o.put("engineWarm", engine.warm);
+                o.put("enginePct", engine.pct());
+                o.put("engineMin", engine.minutesLeft(sky.temp));
+            }
             o.put("albumLed", prefs.getBoolean("albumLed", false));
             o.put("skyLed", prefs.getBoolean("skyLed", true));
             o.put("showroom", showroomUntil > 0);
