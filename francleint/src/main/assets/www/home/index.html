@@ -94,7 +94,7 @@ svg { display: block; }
 .sport .bolt::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; box-shadow: 0 0 0 0 rgba(255,75,43,.55); animation: sp-ping 2.4s cubic-bezier(.22,1,.36,1) infinite; }
 .sport .bolt svg { width: 1.9rem; height: 1.9rem; fill: var(--hot); stroke: none; }
 .sport b { display: block; font-size: 1.75rem; font-weight: 700; font-stretch: 75%; letter-spacing: .06em; line-height: 1; }
-.sport small { display: block; margin-top: .3rem; font-size: .95rem; font-weight: 600; color: var(--hot); letter-spacing: .02em; }
+.sport small { display: block; white-space: nowrap; margin-top: .3rem; font-size: .95rem; font-weight: 600; color: var(--hot); letter-spacing: .02em; }
 .sport .meter { display: none; position: relative; height: .3rem; margin-top: .45rem; border-radius: 999px; background: rgba(255,255,255,.25); overflow: hidden; width: 6.5rem; }
 .sport .meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #fff; border-radius: 999px; transition: width 300ms var(--ease); }
 .sport.on { border-color: transparent; color: #fff; background: linear-gradient(125deg, #FF6A2B 0%, #F21E46 55%, #A21BFF 100%);
@@ -107,6 +107,14 @@ svg { display: block; }
 @keyframes sp-ping { 0% { box-shadow: 0 0 0 0 rgba(255,75,43,.55); } 70%, 100% { box-shadow: 0 0 0 1.1rem rgba(255,75,43,0); } }
 @keyframes sp-sheen { 0% { left: -60%; } 55%, 100% { left: 130%; } }
 @keyframes sp-breathe { 0%, 100% { box-shadow: 0 .6rem 2.2rem -.8rem rgba(242,30,70,.85); } 50% { box-shadow: 0 .6rem 2.8rem -.4rem rgba(162,27,255,.75); } }
+.sport.cold { border-color: transparent; color: #fff; background: linear-gradient(125deg, #2B6BFF 0%, #1C3FD6 60%, #142A8F 100%); }
+.sport.cold::after { display: none; }
+.sport.cold .bolt { background: rgba(255,255,255,.18); }
+.sport.cold .bolt::before { animation: none; }
+.sport.cold .bolt svg { fill: rgba(255,255,255,.6); }
+.sport.cold small { color: rgba(255,255,255,.85); }
+.sport.cold .meter { display: block; }
+.sport.cold .meter i { background: linear-gradient(90deg, #8FB4FF, #FFB25C); }
 body.jour .sport.on { box-shadow: 0 .5rem 1.6rem -.6rem rgba(242,30,70,.6); }
 
 /* Musique (passager) */
@@ -381,7 +389,7 @@ button:focus { outline: none !important; }
   }
 
   function status() {
-    if (!NATIVE) { var q = location.search; return { weather: /night/.test(q) ? 'pluie' : 'dégagé', temp: /night/.test(q) ? 9 : 17, lat: 47.24, lon: 6.02, context: /night/.test(q) ? 'conduite' : 'jour', ambient: /night/.test(q) ? 4 : 60, phone: true, wifi: '5 GHz', gps: true, ledReady: !/night/.test(q), mediaAllowed: true, title: 'Nuit blanche', artist: 'Lomepal', playing: true, track: 'Nuit blanche|Lomepal', pos: 95000, dur: 212000, autoCarplay: true, name: 'Martin', welcomeOn: true, theme: 'auto', albumLed: true, albumUi: /album/.test(q), skyLed: true, driveMode: /drive/.test(q), price: '2.04', showroom: /show/.test(q), trip: /drive/.test(q) ? { now: { km: 4.2, min: 7, liters: 0.27 } } : { last: { km: 12.4, min: 19, maxKmh: 92, avgKmh: 48, maxEffort: 81, avgEffort: 14, liters: 0.71, l100: 5.7, endAt: Date.now() - 360000 } }, speed: /drive/.test(q) ? 88 : 72, power: /night/.test(q) ? 62 : 18, sport: !/off/.test(q), hp: 48, ledColor: /night/.test(q) ? '#9B2BFF' : '#2B5BFF' }; }
+    if (!NATIVE) { var q = location.search; return { weather: /night/.test(q) ? 'pluie' : 'dégagé', temp: /night/.test(q) ? 9 : 17, lat: 47.24, lon: 6.02, context: /night/.test(q) ? 'conduite' : 'jour', ambient: /night/.test(q) ? 4 : 60, phone: true, wifi: '5 GHz', gps: true, ledReady: !/night/.test(q), mediaAllowed: true, title: 'Nuit blanche', artist: 'Lomepal', playing: true, track: 'Nuit blanche|Lomepal', pos: 95000, dur: 212000, autoCarplay: true, name: 'Martin', welcomeOn: true, theme: 'auto', albumLed: true, albumUi: /album/.test(q), skyLed: true, driveMode: /drive/.test(q), price: '2.04', showroom: /show/.test(q), trip: /drive/.test(q) ? { now: { km: 4.2, min: 7, liters: 0.27 } } : { last: { km: 12.4, min: 19, maxKmh: 92, avgKmh: 48, maxEffort: 81, avgEffort: 14, liters: 0.71, l100: 5.7, endAt: Date.now() - 360000 } }, speed: /drive/.test(q) ? 88 : 72, power: /night/.test(q) ? 62 : 18, sport: !/off/.test(q), engineWarm: !/cold/.test(q), enginePct: 42, engineMin: 6, hp: 48, ledColor: /night/.test(q) ? '#9B2BFF' : '#2B5BFF' }; }
     try { return JSON.parse(Home.status()); } catch (e) { return {}; }
   }
 
@@ -426,7 +434,9 @@ button:focus { outline: none !important; }
     if (s.theme === 'jour') jour = true; else if (s.theme === 'nuit') jour = false;
     document.body.classList.toggle('jour', jour);
     if (s.ledColor) document.documentElement.style.setProperty('--live', s.ledColor);
-    var on = s.sport !== false, pw = on ? (s.power || 0) : 0;
+    var cold = s.engineWarm === false, on = s.sport !== false && !cold, pw = on ? (s.power || 0) : 0;
+    if (refresh.cold && !cold) toast('Moteur chaud · mode sport activé');
+    refresh.cold = cold;
     $('dSpeed').textContent = s.speed >= 0 ? s.speed : '—';
     $('dEff').innerHTML = on ? pw + '<small>%</small>' : '—';
     // Puissance estimée (ch) → force aux roues → couple aux roues (rendement 0,85 · roue 185/65 R15 ≈ 0,31 m)
@@ -438,8 +448,9 @@ button:focus { outline: none !important; }
     $('dArc').style.opacity = pw >= 1 ? 1 : 0;
     document.querySelector('.gauge').style.setProperty('--gop', (0.06 + 0.22 * pw / 100).toFixed(2));
     $('sportSw').classList.toggle('on', on);
-    $('sportTxt').textContent = on ? 'Actif · ' + pw + ' %' : 'Activer';
-    $('sportMeter').style.width = pw + '%';
+    $('sportSw').classList.toggle('cold', cold);
+    $('sportTxt').textContent = cold ? 'Froid · ' + (s.engineMin > 0 ? s.engineMin + ' min' : (s.enginePct || 0) + ' %') : on ? 'Actif · ' + pw + ' %' : 'Activer';
+    $('sportMeter').style.width = (cold ? (s.enginePct || 0) : pw) + '%';
     $('stGps').className = 'chip ' + (s.gps ? 'ok' : 'ko');
     $('stLed').className = 'chip ' + (s.ledReady ? 'ok' : 'ko');
     $('stWifi').style.display = s.wifi ? 'flex' : 'none';
@@ -503,6 +514,7 @@ button:focus { outline: none !important; }
     else if (t.dataset.media) { if (NATIVE) Home.media(t.dataset.media); setTimeout(refresh, 400); }
     else if (t.dataset.pkg) { if (NATIVE) Home.launch(t.dataset.pkg); }
     else if (t.id === 'upd') { if (NATIVE) { if ($('updBtn').textContent === 'Installer') Home.updateInstall(); else Home.updateCheck(); updStart(); } }
+    else if (t.id === 'sportSw' && t.classList.contains('cold')) { toast('Moteur froid · le sport s\u2019active tout seul une fois chaud'); }
     else if (t.id === 'sportSw') { var sp = !t.classList.contains('on'); if (NATIVE) Home.setSport(sp); t.classList.toggle('on', sp); setTimeout(refresh, 300); }
     else if (t.id === 'autoCp') { var on = !$('autoCpT').classList.contains('on'); if (NATIVE) Home.setAutoCarplay(on); $('autoCpT').classList.toggle('on', on); }
     else if (t.id === 'albumUi') { albumUi = !$('albumUiT').classList.contains('on'); if (NATIVE) Home.setPref('albumUi', albumUi ? '1' : '0'); $('albumUiT').classList.toggle('on', albumUi); applyAlbumUi(); }
