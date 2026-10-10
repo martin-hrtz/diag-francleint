@@ -389,7 +389,7 @@ button:focus { outline: none !important; }
   }
 
   function status() {
-    if (!NATIVE) { var q = location.search; return { weather: /night/.test(q) ? 'pluie' : 'dégagé', temp: /night/.test(q) ? 9 : 17, lat: 47.24, lon: 6.02, context: /night/.test(q) ? 'conduite' : 'jour', ambient: /night/.test(q) ? 4 : 60, phone: true, wifi: '5 GHz', gps: true, ledReady: !/night/.test(q), mediaAllowed: true, title: 'Nuit blanche', artist: 'Lomepal', playing: true, track: 'Nuit blanche|Lomepal', pos: 95000, dur: 212000, autoCarplay: true, name: 'Martin', welcomeOn: true, theme: 'auto', albumLed: true, albumUi: /album/.test(q), skyLed: true, driveMode: /drive/.test(q), price: '2.04', showroom: /show/.test(q), trip: /drive/.test(q) ? { now: { km: 4.2, min: 7, liters: 0.27 } } : { last: { km: 12.4, min: 19, maxKmh: 92, avgKmh: 48, maxEffort: 81, avgEffort: 14, liters: 0.71, l100: 5.7, endAt: Date.now() - 360000 } }, speed: /drive/.test(q) ? 88 : 72, power: /night/.test(q) ? 62 : 18, sport: !/off/.test(q), engineWarm: !/cold/.test(q), enginePct: 42, engineMin: 6, hp: 48, ledColor: /night/.test(q) ? '#9B2BFF' : '#2B5BFF' }; }
+    if (!NATIVE) { var q = location.search; return { weather: /night/.test(q) ? 'pluie' : 'dégagé', temp: /night/.test(q) ? 9 : 17, lat: 47.24, lon: 6.02, context: /night/.test(q) ? 'conduite' : 'jour', ambient: /night/.test(q) ? 4 : 60, phone: true, wifi: '5 GHz', gps: true, ledReady: !/night/.test(q), mediaAllowed: true, title: 'Nuit blanche', artist: 'Lomepal', playing: true, track: 'Nuit blanche|Lomepal', pos: 95000, dur: 212000, autoCarplay: true, name: 'Martin', welcomeOn: true, theme: 'auto', albumLed: true, albumUi: /album/.test(q), skyLed: true, driveMode: /drive/.test(q), price: '2.04', showroom: /show/.test(q), trip: /drive/.test(q) ? { now: { km: 4.2, min: 7, liters: 0.27 } } : { last: { km: 12.4, min: 19, maxKmh: 92, avgKmh: 48, maxEffort: 81, avgEffort: 14, liters: 0.71, l100: 5.7, endAt: Date.now() - 360000 } }, speed: /drive/.test(q) ? 88 : 72, power: /night/.test(q) ? 62 : 18, sport: !/off/.test(q), engineWarm: !/cold/.test(q), enginePct: 42, engineMin: 6, water: /obd/.test(q) ? 46 : undefined, hp: 48, ledColor: /night/.test(q) ? '#9B2BFF' : '#2B5BFF' }; }
     try { return JSON.parse(Home.status()); } catch (e) { return {}; }
   }
 
@@ -449,7 +449,7 @@ button:focus { outline: none !important; }
     document.querySelector('.gauge').style.setProperty('--gop', (0.06 + 0.22 * pw / 100).toFixed(2));
     $('sportSw').classList.toggle('on', on);
     $('sportSw').classList.toggle('cold', cold);
-    $('sportTxt').textContent = cold ? 'Froid · ' + (s.engineMin > 0 ? s.engineMin + ' min' : (s.enginePct || 0) + ' %') : on ? 'Actif · ' + pw + ' %' : 'Activer';
+    $('sportTxt').textContent = cold ? 'Froid · ' + (s.water != null ? s.water + ' °C' : s.engineMin > 0 ? s.engineMin + ' min' : (s.enginePct || 0) + ' %') : on ? 'Actif · ' + pw + ' %' : 'Activer';
     $('sportMeter').style.width = (cold ? (s.enginePct || 0) : pw) + '%';
     $('stGps').className = 'chip ' + (s.gps ? 'ok' : 'ko');
     $('stLed').className = 'chip ' + (s.ledReady ? 'ok' : 'ko');
