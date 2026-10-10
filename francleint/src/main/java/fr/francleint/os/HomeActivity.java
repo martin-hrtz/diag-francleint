@@ -227,7 +227,7 @@ public class HomeActivity extends Activity {
                 if (a != null) {
                     try {
                         JSONObject x = new JSONObject(a.status());
-                        for (String k : new String[]{"speed", "power", "sport", "ledColor", "hp", "weather", "temp", "lat", "lon", "context", "ledLevel", "gps", "ledReady", "ledState", "albumLed", "skyLed", "showroom", "trip", "engineWarm", "enginePct", "engineMin", "water", "obd", "nm"}) if (x.has(k)) o.put(k, x.get(k));
+                        for (String k : new String[]{"speed", "power", "sport", "ledColor", "hp", "weather", "temp", "lat", "lon", "context", "ledLevel", "gps", "ledReady", "ledState", "albumLed", "skyLed", "showroom", "trip", "engineWarm", "enginePct", "engineMin", "water", "obd", "nm", "engineSound", "engineVol"}) if (x.has(k)) o.put(k, x.get(k));
                     } catch (Exception ignored) { }
                 }
 
@@ -426,6 +426,16 @@ public class HomeActivity extends Activity {
                     AmbianceService a = AmbianceService.instance;
                     if (a != null) a.setSkyLed("1".equals(value));
                     break;
+                }
+                case "engineSound": {
+                    AmbianceService a = AmbianceService.instance;
+                    if (a != null) a.setEngineSound("1".equals(value));
+                    return;
+                }
+                case "engineVol": {
+                    AmbianceService a = AmbianceService.instance;
+                    try { if (a != null) a.setEngineVol(Integer.parseInt(value) / 100f); } catch (Exception ignored) { }
+                    return;
                 }
                 case "albumLed": {
                     AmbianceService a = AmbianceService.instance;
