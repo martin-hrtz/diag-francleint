@@ -114,6 +114,22 @@ public class AmbianceService extends Service {
 
     boolean obdOk() { return obd != null && obd.fresh(); }
 
+    /** Compteur de l'écran d'accueil, 4 fois / s. */
+    String live() {
+        try {
+            JSONObject o = new JSONObject();
+            boolean ok = obdOk();
+            o.put("speed", hasFix || ok ? Math.round(speedKmh) : -1);
+            o.put("power", Math.round(power * 100));
+            o.put("sport", sport);
+            o.put("engineWarm", engine == null || engine.warm);
+            o.put("hp", ok ? (int) Math.max(0, obd.num("hp", 0)) : System.currentTimeMillis() - accelAt < 2200 ? estHp : 0);
+            if (ok) o.put("nm", (int) Math.round(obd.num("q", 0)));
+            o.put("ledColor", String.format("#%02X%02X%02X", (int) cr, (int) cg, (int) cb));
+            return o.toString();
+        } catch (Exception e) { return "{}"; }
+    }
+
     /** Nouvelle ligne du boîtier OBD (5 fois / s, tout de suite pour un clignotant). */
     private void onCar(ObdLink o) {
         if (o.on("cg") || o.on("cd")) blinkerSignal();
@@ -579,7 +595,7 @@ public class AmbianceService extends Service {
                     ? clamp((eff - EFFORT_START) / (EFFORT_RED - EFFORT_START), 0, 1) : 0;
             // Monte en glissant (≈ 0,4 s pour tout le dégradé), redescend doucement (≈ 2,5 s du rouge au bleu).
             // Si tu ré-accélères pendant la descente, ça repart de la couleur actuelle.
-            if (want > power) power = Math.min(want, power + 0.075);
+            if (want > power) power = Math.min(want, power + (obdOk() ? 0.15 : 0.075));   // boîtier : signal propre, on suit plus vite
             else power = Math.max(want, power - 0.012);
             if (sportActive) {
                 tc = hue(HUE_BASE + HUE_SPAN * power);
@@ -751,6 +767,7 @@ public class AmbianceService extends Service {
             o.put("call", inCall);
             o.put("speed", hasFix || obdOk() ? Math.round(speedKmh) : -1);
             if (obd != null) o.put("obd", obd.toJson());
+            if (obdOk()) o.put("nm", (int) Math.round(obd.num("q", 0)));
             o.put("gps", hasFix);
             o.put("ledLevel", Math.round(cl * 100));
             o.put("ledColor", String.format("#%02X%02X%02X", (int) cr, (int) cg, (int) cb));
