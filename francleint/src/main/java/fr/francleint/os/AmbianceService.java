@@ -111,11 +111,21 @@ public class AmbianceService extends Service {
     /** À appeler à chaque signal de clignotant (source branchée pendant la séance voiture). */
     void blinkerSignal() { blinkerUntil = System.currentTimeMillis() + 1200; }
 
+    boolean obdOk() { return obd != null && obd.fresh(); }
+
+    /** Nouvelle ligne du boîtier OBD (5 fois / s, tout de suite pour un clignotant). */
+    private void onCar(ObdLink o) {
+        if (o.on("cg") || o.on("cd")) blinkerSignal();
+        double v = o.num("v", -1);
+        if (v >= 0) speedKmh = v;
+    }
+
     private final Handler h = new Handler(Looper.getMainLooper());
     private Led led;
     private final Sky sky = new Sky();
     Trip trip;
     Engine engine;
+    ObdLink obd;                           // boîtier OBD (écoute seule de la Clio) : vraies données quand il est là
     private volatile long warmFlashAt = 0;
     private SharedPreferences prefs;
 
@@ -153,6 +163,8 @@ public class AmbianceService extends Service {
         startedAt = System.currentTimeMillis();
         led = new Led(this);
         led.start();
+        obd = new ObdLink(this, this::onCar);
+        obd.start();
         startLocation();
         h.post(tick);
         h.post(fade);
@@ -317,6 +329,7 @@ public class AmbianceService extends Service {
         try { unregisterReceiver(screen); } catch (Exception ignored) { }
         removeOverlay();
         led.stop();
+        if (obd != null) obd.stop();
         if (trip != null) trip.save();
         if (engine != null) engine.save(System.currentTimeMillis());
         instance = null;
@@ -347,7 +360,7 @@ public class AmbianceService extends Service {
             LocationListener l = new LocationListener() {
                 @Override public void onLocationChanged(Location loc) {
                     lat = loc.getLatitude(); lon = loc.getLongitude(); hasFix = true;
-                    speedKmh = loc.hasSpeed() ? loc.getSpeed() * 3.6 : speedKmh;
+                    if (!obdOk()) speedKmh = loc.hasSpeed() ? loc.getSpeed() * 3.6 : speedKmh;   // le boîtier OBD est plus juste
                     // Point GPS imprécis (> 25 m) : ignoré pour l'effort, sinon il crée des « faux » coups d'accélérateur
                     if (LocationManager.GPS_PROVIDER.equals(loc.getProvider()) && loc.hasSpeed()
                             && !(loc.hasAccuracy() && loc.getAccuracy() > 25)) {
@@ -432,7 +445,7 @@ public class AmbianceService extends Service {
         }
 
         elevation = Sky.sunElevation(lat, lon, now);
-        lights = headlights();
+        lights = headlights() || (obdOk() && (obd.on("co") || obd.on("pl")));
         inCall = calling();
 
         // Lumière dehors estimée, de 0 (nuit noire) à 1 (plein soleil)
@@ -441,7 +454,7 @@ public class AmbianceService extends Service {
         if (lights) a = Math.min(a, 0.15);                       // phares allumés : tunnel, pluie, nuit
 
         if (speedKmh < 2) { if (stillSince == 0) stillSince = now; } else stillSince = 0;
-        boolean parked = hasFix && stillSince > 0 && now - stillSince > 60_000;
+        boolean parked = (hasFix || obdOk()) && stillSince > 0 && now - stillSince > 60_000;
         boolean highway = speedKmh > 110;
         boolean welcome = now - startedAt < 4_000;
         boolean call = inCall;
@@ -461,7 +474,11 @@ public class AmbianceService extends Service {
         ambient = a;
 
         // Moteur froid : LED bleues fixes, pas de mode sport. Chaud : 2 clignotements ambre puis sport activé tout seul.
-        if (engine.tick(now, hasFix && speedKmh > 5, sky.temp)) {
+        double water = obdOk() ? obd.num("e", -100) : -100;
+        if (water <= -40) engine.water = -100;
+        boolean became = water > -40 ? engine.real(now, water)                      // vraie température d'eau
+                : engine.tick(now, (hasFix || obdOk()) && speedKmh > 5, sky.temp);   // sinon : estimation
+        if (became) {
             warmFlashAt = now;
             setSport(true);
         }
@@ -553,6 +570,7 @@ public class AmbianceService extends Service {
             // Accélération → teinte (bleu → violet → magenta → rouge), intensité inchangée
             long now = System.currentTimeMillis();
             double eff = "acc1".equals(sim) ? 0.45 : "acc2".equals(sim) ? 0.9
+                    : obdOk() ? clamp(obd.num("q", 0) / 135.0, 0, 1)            // couple réel / couple max du 0.9 TCe
                     : (now - accelAt < 2200 ? predictedEffort(now) : 0);   // un point GPS en retard ne fait plus « retomber » la couleur
             double want = sportActive && !blinker
                     ? clamp((eff - EFFORT_START) / (EFFORT_RED - EFFORT_START), 0, 1) : 0;
@@ -725,7 +743,8 @@ public class AmbianceService extends Service {
             o.put("lon", lon);
             o.put("lights", lights);
             o.put("call", inCall);
-            o.put("speed", hasFix ? Math.round(speedKmh) : -1);
+            o.put("speed", hasFix || obdOk() ? Math.round(speedKmh) : -1);
+            if (obd != null) o.put("obd", obd.toJson());
             o.put("gps", hasFix);
             o.put("ledLevel", Math.round(cl * 100));
             o.put("ledColor", String.format("#%02X%02X%02X", (int) cr, (int) cg, (int) cb));
@@ -742,7 +761,8 @@ public class AmbianceService extends Service {
             if (engine != null) {
                 o.put("engineWarm", engine.warm);
                 o.put("enginePct", engine.pct());
-                o.put("engineMin", engine.minutesLeft(sky.temp));
+                o.put("engineMin", engine.water > -40 ? 0 : engine.minutesLeft(sky.temp));
+                if (obdOk() && engine.water > -40) o.put("water", Math.round(engine.water));
             }
             o.put("albumLed", prefs.getBoolean("albumLed", false));
             o.put("skyLed", prefs.getBoolean("skyLed", true));
@@ -754,7 +774,7 @@ public class AmbianceService extends Service {
             o.put("measuring", measuring);
             o.put("accel", Math.round((System.currentTimeMillis() - accelAt < 2500 ? accel : 0) * 10) / 10.0);
             o.put("power", Math.round(power * 100));
-            o.put("hp", System.currentTimeMillis() - accelAt < 2200 ? estHp : 0);
+            o.put("hp", obdOk() ? (int) Math.max(0, obd.num("hp", 0)) : System.currentTimeMillis() - accelAt < 2200 ? estHp : 0);
             o.put("canOverlay", canOverlay());
             boolean locOn = false;
             try { locOn = ((LocationManager) getSystemService(LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER); } catch (Exception ignored) { }
