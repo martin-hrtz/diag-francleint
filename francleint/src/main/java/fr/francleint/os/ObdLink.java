@@ -48,7 +48,7 @@ class ObdLink {
     private final SharedPreferences prefs;
     private BluetoothGatt gatt;
     private boolean scanning;
-    private long attemptAt = 0;
+    private long attemptAt = 0, lastScan = 0;
     private final StringBuilder buf = new StringBuilder();
 
     volatile String state = "en attente";
@@ -75,7 +75,10 @@ class ObdLink {
                 if (silent) { close(); state = "boîtier muet, reconnexion"; }
                 if (gatt == null && !scanning && now - attemptAt > 15000) {
                     String addr = prefs.getString("addr", null);
-                    if (addr != null && (now / 15000) % 4 != 0) connect(addr); else scan();
+                    // Adresse connue : on la rappelle directement (pas de recherche Bluetooth, qui gênait les LED).
+                    // Recherche seulement si aucun boîtier n'a jamais été vu, et au plus une fois par minute.
+                    if (addr != null) connect(addr);
+                    else if (now - lastScan > 60000) { lastScan = now; scan(); }
                 }
             } catch (Exception ignored) { }
             h.postDelayed(this, 5000);
