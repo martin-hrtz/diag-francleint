@@ -57,12 +57,12 @@ svg { display: block; }
 
 /* Instruments (passager) : jauge d'effort en arc, vitesse au centre */
 .gauge { position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1.5rem 1.75rem 1.25rem; min-height: 0; }
-.gauge::before { content: ""; position: absolute; left: 50%; top: 58%; width: 30rem; height: 30rem; margin: -15rem 0 0 -15rem; border-radius: 50%;
+.gauge::before { content: ""; position: absolute; left: 50%; top: 58%; width: 30rem; height: 30rem; margin: -15rem 0 0 -15rem; border-radius: 50%; will-change: opacity;
   background: radial-gradient(closest-side, var(--live), transparent 100%); opacity: var(--gop, .10); transition: opacity 500ms var(--ease), background 500ms var(--ease); pointer-events: none; }
 .ring { position: relative; width: 21rem; height: 21rem; flex: none; margin-bottom: -.75rem; }
 .ring svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .ring .trk { fill: none; stroke: var(--surface-2); stroke-width: 10; stroke-linecap: round; }
-.ring .val { fill: none; stroke: var(--live); stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray 300ms var(--ease), stroke 500ms var(--ease); }
+.ring .val { fill: none; stroke: var(--live); stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray 110ms linear, stroke 500ms var(--ease); }
 .ring .tick { stroke: var(--line); stroke-width: 2; }
 .ring .mid { position: absolute; left: 0; right: 0; top: 50%; margin-top: -4.6rem; text-align: center; }
 .ring .spd { display: block; font-size: 7rem; font-weight: 600; font-stretch: 75%; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -87,25 +87,25 @@ svg { display: block; }
 .sport { --hot: #FF4B2B; flex: none; width: 15rem; position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--surface);
   border: 1px solid rgba(255,75,43,.55); padding: 0 1.25rem 0 1rem; display: flex; align-items: center; text-align: left; color: var(--ink);
   transition: background 400ms var(--ease), border-color 400ms var(--ease), box-shadow 400ms var(--ease); }
-.sport::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none;
-  background: linear-gradient(100deg, transparent, rgba(255,255,255,.10), transparent); transform: skewX(-18deg); animation: sp-sheen 4.8s ease-in-out 1.2s infinite; }
+.sport::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none; will-change: transform;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.10), transparent); transform: translateX(0) skewX(-18deg); animation: sp-sheen 4.8s ease-in-out 1.2s infinite; }
 .sport .bolt { position: relative; flex: none; width: 3.8rem; height: 3.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   background: rgba(255,75,43,.14); margin-right: .9rem; }
-.sport .bolt::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; box-shadow: 0 0 0 0 rgba(255,75,43,.55); animation: sp-ping 2.4s cubic-bezier(.22,1,.36,1) infinite; }
+.sport .bolt::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2px solid rgba(255,75,43,.55); will-change: transform, opacity; animation: sp-ping 2.4s cubic-bezier(.22,1,.36,1) infinite; }
 .sport .bolt svg { width: 1.9rem; height: 1.9rem; fill: var(--hot); stroke: none; }
 .sport b { display: block; font-size: 1.75rem; font-weight: 700; font-stretch: 75%; letter-spacing: .06em; line-height: 1; }
 .sport small { display: block; white-space: nowrap; margin-top: .3rem; font-size: .95rem; font-weight: 600; color: var(--hot); letter-spacing: .02em; }
 .sport .meter { display: none; position: relative; height: .3rem; margin-top: .45rem; border-radius: 999px; background: rgba(255,255,255,.25); overflow: hidden; width: 6.5rem; }
 .sport .meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #fff; border-radius: 999px; transition: width 300ms var(--ease); }
 .sport.on { border-color: transparent; color: #fff; background: linear-gradient(125deg, #FF6A2B 0%, #F21E46 55%, #A21BFF 100%);
-  box-shadow: 0 .6rem 2.2rem -.8rem rgba(242,30,70,.85); animation: sp-breathe 2.6s ease-in-out infinite; }
+  box-shadow: 0 .6rem 2.4rem -.6rem rgba(200,30,120,.8); }
 .sport.on .bolt { background: rgba(255,255,255,.22); }
 .sport.on .bolt::before { animation: none; }
 .sport.on .bolt svg { fill: #fff; }
 .sport.on small { color: rgba(255,255,255,.85); }
 .sport.on .meter { display: block; }
-@keyframes sp-ping { 0% { box-shadow: 0 0 0 0 rgba(255,75,43,.55); } 70%, 100% { box-shadow: 0 0 0 1.1rem rgba(255,75,43,0); } }
-@keyframes sp-sheen { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+@keyframes sp-ping { 0% { transform: scale(1); opacity: 1; } 70%, 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes sp-sheen { 0% { transform: translateX(0) skewX(-18deg); } 55%, 100% { transform: translateX(475%) skewX(-18deg); } }
 @keyframes sp-breathe { 0%, 100% { box-shadow: 0 .6rem 2.2rem -.8rem rgba(242,30,70,.85); } 50% { box-shadow: 0 .6rem 2.8rem -.4rem rgba(162,27,255,.75); } }
 .sport.cold { border-color: transparent; color: #fff; background: linear-gradient(125deg, #2B6BFF 0%, #1C3FD6 60%, #142A8F 100%); }
 .sport.cold::after { display: none; }
@@ -209,17 +209,21 @@ body.drive .clock { font-size: 8rem; }
 
 /* ───── Voiture (boîtier OBD) : voyants, clignotants, rapport, page Voiture ───── */
 :root { --ok: #3FBF74; --hi: #4C8DFF; --warn: #F5A524; --bad: #E0583A; }
-.ring .lamps { position: absolute; left: 50%; bottom: 1.1rem; width: 12rem; margin-left: -6rem; display: flex; justify-content: center; align-items: center; height: 2.4rem; pointer-events: none; }
-.lp { display: none; align-items: center; height: 2.4rem; margin: 0 .3rem; opacity: 0; transform: scale(.7); }
-.lp.on { display: flex; animation: lp-in 260ms var(--ease) forwards; }
-.ring .lp svg { position: static; width: 2.1rem; height: 2.1rem; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
-.lp em { font-style: normal; font-size: .85rem; font-weight: 700; letter-spacing: .06em; margin-left: .25rem; }
-.lp.g { color: #43D17E; } .lp.b { color: #5C9BFF; } .lp.r { color: #FF5A3C; } .lp.a { color: #FFB020; } .lp.w { color: var(--ink); }
-.lp.g svg, .lp.b svg, .lp.r svg, .lp.a svg { -webkit-filter: drop-shadow(0 0 .35rem currentColor); filter: drop-shadow(0 0 .35rem currentColor); }
-body.jour .lp svg { -webkit-filter: none; filter: none; }
-@keyframes lp-in { to { opacity: 1; transform: none; } }
-.ring svg.blk { position: absolute; top: 50%; left: auto; width: 2.6rem; height: 2.6rem; margin-top: -1.3rem; fill: #43D17E; opacity: .07; transition: opacity 120ms linear; }
-.ring svg.blk.on { -webkit-filter: drop-shadow(0 0 .5rem rgba(67,209,126,.8)); filter: drop-shadow(0 0 .5rem rgba(67,209,126,.8)); }
+.cluster { margin-top: 1.5rem; padding: 1.15rem 1.5rem 1rem; border-radius: 1.5rem; border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface) 0%, rgba(0,0,0,0) 140%); }
+.cl-row { display: flex; align-items: center; justify-content: space-between; height: 2.9rem; }
+.cluster .ic { position: relative; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; color: var(--ink-3); opacity: .22; transition: opacity 220ms var(--ease), color 220ms var(--ease); }
+.cluster .ic svg { width: 2.3rem; height: 2.3rem; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.cluster svg.ic.arr { width: 2.6rem; height: 2.6rem; fill: currentColor; stroke: none; opacity: .14; }
+.cluster .ic.on { opacity: 1; }
+.cluster .ic.on.g { color: #43D17E; } .cluster .ic.on.b { color: #5C9BFF; } .cluster .ic.on.r { color: #FF5A3C; } .cluster .ic.on.a { color: #FFB020; } .cluster .ic.on.w { color: var(--ink); }
+.cluster .ic.on::after { content: ""; position: absolute; left: 50%; top: 50%; width: 3.2rem; height: 3.2rem; margin: -1.6rem 0 0 -1.6rem; border-radius: 50%;
+  background: radial-gradient(closest-side, currentColor, transparent); opacity: .16; pointer-events: none; }
+.cluster svg.ic.arr.on { animation: blk 680ms steps(1) infinite; }
+.cl-msg { display: flex; align-items: center; margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--line); font-size: 1.15rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cl-msg i { flex: none; width: .55rem; height: .55rem; border-radius: 50%; margin-right: .7rem; background: var(--ink-3); }
+.cl-msg.ok i { background: #43D17E; } .cl-msg.r { color: #FF6B4E; } .cl-msg.r i { background: #FF5A3C; } .cl-msg.b i { background: #5C9BFF; } .cl-msg.a i { background: #FFB020; } .cl-msg.g i { background: #43D17E; }
+body.jour .cluster { background: var(--surface); }
 .ring svg.blk.l { left: -1.2rem; } .ring svg.blk.r { right: -1.2rem; }
 .blk.on { animation: blk 680ms steps(1) infinite; }
 @keyframes blk { 0% { opacity: 1; } 50% { opacity: .12; } }
@@ -227,38 +231,57 @@ body.jour .lp svg { -webkit-filter: none; filter: none; }
 .ring .gear.on { display: block; }
 .ring .gear.rv { background: var(--ink); color: var(--bg); }
 
-#car { grid-template-rows: 2.75rem minmax(0,1fr); }
-.carv { min-height: 0; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.45fr); grid-gap: 1.25rem; gap: 1.25rem; }
-.carbox { position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
-.carbox svg { height: 100%; width: auto; max-width: 100%; }
+#car { grid-template-rows: 2.75rem minmax(0,1fr); --paint1: #2B3036; --paint2: #121519; --glass1: #0B0E10; --glass2: #1E252B; }
+body.jour #car { --paint1: #F3F5F6; --paint2: #C7CDD2; --glass1: #2A3238; --glass2: #56626B; }
+.carv { min-height: 0; display: grid; grid-template-columns: minmax(0,.92fr) minmax(0,1.5fr); grid-gap: 1.25rem; gap: 1.25rem; }
+.carbox { position: relative; overflow: hidden; border-radius: 1.75rem; border: 1px solid var(--line);
+  background: radial-gradient(60% 50% at 50% 55%, var(--surface-2), var(--surface) 70%); display: flex; align-items: center; justify-content: center; }
+.carbox svg { height: 94%; width: auto; max-width: 100%; }
 .carbox .off { position: absolute; left: 0; right: 0; bottom: 1.25rem; text-align: center; font-size: 1.05rem; font-weight: 600; color: var(--ink-3); }
-.cv .body { fill: var(--surface-2); stroke: var(--line); stroke-width: 2; }
-.cv .glass { fill: var(--bg); opacity: .8; }
-.cv .roof { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
-.cv .door { stroke: var(--ink-3); stroke-width: 5; stroke-linecap: round; transition: stroke 250ms var(--ease); }
-.cv .door.open { stroke: var(--bad); }
-.cv .trunk { fill: none; stroke: var(--ink-3); stroke-width: 5; stroke-linecap: round; transition: stroke 250ms var(--ease), transform 300ms var(--ease); }
-.cv .trunk.open { stroke: var(--bad); }
-.cv .wheel { fill: var(--ink-3); }
-.cv .lamp { fill: var(--ink-3); transition: fill 250ms var(--ease); }
-.cv .lamp.on { fill: #F4F1E6; }
-.cv .tail { fill: #4A2420; transition: fill 200ms var(--ease); }
-.cv .tail.on { fill: #FF3B30; } .cv .tail.rev { fill: #FFFFFF; }
-.cv .beam { opacity: 0; transition: opacity 300ms var(--ease); }
-.cv .beam.on { opacity: 1; }
-.cv .ind { fill: transparent; }
-.cv .ind.on { fill: #FFA41B; animation: blk 680ms steps(1) infinite; }
-.cv .lock { fill: none; stroke: var(--ink-3); stroke-width: 3; stroke-linecap: round; transition: stroke 250ms var(--ease); }
-.cv .lock.on { stroke: var(--ok); }
-.cgrid { min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); grid-template-rows: repeat(3, minmax(0,1fr)); grid-gap: 1rem; gap: 1rem; }
-.ct { position: relative; overflow: hidden; border-radius: 1.25rem; background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; }
-.ct span { font-size: 1rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
-.ct b { font-size: 3.4rem; font-weight: 600; font-stretch: 75%; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.ct b small { font-size: 1.1rem; font-weight: 600; color: var(--ink-2); margin-left: .2rem; }
-.ct .bar { height: .45rem; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
-.ct .bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--live); transition: width 200ms linear; }
-.ct.brk .bar i { background: var(--bad); }
-.ct.hot b { color: var(--live); }
+.carbox .lockst { position: absolute; left: 1.25rem; top: 1.1rem; display: flex; align-items: center; font-size: 1rem; font-weight: 600; color: var(--ink-2); }
+.carbox .lockst svg { width: 1.3rem; height: 1.3rem; margin-right: .45rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.carbox .lockst.on { color: #43D17E; }
+.carbox .kmst { position: absolute; right: 1.25rem; top: 1.1rem; font-size: 1rem; font-weight: 600; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.cv .door, .cv .hatch { transition: transform 450ms var(--ease); }
+.cv .door path, .cv .hatch path { fill: url(#gPaint); stroke: rgba(255,255,255,.06); stroke-width: 1; transition: stroke 250ms var(--ease); }
+.cv .door.open path, .cv .hatch.open path { stroke: #FF5A3C; stroke-width: 2.5; fill: rgba(255,90,60,.28); }
+.cv .beam, .cv .glow { opacity: 0; transition: opacity 350ms var(--ease); }
+.cv .beam.on, .cv .glow.on { opacity: 1; }
+.cv .ind.on { animation: blk 680ms steps(1) infinite; }
+.cv .hl { fill: #3A4148; transition: fill 250ms var(--ease); } .cv .hl.on { fill: #F6F3E8; }
+.cv .tl { fill: #4A1D1A; transition: fill 200ms var(--ease); } .cv .tl.on { fill: #E0352B; } .cv .tl.brake { fill: #FF4A3A; }
+.cv .rev { fill: transparent; transition: fill 200ms var(--ease); } .cv .rev.on { fill: #FFFFFF; }
+.cv .fw { transition: transform 200ms linear; }
+.cdata { min-height: 0; display: grid; grid-template-rows: minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr); grid-gap: 1rem; gap: 1rem; }
+.crow { min-height: 0; display: grid; grid-gap: 1rem; gap: 1rem; }
+.crow.r3 { grid-template-columns: repeat(3, minmax(0,1fr)); } .crow.r2 { grid-template-columns: minmax(0,1.4fr) minmax(0,1fr); }
+.cc { position: relative; overflow: hidden; min-width: 0; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 1.1rem 1.4rem; display: flex; flex-direction: column; justify-content: space-between; }
+.cc .lb { font-size: .95rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.cc .v { font-size: 3rem; font-weight: 600; font-stretch: 75%; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cc .v small { font-size: 1.05rem; font-weight: 600; color: var(--ink-2); margin-left: .3rem; letter-spacing: 0; }
+.cc .tr { height: .4rem; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.cc .tr i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--live); transition: width 120ms linear; }
+.tach { flex-direction: row; align-items: stretch; }
+.tach .tm { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+.tach .v { font-size: 5.2rem; color: var(--ink); }
+.segs { display: flex; height: 1.1rem; }
+.segs i { flex: 1; margin-right: .22rem; border-radius: .2rem; background: var(--surface-2); transition: background 90ms linear; }
+.segs i:last-child { margin-right: 0; }
+.segs i.on { background: var(--live); } .segs i.red { background: rgba(255,90,60,.25); } .segs i.red.on { background: #FF5A3C; }
+.tach .gr { flex: none; width: 7.5rem; margin-left: 1.4rem; border-left: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.tach .gr b { font-size: 5.6rem; font-weight: 700; font-stretch: 75%; line-height: 1; }
+.tach .gr span { margin-top: .3rem; font-size: .95rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.cc.water .tr i { background: linear-gradient(90deg, #5C9BFF, #43D17E 65%, #FF5A3C); }
+.ped { display: flex; flex-direction: column; justify-content: center; }
+.ped div { display: flex; align-items: center; }
+.ped div + div { margin-top: 1rem; }
+.ped em { width: 8.5rem; flex: none; font-style: normal; font-size: 1.05rem; font-weight: 600; color: var(--ink-2); }
+.ped .tr { flex: 1; height: .7rem; }
+.ped b { width: 4rem; flex: none; text-align: right; font-size: 1.5rem; font-weight: 600; font-stretch: 75%; font-variant-numeric: tabular-nums; }
+.ped .brk i { background: #FF5A3C; }
+.steer { flex-direction: row; align-items: center; }
+.steer svg { flex: none; width: 5.5rem; height: 5.5rem; margin-right: 1.25rem; fill: none; stroke: var(--ink-2); stroke-width: 2.2; stroke-linecap: round; transition: transform 120ms linear; }
+.steer > div { min-width: 0; display: flex; flex-direction: column; justify-content: space-between; align-self: stretch; }
 
 #sheet { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 92; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; }
 #sheet.on { display: flex; }
@@ -300,17 +323,17 @@ button:focus { outline: none !important; }
   <symbol id="i-cam" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></symbol>
   <symbol id="i-apps" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
-  <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5v-3.5l2.2-5h13.6l2.2 5v3.5z"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 11.5 6.3 6.8A2 2 0 0 1 8.2 5.5h7.6a2 2 0 0 1 1.9 1.3l1.8 4.7"/><path d="M3.5 13.5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v3.5h-17z"/><path d="M5.5 17v2M18.5 17v2"/><circle cx="7.3" cy="14.3" r=".9"/><circle cx="16.7" cy="14.3" r=".9"/></symbol>
   <symbol id="i-low" viewBox="0 0 24 24"><path d="M10 5C6 5 3 8 3 12s3 7 7 7V5z"/><path d="M14 8.5l7 2M14 12.5l7 2M14 16.5l7 2"/></symbol>
   <symbol id="i-high" viewBox="0 0 24 24"><path d="M10 5C6 5 3 8 3 12s3 7 7 7V5z"/><path d="M14 7.5h7M14 12h7M14 16.5h7"/></symbol>
   <symbol id="i-pos" viewBox="0 0 24 24"><path d="M9 7.5c-2.5 0-4.5 2-4.5 4.5s2 4.5 4.5 4.5z"/><path d="M13 9.5l4-1.5M13 14.5l4 1.5M2.5 12H1"/></symbol>
-  <symbol id="i-door" viewBox="0 0 24 24"><rect x="8" y="2.5" width="9" height="19" rx="3.5"/><path d="M8 9l-5 3.5"/></symbol>
-  <symbol id="i-trunk" viewBox="0 0 24 24"><rect x="7.5" y="2.5" width="9" height="15" rx="3.5"/><path d="M7.5 17.5l-2 4h13l-2-4"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><path d="M9 2.5h6a2.5 2.5 0 0 1 2.5 2.5v14a2.5 2.5 0 0 1-2.5 2.5H9A2.5 2.5 0 0 1 6.5 19V5A2.5 2.5 0 0 1 9 2.5z"/><path d="M8.5 7.5h7M8.5 16.5h7"/><path d="M6.5 9.5 2.5 13"/></symbol>
+  <symbol id="i-trunk" viewBox="0 0 24 24"><path d="M9 2.5h6a2.5 2.5 0 0 1 2.5 2.5v11.5h-11V5A2.5 2.5 0 0 1 9 2.5z"/><path d="M8.5 7.5h7"/><path d="M6 19.5h12l1.5 2.5h-15z"/></symbol>
   <symbol id="i-park" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5"/><path d="M4.5 6.5a9.5 9.5 0 0 0 0 11M19.5 6.5a9.5 9.5 0 0 1 0 11M10.5 15V9h2a1.8 1.8 0 0 1 0 3.6h-2"/></symbol>
-  <symbol id="i-belt" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M7.5 21v-7a4.5 4.5 0 0 1 9 0v7M8.5 9.5l7.5 9"/></symbol>
+  <symbol id="i-belt" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="M9 21.5V15a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v6.5"/><path d="M9.5 11.5 17 19"/><path d="M6.5 21.5h11"/></symbol>
   <symbol id="i-limit" viewBox="0 0 24 24"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></symbol>
   <symbol id="i-defrost" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10c1.2 1 2.3 1 3.5 0s2.3-1 3.5 0 2.3 1 3 0M7 14.5c1.2 1 2.3 1 3.5 0s2.3-1 3.5 0 2.3 1 3 0"/></symbol>
-  <symbol id="i-temp" viewBox="0 0 24 24"><path d="M12 3v11"/><circle cx="12" cy="17" r="3"/><path d="M15.5 6h3M15.5 10h3"/></symbol>
+  <symbol id="i-temp" viewBox="0 0 24 24"><path d="M12 2.5v9"/><path d="M12 3.5h3M12 6.5h3M12 9.5h3"/><circle cx="12" cy="14" r="2.3"/><path d="M2.5 19.5c1.6 1.1 3.2 1.1 4.8 0s3.2-1.1 4.8 0 3.2 1.1 4.8 0 3.2-1.1 4.8 0"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
   <symbol id="i-blk" viewBox="0 0 24 24"><path d="M10.5 4.5 3 12l7.5 7.5v-4.5H21V9H10.5z"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
@@ -334,6 +357,22 @@ button:focus { outline: none !important; }
           <button class="act" data-page="settings" aria-label="Réglages"><svg><use href="#i-gear"/></svg></button>
         </div>
       </div>
+      <section class="cluster" aria-label="Voyants">
+        <div class="cl-row">
+          <svg class="ic arr g" id="blkL" viewBox="0 0 24 24"><use href="#i-blk"/></svg>
+          <span class="ic g" id="tCo"><svg><use href="#i-low"/></svg></span>
+          <span class="ic b" id="tPl"><svg><use href="#i-high"/></svg></span>
+          <span class="ic r" id="tPo"><svg><use href="#i-door"/></svg></span>
+          <span class="ic r" id="tCf"><svg><use href="#i-trunk"/></svg></span>
+          <span class="ic r" id="tFm"><svg><use href="#i-park"/></svg></span>
+          <span class="ic r" id="tCe"><svg><use href="#i-belt"/></svg></span>
+          <span class="ic a" id="tDg"><svg><use href="#i-defrost"/></svg></span>
+          <span class="ic b" id="tEf"><svg><use href="#i-temp"/></svg></span>
+          <span class="ic w" id="tLr"><svg><use href="#i-limit"/></svg></span>
+          <svg class="ic arr g" id="blkR" viewBox="0 0 24 24" style="transform:scaleX(-1)"><use href="#i-blk"/></svg>
+        </div>
+        <p class="cl-msg" id="clMsg"><i></i><span>Boîtier OBD non connecté</span></p>
+      </section>
       <div style="margin-top:auto">
         <p class="hello" id="hello">Bonjour <b>Martin</b></p>
         <p class="clock" id="clock">--:--</p>
@@ -352,20 +391,6 @@ button:focus { outline: none !important; }
           <circle class="val" id="dArc" cx="100" cy="100" r="88" stroke-dasharray="0 552.9" transform="rotate(135 100 100)"/>
         </svg>
         <div class="mid"><b class="spd" id="dSpeed">—</b><span class="unit">km/h</span><span class="gear" id="dGear"></span></div>
-        <div class="lamps" id="lamps">
-          <span class="lp g" id="tVl"><svg><use href="#i-pos"/></svg></span>
-          <span class="lp g" id="tCo"><svg><use href="#i-low"/></svg></span>
-          <span class="lp b" id="tPl"><svg><use href="#i-high"/></svg></span>
-          <span class="lp r" id="tPo"><svg><use href="#i-door"/></svg></span>
-          <span class="lp r" id="tCf"><svg><use href="#i-trunk"/></svg></span>
-          <span class="lp r" id="tFm"><svg><use href="#i-park"/></svg></span>
-          <span class="lp r" id="tCe"><svg><use href="#i-belt"/></svg></span>
-          <span class="lp w" id="tLr"><svg><use href="#i-limit"/></svg><em id="tLrT">LIM</em></span>
-          <span class="lp a" id="tDg"><svg><use href="#i-defrost"/></svg></span>
-          <span class="lp b" id="tEf"><svg><use href="#i-temp"/></svg></span>
-        </div>
-        <svg class="blk l" id="blkL" viewBox="0 0 24 24"><use href="#i-blk"/></svg>
-        <svg class="blk r" id="blkR" viewBox="0 0 24 24" style="transform:scaleX(-1)"><use href="#i-blk"/></svg>
       </div>
     </section>
     <div class="dock">
@@ -389,46 +414,63 @@ button:focus { outline: none !important; }
   <header><h1>Voiture</h1><button data-page="home">Retour</button></header>
   <div class="carv">
     <div class="carbox">
-      <svg class="cv" viewBox="0 0 240 440" aria-label="Vue de dessus de la Clio">
+      <p class="kmst" id="cKm">—</p>
+      <p class="lockst" id="cLock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>—</span></p>
+      <svg class="cv" viewBox="0 0 300 560" aria-label="Ta Clio vue de dessus">
         <defs>
-          <linearGradient id="gBeam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FFF6D8" stop-opacity=".55"/><stop offset="1" stop-color="#FFF6D8" stop-opacity="0"/></linearGradient>
-          <linearGradient id="gHigh" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#CFE0FF" stop-opacity=".6"/><stop offset="1" stop-color="#CFE0FF" stop-opacity="0"/></linearGradient>
+          <linearGradient id="gPaint" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--paint2)"/><stop offset=".5" style="stop-color:var(--paint1)"/><stop offset="1" style="stop-color:var(--paint2)"/></linearGradient>
+          <linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--glass2)"/><stop offset="1" style="stop-color:var(--glass1)"/></linearGradient>
+          <linearGradient id="gRoof" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--paint1)"/><stop offset=".55" style="stop-color:var(--paint2)"/><stop offset="1" style="stop-color:var(--paint1)"/></linearGradient>
+          <linearGradient id="gLow" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FFF4D6" stop-opacity=".55"/><stop offset="1" stop-color="#FFF4D6" stop-opacity="0"/></linearGradient>
+          <linearGradient id="gHigh" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#DCE8FF" stop-opacity=".6"/><stop offset="1" stop-color="#DCE8FF" stop-opacity="0"/></linearGradient>
+          <radialGradient id="gAmb"><stop offset="0" stop-color="#FFA41B" stop-opacity=".95"/><stop offset="1" stop-color="#FFA41B" stop-opacity="0"/></radialGradient>
+          <radialGradient id="gRed"><stop offset="0" stop-color="#FF3B30" stop-opacity=".7"/><stop offset="1" stop-color="#FF3B30" stop-opacity="0"/></radialGradient>
+          <radialGradient id="gShadow"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
         </defs>
-        <path class="beam" id="cvLow" fill="url(#gBeam)" d="M72 98 L38 30 L108 30 Z M168 98 L132 30 L202 30 Z"/>
-        <path class="beam" id="cvHigh" fill="url(#gHigh)" d="M72 98 L20 0 L120 0 Z M168 98 L120 0 L220 0 Z"/>
-        <rect class="wheel" id="cvWL" x="48" y="128" width="14" height="40" rx="5"/>
-        <rect class="wheel" id="cvWR" x="178" y="128" width="14" height="40" rx="5"/>
-        <rect class="wheel" x="48" y="318" width="14" height="40" rx="5"/>
-        <rect class="wheel" x="178" y="318" width="14" height="40" rx="5"/>
-        <rect class="body" x="58" y="88" width="124" height="320" rx="40"/>
-        <rect class="lamp" id="cvHL" x="66" y="94" width="26" height="9" rx="4"/>
-        <rect class="lamp" id="cvHR" x="148" y="94" width="26" height="9" rx="4"/>
-        <circle class="ind" id="cvIFL" cx="64" cy="112" r="6"/><circle class="ind" id="cvIFR" cx="176" cy="112" r="6"/>
-        <circle class="ind" id="cvIRL" cx="64" cy="386" r="6"/><circle class="ind" id="cvIRR" cx="176" cy="386" r="6"/>
-        <path class="glass" d="M76 176 Q120 156 164 176 L158 206 Q120 194 82 206 Z"/>
-        <rect class="roof" x="78" y="212" width="84" height="118" rx="16"/>
-        <path class="glass" d="M82 336 Q120 346 158 336 L162 360 Q120 370 78 360 Z"/>
-        <g id="cvLock" class="lock" transform="translate(108 256)"><rect x="2" y="12" width="20" height="15" rx="3"/><path d="M6 12V8a6 6 0 0 1 12 0v4"/></g>
-        <line class="door" id="cvDFL" x1="58" y1="206" x2="58" y2="272"/>
-        <line class="door" id="cvDFR" x1="182" y1="206" x2="182" y2="272"/>
-        <line class="door" x1="58" y1="280" x2="58" y2="334"/>
-        <line class="door" x1="182" y1="280" x2="182" y2="334"/>
-        <line class="trunk" id="cvTrunk" x1="84" y1="408" x2="156" y2="408"/>
-        <rect class="tail" id="cvTL" x="64" y="394" width="22" height="8" rx="3"/>
-        <rect class="tail" id="cvTR" x="154" y="394" width="22" height="8" rx="3"/>
+        <path class="beam" id="cvLow" fill="url(#gLow)" d="M96 92 L58 4 L132 4 Z M204 92 L168 4 L242 4 Z"/>
+        <path class="beam" id="cvHigh" fill="url(#gHigh)" d="M96 92 L30 -40 L150 -40 Z M204 92 L150 -40 L270 -40 Z"/>
+        <ellipse cx="150" cy="290" rx="128" ry="240" fill="url(#gShadow)"/>
+        <g class="fw" id="cvWL"><rect x="52" y="128" width="18" height="52" rx="7" fill="#0C0E10"/></g>
+        <g class="fw" id="cvWR"><rect x="230" y="128" width="18" height="52" rx="7" fill="#0C0E10"/></g>
+        <rect x="52" y="388" width="18" height="52" rx="7" fill="#0C0E10"/>
+        <rect x="230" y="388" width="18" height="52" rx="7" fill="#0C0E10"/>
+        <path fill="url(#gPaint)" d="M150 74 C206 74 232 92 236 132 L241 196 C244 226 244 386 241 432 C239 470 222 494 150 494 C78 494 61 470 59 432 C56 386 56 226 59 196 L64 132 C68 92 94 74 150 74 Z"/>
+        <path d="M112 86 C120 120 122 150 120 176 M188 86 C180 120 178 150 180 176" stroke="rgba(255,255,255,.07)" stroke-width="1.5" fill="none"/>
+        <path fill="url(#gGlass)" d="M86 196 C112 176 188 176 214 196 L203 244 C178 234 122 234 97 244 Z"/>
+        <path d="M100 196 C122 186 140 184 150 184" stroke="rgba(255,255,255,.18)" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <rect x="98" y="248" width="104" height="150" rx="24" fill="url(#gRoof)"/>
+        <path fill="url(#gGlass)" d="M98 404 C122 412 178 412 202 404 L210 440 C182 452 118 452 90 440 Z"/>
+        <ellipse cx="52" cy="206" rx="9" ry="6" fill="url(#gPaint)"/><ellipse cx="248" cy="206" rx="9" ry="6" fill="url(#gPaint)"/>
+        <g class="door" id="cvDFL"><path d="M58 204 L70 204 L70 300 L57 300 Z"/></g>
+        <g class="door" id="cvDFR"><path d="M242 204 L230 204 L230 300 L243 300 Z"/></g>
+        <path d="M60 304 H70 M230 304 H240" stroke="rgba(0,0,0,.35)" stroke-width="2"/>
+        <g class="hatch" id="cvTrunk"><path d="M84 452 C112 462 188 462 216 452 L224 478 C200 494 100 494 76 478 Z"/></g>
+        <path class="hl" id="cvHL" d="M74 104 C86 90 112 84 128 86 L124 100 C104 100 88 106 78 116 Z"/>
+        <path class="hl" id="cvHR" d="M226 104 C214 90 188 84 172 86 L176 100 C196 100 212 106 222 116 Z"/>
+        <path class="tl" id="cvTL" d="M64 448 C70 470 88 484 114 488 L116 476 C96 472 82 464 74 446 Z"/>
+        <path class="tl" id="cvTR" d="M236 448 C230 470 212 484 186 488 L184 476 C204 472 218 464 226 446 Z"/>
+        <rect class="rev" id="cvRev" x="134" y="482" width="32" height="6" rx="3"/>
+        <circle class="glow" id="cvBrk" cx="150" cy="500" r="70" fill="url(#gRed)"/>
+        <g class="ind" id="cvIL" opacity="0"><circle cx="70" cy="110" r="22" fill="url(#gAmb)"/><circle cx="66" cy="462" r="22" fill="url(#gAmb)"/></g>
+        <g class="ind" id="cvIR" opacity="0"><circle cx="230" cy="110" r="22" fill="url(#gAmb)"/><circle cx="234" cy="462" r="22" fill="url(#gAmb)"/></g>
       </svg>
       <p class="off" id="carOff">Boîtier OBD non connecté</p>
     </div>
-    <div class="cgrid">
-      <div class="ct hot"><span>Régime</span><b id="cRpm">—</b></div>
-      <div class="ct"><span>Rapport</span><b id="cGear">—</b></div>
-      <div class="ct"><span>Eau moteur</span><b id="cWater">—</b></div>
-      <div class="ct hot"><span>Couple moteur</span><b id="cNm">—</b></div>
-      <div class="ct hot"><span>Puissance</span><b id="cHp">—</b></div>
-      <div class="ct"><span>Volant</span><b id="cSteer">—</b></div>
-      <div class="ct"><span>Accélérateur</span><b id="cAcc">—</b><span class="bar"><i id="cAccB"></i></span></div>
-      <div class="ct brk"><span>Freinage</span><b id="cBrk">—</b><span class="bar"><i id="cBrkB"></i></span></div>
-      <div class="ct"><span>Kilométrage</span><b id="cKm" style="font-size:2.7rem">—</b></div>
+    <div class="cdata">
+      <div class="cc tach">
+        <div class="tm"><span class="lb">Régime</span><b class="v" id="cRpm">—<small>tr/min</small></b>
+          <div class="segs" id="cSegs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="red"></i><i class="red"></i><i class="red"></i><i class="red"></i></div></div>
+        <div class="gr"><b id="cGear">—</b><span>Rapport</span></div>
+      </div>
+      <div class="crow r3">
+        <div class="cc"><span class="lb">Couple</span><b class="v" id="cNm">—</b><span class="tr"><i id="cNmB"></i></span></div>
+        <div class="cc"><span class="lb">Puissance</span><b class="v" id="cHp">—</b><span class="tr"><i id="cHpB"></i></span></div>
+        <div class="cc water"><span class="lb">Eau moteur</span><b class="v" id="cWater">—</b><span class="tr"><i id="cWaterB"></i></span></div>
+      </div>
+      <div class="crow r2">
+        <div class="cc ped"><div><em>Accélérateur</em><span class="tr"><i id="cAccB"></i></span><b id="cAcc">—</b></div><div class="brk"><em>Frein</em><span class="tr"><i id="cBrkB"></i></span><b id="cBrk">—</b></div></div>
+        <div class="cc steer"><svg id="cWheel" viewBox="0 0 48 48"><circle cx="24" cy="24" r="19"/><circle cx="24" cy="24" r="5"/><path d="M5.5 22h13M29.5 22h13M24 29v13.5"/></svg><div><span class="lb">Volant</span><b class="v" id="cSteer">—</b><span class="lb" id="cSteerD">—</span></div></div>
+      </div>
     </div>
   </div>
 </section>
@@ -574,13 +616,13 @@ button:focus { outline: none !important; }
   function gauge(s) {
     var cold = s.engineWarm === false, on = s.sport !== false && !cold, pw = on ? (s.power || 0) : 0;
     if (s.ledColor) document.documentElement.style.setProperty('--live', s.ledColor);
-    $('dSpeed').textContent = s.speed >= 0 ? s.speed : '—';
-    $('dEff').innerHTML = on ? pw + '<small>%</small>' : '—';
+    var nowT = Date.now();
+    if (!gauge.t || nowT - gauge.t > 240) { gauge.t = nowT; $('dSpeed').textContent = s.speed >= 0 ? s.speed : '—'; gauge.num = true; } else gauge.num = false;
+    if (gauge.num) $('dEff').innerHTML = on ? pw + '<small>%</small>' : '—';
     var v = (s.speed || 0) / 3.6, hp = on && s.hp > 0 ? s.hp : 0;
     // Couple : vrai couple moteur du boîtier OBD ; sinon estimé (ch → force aux roues, roue 185/65 R15 ≈ 0,31 m)
     var nm = s.nm != null ? (on ? Math.max(0, s.nm) : 0) : hp > 0 && v > 2 ? Math.round(hp * 735.5 * 0.85 / v * 0.31) : 0;
-    $('dHp').innerHTML = on ? hp + '<small>ch</small>' : '—';
-    $('dNm').innerHTML = on ? nm + '<small>N·m</small>' : '—';
+    if (gauge.num) { $('dHp').innerHTML = on ? hp + '<small>ch</small>' : '—'; $('dNm').innerHTML = on ? nm + '<small>N·m</small>' : '—'; }
     $('dNmL').textContent = s.nm != null ? 'Couple moteur' : 'Couple aux roues';
     $('dArc').setAttribute('stroke-dasharray', (414.7 * pw / 100).toFixed(1) + ' 552.9');
     $('dArc').style.opacity = pw >= 1 ? 1 : 0;
@@ -592,6 +634,7 @@ button:focus { outline: none !important; }
   var blkL = 0, blkR = 0, localPlay = false;
   function tog(id, on) { $(id).classList.toggle('on', !!on); }
   function gearTxt(g) { return g === -1 ? 'R' : g > 0 ? String(g) : 'N'; }
+  function msg(t, cls) { var m = $('clMsg'); m.className = 'cl-msg ' + (cls || ''); m.lastChild.textContent = t; }
   function car(c, spd) {
     var ok = !!c, now = Date.now();
     if (ok && c.cg) blkL = now; if (ok && c.cd) blkR = now;
@@ -599,39 +642,62 @@ button:focus { outline: none !important; }
     tog('blkL', L); tog('blkR', R);
     var g = $('dGear'); g.classList.toggle('on', ok && c.r > 400); g.classList.toggle('rv', ok && c.g === -1);
     if (ok) g.textContent = gearTxt(c.g);
-    tog('tVl', ok && c.vl && !c.co && !c.pl); tog('tCo', ok && c.co && !c.pl); tog('tPl', ok && c.pl);
+    tog('tCo', ok && (c.co || c.vl) && !c.pl); tog('tPl', ok && c.pl);
     tog('tPo', ok && (c.pc || c.pp)); tog('tCf', ok && c.cf);
     tog('tFm', ok && c.fm === 1 && spd > 2); tog('tCe', ok && c.ce === 0 && spd > 5);
-    tog('tLr', ok && c.lr > 0); if (ok && c.lr) $('tLrT').textContent = c.lr === 2 ? 'RÉG' : 'LIM';
+    tog('tLr', ok && c.lr > 0);
     tog('tDg', ok && c.dg);
     tog('tEf', ok && c.e > -40 && c.e < 60);
-    if (current === 'car') carPage(c, L, R);
+    // Ligne d'info : l'alerte la plus importante, sinon un état rassurant
+    if (!ok) msg('Boîtier OBD non connecté');
+    else if (c.pc && c.pp) msg('Portes avant ouvertes', 'r');
+    else if (c.pc) msg('Porte conducteur ouverte', 'r');
+    else if (c.pp) msg('Porte passager ouverte', 'r');
+    else if (c.cf) msg('Coffre ouvert', 'r');
+    else if (c.fm === 1 && spd > 2) msg('Frein à main serré', 'r');
+    else if (c.ce === 0 && spd > 5) msg('Attache ta ceinture', 'r');
+    else if (L && R) msg('Warnings', 'g');
+    else if (c.e > -40 && c.e < 60) msg('Moteur froid · eau ' + c.e + ' °C', 'b');
+    else if (c.lr) msg(c.lr === 2 ? 'Régulateur actif' : 'Limiteur actif');
+    else if (c.pl) msg('Pleins phares', 'b');
+    else if (c.dg) msg('Dégivrage arrière', 'a');
+    else msg('Tout est en ordre · eau ' + (c.e > -40 ? c.e + ' °C' : '—'), 'ok');
+    if (current === 'car' && gauge.num) carPage(c, L, R);
   }
+  // Kilométrage : recalé sur le compteur (78 833 km le 10/10) avec l'échelle mesurée en roulant
+  var KM0 = 78833, RAW0 = 122930544, RAW_PER_KM = 1588.8;
+  function kmReal(kmBox) { return KM0 + (kmBox * 1559.38 - RAW0) / RAW_PER_KM; }
   function carPage(c, L, R) {
     var ok = !!c;
     $('carOff').style.display = ok ? 'none' : 'block';
     if (!ok) return;
     $('cRpm').innerHTML = c.r + '<small>tr/min</small>';
+    var segs = $('cSegs').children, n = Math.round(Math.max(0, Math.min(7000, c.r)) / 7000 * segs.length);
+    for (var i = 0; i < segs.length; i++) segs[i].classList.toggle('on', i < n);
     $('cGear').textContent = c.r > 400 ? gearTxt(c.g) : '—';
-    $('cWater').innerHTML = (c.e > -40 ? c.e : '—') + '<small>°C</small>';
-    $('cNm').innerHTML = Math.max(0, c.q) + '<small>N·m</small>';
-    $('cHp').innerHTML = Math.max(0, c.hp) + '<small>ch</small>';
-    $('cSteer').innerHTML = Math.abs(c.s) + '<small>° ' + (c.s > 3 ? 'gauche' : c.s < -3 ? 'droite' : '') + '</small>';
-    $('cAcc').innerHTML = Math.max(0, c.a) + '<small>%</small>'; $('cAccB').style.width = Math.max(0, Math.min(100, c.a)) + '%';
-    $('cBrk').innerHTML = Math.max(0, c.f) + '<small>%</small>'; $('cBrkB').style.width = Math.max(0, Math.min(100, c.f)) + '%';
-    $('cKm').innerHTML = (c.km > 0 ? Math.floor(c.km).toLocaleString('fr-FR') : '—') + '<small>km</small>';
+    var nm = Math.max(0, c.q), hp = Math.max(0, c.hp);
+    $('cNm').innerHTML = nm + '<small>N·m</small>'; $('cNmB').style.width = Math.min(100, nm / 1.4) + '%';
+    $('cHp').innerHTML = hp + '<small>ch</small>'; $('cHpB').style.width = Math.min(100, hp / 0.9) + '%';
+    $('cWater').innerHTML = (c.e > -40 ? c.e : '—') + '<small>°C</small>'; $('cWaterB').style.width = (c.e > -40 ? Math.max(0, Math.min(100, (c.e - 20) / 0.9)) : 0) + '%';
+    $('cAcc').textContent = Math.max(0, c.a) + '%'; $('cAccB').style.width = Math.max(0, Math.min(100, c.a)) + '%';
+    $('cBrk').textContent = Math.max(0, c.f) + '%'; $('cBrkB').style.width = Math.max(0, Math.min(100, c.f)) + '%';
+    $('cSteer').innerHTML = Math.abs(c.s) + '<small>°</small>'; $('cSteerD').textContent = c.s > 3 ? 'À gauche' : c.s < -3 ? 'À droite' : 'Droit';
+    $('cWheel').style.transform = 'rotate(' + (-c.s) + 'deg)';
+    $('cKm').textContent = c.km > 0 ? Math.floor(kmReal(c.km)).toLocaleString('fr-FR') + ' km' : '—';
+    var lk = $('cLock'); lk.classList.toggle('on', !!c.vr); lk.lastChild.textContent = c.vr ? 'Verrouillée' : 'Déverrouillée';
     // Vue de dessus
     tog('cvLow', c.co || c.pl); tog('cvHigh', c.pl); tog('cvHL', c.vl || c.co || c.pl); tog('cvHR', c.vl || c.co || c.pl);
-    tog('cvIFL', L); tog('cvIRL', L); tog('cvIFR', R); tog('cvIRR', R);
-    $('cvDFL').classList.toggle('open', !!c.pc); $('cvDFL').setAttribute('transform', c.pc ? 'rotate(40 58 206)' : '');
-    $('cvDFR').classList.toggle('open', !!c.pp); $('cvDFR').setAttribute('transform', c.pp ? 'rotate(-40 182 206)' : '');
-    $('cvTrunk').classList.toggle('open', !!c.cf); $('cvTrunk').setAttribute('transform', c.cf ? 'translate(0 16)' : '');
-    tog('cvLock', c.vr);
-    var tl = c.f > 4 ? 'on' : '', rv = c.ar || c.g === -1;
-    ['cvTL', 'cvTR'].forEach(function (id) { var e = $(id); e.classList.toggle('on', !!tl || !!c.vl); e.classList.toggle('rev', !!rv); });
-    var a = Math.max(-35, Math.min(35, -c.s / 14));
-    $('cvWL').setAttribute('transform', 'rotate(' + a.toFixed(1) + ' 55 148)'); $('cvWR').setAttribute('transform', 'rotate(' + a.toFixed(1) + ' 185 148)');
+    $('cvIL').setAttribute('opacity', L ? 1 : 0); $('cvIR').setAttribute('opacity', R ? 1 : 0); tog('cvIL', L); tog('cvIR', R);
+    $('cvDFL').setAttribute('transform', c.pc ? 'rotate(42 62 204)' : ''); $('cvDFL').classList.toggle('open', !!c.pc);
+    $('cvDFR').setAttribute('transform', c.pp ? 'rotate(-42 238 204)' : ''); $('cvDFR').classList.toggle('open', !!c.pp);
+    $('cvTrunk').setAttribute('transform', c.cf ? 'translate(0 26)' : ''); $('cvTrunk').classList.toggle('open', !!c.cf);
+    var brake = c.f > 4, rv = c.ar || c.g === -1;
+    ['cvTL', 'cvTR'].forEach(function (id) { var e = $(id); e.classList.toggle('on', !!(c.vl || c.co || c.pl)); e.classList.toggle('brake', brake); });
+    tog('cvBrk', brake); tog('cvRev', rv);
+    var a = Math.max(-32, Math.min(32, -c.s / 15));
+    $('cvWL').setAttribute('transform', 'rotate(' + a.toFixed(1) + ' 61 154)'); $('cvWR').setAttribute('transform', 'rotate(' + a.toFixed(1) + ' 239 154)');
   }
+
   function live() {
     var s;
     if (!NATIVE) {   // aperçu navigateur : ?obd simule le boîtier
@@ -639,6 +705,8 @@ button:focus { outline: none !important; }
       var t = Date.now() / 1000, bl = Math.floor(t / .34) % 2;
       s = { speed: 48, power: 35, sport: true, engineWarm: true, hp: 41, nm: 96, car: { v: 48, r: 2350, e: 84, q: 96, hp: 41, a: 34, f: 0, s: 120, g: 3, km: 78841.6,
         cg: bl, cd: 0, vl: 1, co: 1, pl: 0, pc: /door/.test(location.search) ? 1 : 0, pp: 0, cf: 0, vr: 0, ar: 0, em: 0, fm: 0, ce: 1, dg: 1, lv: 0, lr: 1 } };
+      if (/all/.test(location.search)) { var k = s.car; k.vl = 0; k.co = 1; k.pl = 0; k.pc = 1; k.cf = 1; k.fm = 1; k.ce = 0; k.dg = 1; k.lr = 1; k.e = 45; s.speed = k.v = 48; }
+      if (/all2/.test(location.search)) { var k2 = s.car; k2.co = 0; k2.pl = 1; k2.pc = 0; k2.cf = 0; k2.fm = 0; k2.ce = 1; k2.lr = 2; k2.vl = 1; }
     } else {
       if (!Home.live) return;
       try { s = JSON.parse(Home.live()); } catch (e) { return; }
@@ -762,7 +830,7 @@ button:focus { outline: none !important; }
   tick(); refresh(); updRefresh();
   setInterval(tick, 5000);
   setInterval(refresh, 2000);
-  setInterval(live, 250);
+  setInterval(live, 100);
   setInterval(function () { if (current === 'perms') refreshPerms(); }, 1500);
 })();
 </script>
