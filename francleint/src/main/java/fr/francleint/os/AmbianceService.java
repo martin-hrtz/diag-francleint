@@ -107,6 +107,7 @@ public class AmbianceService extends Service {
     // Clignotant : tenu 1,2 s après le dernier signal (le voyant clignote, on ne veut pas que les LED clignotent)
     private volatile long blinkerUntil = 0;
     volatile boolean blinker = false;
+    private double blinkMix = 0;           // 0 = couleur normale, 1 = orange clignotant (fondu)
 
     /** À appeler à chaque signal de clignotant (source branchée pendant la séance voiture). */
     void blinkerSignal() { blinkerUntil = System.currentTimeMillis() + 1200; }
@@ -540,8 +541,10 @@ public class AmbianceService extends Service {
     private final Runnable fade = new Runnable() {
         @Override public void run() {
             blinker = System.currentTimeMillis() < blinkerUntil || "clignotant".equals(sim);
-            double k = blinker ? 1.0 : 0.30; // clignotant : instantané ; sinon fondu ≈ 0,1 s (invisible)
-            int[] tc = blinker ? TURN : targetColor;
+            double k = 0.30;                 // fondu ≈ 0,1 s (invisible)
+            // Clignotant : fondu doux vers l'orange (≈ 0,3 s) et retour aussi doux, jamais de coupure franche
+            blinkMix += ((blinker ? 1 : 0) - blinkMix) * 0.12;
+            int[] tc = targetColor;
             boolean show = showroomUntil > 0;
             if (show && !blinker) {
                 // Mode Showroom : vague de couleurs qui fait le tour du cercle en 9 s, avec une respiration
@@ -566,19 +569,19 @@ public class AmbianceService extends Service {
                 h.postDelayed(this, 30);
                 return;
             }
-            double tl = blinker ? Math.max(targetLevel, 0.5) : targetLevel;
+            double tl = targetLevel;
             // Accélération → teinte (bleu → violet → magenta → rouge), intensité inchangée
             long now = System.currentTimeMillis();
             double eff = "acc1".equals(sim) ? 0.45 : "acc2".equals(sim) ? 0.9
                     : obdOk() ? clamp(obd.num("q", 0) / 135.0, 0, 1)            // couple réel / couple max du 0.9 TCe
                     : (now - accelAt < 2200 ? predictedEffort(now) : 0);   // un point GPS en retard ne fait plus « retomber » la couleur
-            double want = sportActive && !blinker
+            double want = sportActive
                     ? clamp((eff - EFFORT_START) / (EFFORT_RED - EFFORT_START), 0, 1) : 0;
             // Monte en glissant (≈ 0,4 s pour tout le dégradé), redescend doucement (≈ 2,5 s du rouge au bleu).
             // Si tu ré-accélères pendant la descente, ça repart de la couleur actuelle.
             if (want > power) power = Math.min(want, power + 0.075);
             else power = Math.max(want, power - 0.012);
-            if (sportActive && !blinker) {
+            if (sportActive) {
                 tc = hue(HUE_BASE + HUE_SPAN * power);
                 k = 1.0;                                 // la teinte est déjà progressive : pas de mélange RGB (évite le blanc)
             }
@@ -586,7 +589,10 @@ public class AmbianceService extends Service {
             cg += (tc[1] - cg) * k;
             cb += (tc[2] - cb) * k;
             cl += (tl - cl) * k;
-            led.color((int) Math.round(cr * cl), (int) Math.round(cg * cl), (int) Math.round(cb * cl));
+            double m = blinkMix < 0.01 ? 0 : blinkMix > 0.99 ? 1 : blinkMix, tlv = Math.max(cl, 0.5);
+            led.color((int) Math.round(cr * cl * (1 - m) + TURN[0] * tlv * m),
+                      (int) Math.round(cg * cl * (1 - m) + TURN[1] * tlv * m),
+                      (int) Math.round(cb * cl * (1 - m) + TURN[2] * tlv * m));
             curDim += (targetDim - curDim) * 0.025;
             applyOverlay();
             h.postDelayed(this, 30);   // ≈ 33 images/seconde
