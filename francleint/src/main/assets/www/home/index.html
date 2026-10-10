@@ -427,6 +427,27 @@ button:focus { outline: none !important; }
   $('artImg').onload = function () { albumColor(); applyAlbumUi(); };
   var THEMES = { auto: 'Auto', jour: 'Jour', nuit: 'Nuit' };
   var MOCK_ART = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B2A6B"/><stop offset=".6" stop-color="#7A2BD8"/><stop offset="1" stop-color="#F2496A"/></linearGradient></defs><rect width="100" height="100" fill="url(#g)"/><circle cx="66" cy="38" r="16" fill="#FFD2A6" opacity=".9"/></svg>');
+  // Compteur (vitesse, effort, ch, couple) : rafraîchi 4 fois / s par live(), le reste toutes les 2 s
+  function gauge(s) {
+    var cold = s.engineWarm === false, on = s.sport !== false && !cold, pw = on ? (s.power || 0) : 0;
+    if (s.ledColor) document.documentElement.style.setProperty('--live', s.ledColor);
+    $('dSpeed').textContent = s.speed >= 0 ? s.speed : '—';
+    $('dEff').innerHTML = on ? pw + '<small>%</small>' : '—';
+    var v = (s.speed || 0) / 3.6, hp = on && s.hp > 0 ? s.hp : 0;
+    // Couple : vrai couple moteur du boîtier OBD ; sinon estimé (ch → force aux roues, roue 185/65 R15 ≈ 0,31 m)
+    var nm = s.nm != null ? (on ? Math.max(0, s.nm) : 0) : hp > 0 && v > 2 ? Math.round(hp * 735.5 * 0.85 / v * 0.31) : 0;
+    $('dHp').innerHTML = on ? hp + '<small>ch</small>' : '—';
+    $('dNm').innerHTML = on ? nm + '<small>N·m</small>' : '—';
+    $('dArc').setAttribute('stroke-dasharray', (414.7 * pw / 100).toFixed(1) + ' 552.9');
+    $('dArc').style.opacity = pw >= 1 ? 1 : 0;
+    document.querySelector('.gauge').style.setProperty('--gop', (0.06 + 0.22 * pw / 100).toFixed(2));
+    if (!cold) $('sportMeter').style.width = pw + '%';
+  }
+  function live() {
+    if (!NATIVE || !Home.live) return;
+    try { gauge(JSON.parse(Home.live())); } catch (e) { }
+  }
+
   function refresh() {
     var s = status();
     var h = new Date().getHours();
@@ -437,16 +458,7 @@ button:focus { outline: none !important; }
     var cold = s.engineWarm === false, on = s.sport !== false && !cold, pw = on ? (s.power || 0) : 0;
     if (refresh.cold && !cold) toast('Moteur chaud · mode sport activé');
     refresh.cold = cold;
-    $('dSpeed').textContent = s.speed >= 0 ? s.speed : '—';
-    $('dEff').innerHTML = on ? pw + '<small>%</small>' : '—';
-    // Puissance estimée (ch) → force aux roues → couple aux roues (rendement 0,85 · roue 185/65 R15 ≈ 0,31 m)
-    var v = (s.speed || 0) / 3.6, hp = on && s.hp > 0 ? s.hp : 0;
-    var nm = hp > 0 && v > 2 ? Math.round(hp * 735.5 * 0.85 / v * 0.31) : 0;
-    $('dHp').innerHTML = on ? hp + '<small>ch</small>' : '—';
-    $('dNm').innerHTML = on ? nm + '<small>N·m</small>' : '—';
-    $('dArc').setAttribute('stroke-dasharray', (414.7 * pw / 100).toFixed(1) + ' 552.9');
-    $('dArc').style.opacity = pw >= 1 ? 1 : 0;
-    document.querySelector('.gauge').style.setProperty('--gop', (0.06 + 0.22 * pw / 100).toFixed(2));
+    gauge(s);
     $('sportSw').classList.toggle('on', on);
     $('sportSw').classList.toggle('cold', cold);
     $('sportTxt').textContent = cold ? 'Froid · ' + (s.water != null ? s.water + ' °C' : s.engineMin > 0 ? s.engineMin + ' min' : (s.enginePct || 0) + ' %') : on ? 'Actif · ' + pw + ' %' : 'Activer';
@@ -543,6 +555,7 @@ button:focus { outline: none !important; }
   tick(); refresh(); updRefresh();
   setInterval(tick, 5000);
   setInterval(refresh, 2000);
+  setInterval(live, 250);
   setInterval(function () { if (current === 'perms') refreshPerms(); }, 1500);
 })();
 </script>
