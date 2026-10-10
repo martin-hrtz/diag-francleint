@@ -65,6 +65,7 @@ class Led {
         @Override public void run() {
             try {
                 long now = System.currentTimeMillis();
+                if (adapter != null && !adapter.isEnabled()) { state = "Bluetooth éteint"; h.postDelayed(this, 8000); return; }
                 if (!ready() && !scanning && now - attemptAt > 12000) {
                     failures++;
                     if (gatt != null) { try { gatt.disconnect(); gatt.close(); } catch (Exception ignored) { } gatt = null; chr = null; }
@@ -83,18 +84,34 @@ class Led {
         h.removeCallbacks(watchdog);
         h.postDelayed(watchdog, 8000);
         if (adapter == null) { state = "pas de Bluetooth"; return; }
-        if (!adapter.isEnabled()) { try { adapter.enable(); } catch (Exception ignored) { } }
+        if (!adapter.isEnabled()) { state = "Bluetooth éteint"; return; }   // il préviendra quand il revient (le chien de garde veille aussi)
         String saved = prefs.getString("addr", null);
         if (saved != null) connect(saved, prefs.getString("name", ""));
         else scan();
     }
 
     void stop() {
-        h.removeCallbacks(watchdog);
+        h.removeCallbacksAndMessages(null);   // plus aucune relance en attente
         stopScan();
         if (gatt != null) { try { gatt.disconnect(); gatt.close(); } catch (Exception ignored) { } }
         gatt = null; chr = null;
+        synchronized (this) { busy = false; pendingColor = null; pendingCmd = null; }
+        lastR = lastG = lastB = -1;
+        failures = 0;
     }
+
+    /** Bluetooth coupé / planté : on ferme tout et on attend qu'il revienne. */
+    void shutdown() {
+        h.post(() -> {
+            scanning = false;
+            stop();
+            state = "Bluetooth coupé, en attente";
+            h.postDelayed(watchdog, 8000);   // filet de sécurité : relance seule si l'annonce « Bluetooth revenu » se perd
+        });
+    }
+
+    /** Bluetooth revenu : reconnexion propre depuis zéro. */
+    void restart() { h.post(() -> { stop(); start(); }); }
 
     /** Oublie le boîtier mémorisé et relance la recherche. */
     void reset() {
@@ -176,8 +193,8 @@ class Led {
             }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 state = "connecté, lecture";
-                // Liaison rapide : intervalle radio le plus court possible (≈ 7,5–15 ms)
-                try { g.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH); } catch (Exception ignored) { }
+                // Priorité normale : la radio de l'écran est partagée avec CarPlay et le boîtier OBD.
+                // 20 couleurs/s passent largement, sans saturer la puce Bluetooth.
                 g.discoverServices();
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 try { g.close(); } catch (Exception ignored) { }
@@ -233,6 +250,8 @@ class Led {
     private long lastSendAt = 0;
     private long testUntil = 0;
     private byte[] lastColorSent;
+    private static final long MIN_GAP = 50;
+    private final Runnable pumpLater = this::pump;
 
     /** 0 = langage A (7E 00 … 00 EF), 1 = langage B (7E 07 … 10 EF) */
     int protocol() { return prefs.getInt("proto", 0); }
@@ -261,6 +280,11 @@ class Led {
         if (busy && now - lastSendAt < 400) return;      // on attend la réponse du boîtier
         byte[] next = pendingCmd != null ? pendingCmd : pendingColor;
         if (next == null) return;
+        if (next != pendingCmd && now - lastSendAt < MIN_GAP) {          // au plus 20 couleurs par seconde
+            h.removeCallbacks(pumpLater);
+            h.postDelayed(pumpLater, MIN_GAP - (now - lastSendAt));
+            return;
+        }
         // Couleurs : envoi sans accusé de réception (instantané) ; commandes : avec accusé (fiable)
         boolean canNoResp = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0;
         boolean canResp = (chr.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
@@ -274,7 +298,7 @@ class Led {
             lastSendAt = now;
             if (next == pendingCmd) pendingCmd = null;
             else { lastColorSent = pendingColor; pendingColor = null; }
-            if (noResp) { busy = false; if (pendingCmd != null || pendingColor != null) h.postDelayed(this::pump, 20); }
+            if (noResp) { busy = false; if (pendingCmd != null || pendingColor != null) { h.removeCallbacks(pumpLater); h.postDelayed(pumpLater, MIN_GAP); } }
             else busy = true;
         } catch (Exception e) {
             h.postDelayed(this::pump, 200);
@@ -284,11 +308,14 @@ class Led {
     /** Couleur voulue par le moteur (déjà multipliée par l'intensité). Renvoyée toutes les 3 s par sécurité. */
     void color(int r, int g, int b) {
         if (!ready() || System.currentTimeMillis() < testUntil) return;
-        boolean same = r == lastR && g == lastG && b == lastB;
-        if (same && System.currentTimeMillis() - lastSendAt < 3000) return;
+        long now = System.currentTimeMillis();
+        int d = Math.max(Math.abs(r - lastR), Math.max(Math.abs(g - lastG), Math.abs(b - lastB)));
+        if (d == 0 && now - lastSendAt < 3000) return;
+        if (d <= 1 && now - lastSendAt < 250) return;    // écart invisible : inutile d'occuper la radio
         lastR = r; lastG = g; lastB = b;
         synchronized (this) { pendingColor = colorCmd(r, g, b); }
-        h.post(this::pump);
+        h.removeCallbacks(pumpLater);
+        h.post(pumpLater);
     }
 
     /** Test manuel : impose une couleur pendant 8 s, le moteur reprend la main ensuite. */
