@@ -268,6 +268,10 @@ public class HomeActivity extends Activity {
                         o.put("dur", dur);
                     }
                 }
+                if (!o.has("title") && MediaListener.nTitle != null && System.currentTimeMillis() - MediaListener.nAt < 30 * 60_000) {
+                    o.put("title", MediaListener.nTitle);                 // titre lu dans la notification de l'appli CarPlay
+                    o.put("artist", MediaListener.nText == null ? "" : MediaListener.nText);
+                }
                 o.put("autoCarplay", prefs.getBoolean("autoCarplay", true));
                 o.put("name", prefs.getString("name", "Martin"));
                 o.put("welcomeOn", prefs.getBoolean("welcome", true));
@@ -399,6 +403,30 @@ public class HomeActivity extends Activity {
         public String art() {
             MediaController c = controller();
             return c == null ? "" : Art.dataUri(Art.bitmap(c.getMetadata()));
+        }
+
+        /** Diagnostic musique : lecteurs déclarés + dernières notifications de chaque appli. */
+        @JavascriptInterface
+        public String mediaDebug() {
+            StringBuilder b = new StringBuilder();
+            b.append("Autorisation « Afficher la musique » : ").append(mediaAllowed() ? "OK" : "NON").append('\n');
+            try {
+                android.media.session.MediaSessionManager m = (android.media.session.MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
+                java.util.List<MediaController> list = m.getActiveSessions(new android.content.ComponentName(HomeActivity.this, MediaListener.class));
+                b.append("Lecteurs déclarés : ").append(list.size()).append('\n');
+                for (MediaController c : list) {
+                    PlaybackState st = c.getPlaybackState();
+                    MediaMetadata md = c.getMetadata();
+                    b.append(" • ").append(c.getPackageName()).append(" · état ").append(st == null ? "?" : st.getState())
+                            .append(" · ").append(md == null ? "sans titre" : md.getString(MediaMetadata.METADATA_KEY_TITLE)).append('\n');
+                }
+            } catch (Exception e) { b.append("Lecteurs : erreur ").append(e.getMessage()).append('\n'); }
+            b.append("Session via notification : ").append(MediaListener.token != null ? MediaListener.tokenPkg : "aucune").append('\n');
+            b.append("Notifications récentes :\n");
+            synchronized (MediaListener.log) {
+                for (java.util.Map.Entry<String, String> e : MediaListener.log.entrySet()) b.append(" • ").append(e.getKey()).append(" → ").append(e.getValue()).append('\n');
+            }
+            return b.toString();
         }
 
         /** Mode Showroom (LED en vague de couleurs). Renvoie false si on roule. */
