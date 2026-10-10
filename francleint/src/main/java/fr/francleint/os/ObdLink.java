@@ -24,7 +24,8 @@ import java.util.UUID;
 
 /**
  * Liaison Bluetooth avec le boîtier OBD « francleint-OBD » (ESP32, écoute seule de la Clio 4).
- * Le boîtier envoie 5 fois par seconde une ligne JSON terminée par \n (découpée en morceaux de 180 octets) :
+ * Boîtier v0.5+ : 10 fois par seconde un petit paquet binaire de 24 octets (1 seule notification, léger pour la radio).
+ * Anciens boîtiers : une ligne JSON terminée par \n (toujours comprise). Mêmes clés dans les deux cas :
  *   v vitesse km/h · r régime · e eau °C · q couple Nm · hp chevaux · a accélérateur % · f frein 0..100
  *   s volant ≈ degrés · g rapport (-1 = marche arrière, 0 = neutre/embrayé) · km kilométrage
  *   cg/cd clignotant gauche/droit · vl veilleuses · co codes · pl pleins phares
@@ -71,6 +72,7 @@ class ObdLink {
         @Override public void run() {
             try {
                 long now = System.currentTimeMillis();
+                if (adapter != null && !adapter.isEnabled()) { state = "Bluetooth éteint"; h.postDelayed(this, 5000); return; }
                 boolean silent = gatt != null && at > 0 && now - at > 20000 && now - attemptAt > 20000;
                 if (silent) { close(); state = "boîtier muet, reconnexion"; }
                 if (gatt == null && !scanning && now - attemptAt > 15000) {
@@ -89,14 +91,21 @@ class ObdLink {
         h.removeCallbacks(watchdog);
         h.postDelayed(watchdog, 5000);
         if (adapter == null) { state = "pas de Bluetooth"; return; }
+        if (!adapter.isEnabled()) { state = "Bluetooth éteint"; return; }   // le chien de garde attend son retour
         String addr = prefs.getString("addr", null);
         if (addr != null) connect(addr); else scan();
     }
 
     void stop() {
-        h.removeCallbacks(watchdog);
-        stopScan();
+        h.removeCallbacksAndMessages(null);
+        scanning = false;
         close();
+        state = "en pause";
+    }
+
+    /** Bluetooth coupé : on ferme la liaison morte, le chien de garde continue et reconnecte quand il revient. */
+    void pause() {
+        h.post(() -> { stopScan(); scanning = false; close(); state = "Bluetooth coupé, en attente"; attemptAt = 0; });
     }
 
     private void close() {
@@ -145,7 +154,8 @@ class ObdLink {
         @Override public void onConnectionStateChange(BluetoothGatt g, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED && status == BluetoothGatt.GATT_SUCCESS) {
                 state = "connecté";
-                try { g.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH); } catch (Exception ignored) { }   // liaison radio la plus rapide
+                // Priorité normale (≈ 30–50 ms) : 10 paquets/s passent sans peine, et la radio reste libre pour CarPlay et les LED.
+                try { g.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_BALANCED); } catch (Exception ignored) { }
                 try { g.requestMtu(185); } catch (Exception e) { g.discoverServices(); }
             } else {
                 try { g.close(); } catch (Exception ignored) { }
@@ -170,6 +180,15 @@ class ObdLink {
         @Override public void onCharacteristicChanged(BluetoothGatt g, BluetoothGattCharacteristic c) {
             byte[] v = c.getValue();
             if (v == null) return;
+            if (v.length >= 22 && v[0] == (byte) 0xFC) {           // paquet binaire (boîtier v0.5+)
+                JSONObject o = decode(v);
+                if (o != null) {
+                    car = o;
+                    at = System.currentTimeMillis();
+                    if (listener != null) listener.onCar(ObdLink.this);
+                }
+                return;
+            }
             synchronized (buf) {
                 buf.append(new String(v, StandardCharsets.UTF_8));
                 if (buf.length() > 2000) buf.setLength(0);
@@ -187,6 +206,41 @@ class ObdLink {
             }
         }
     };
+
+    private static int u8(byte[] p, int i) { return p[i] & 0xFF; }
+    private static int u16(byte[] p, int i) { return u8(p, i) | u8(p, i + 1) << 8; }
+
+    /** Paquet 24 octets → mêmes clés que la ligne JSON. */
+    static JSONObject decode(byte[] p) {
+        try {
+            JSONObject o = new JSONObject();
+            int v = u16(p, 2), r = u16(p, 4), e = u8(p, 6), q = u16(p, 7);
+            long k = (long) u8(p, 15) | (long) u8(p, 16) << 8 | (long) u8(p, 17) << 16 | (long) u8(p, 18) << 24;
+            o.put("v", v == 0xFFFF ? -1 : v / 100.0);
+            o.put("r", r == 0xFFFF ? -1 : r);
+            o.put("e", e == 0 ? -100 : e - 40);
+            o.put("q", q == 0 ? -999 : q - 400);
+            o.put("hp", u8(p, 9));
+            o.put("a", u8(p, 10));
+            o.put("f", u8(p, 11));
+            o.put("s", (short) u16(p, 12));
+            o.put("g", (int) p[14]);
+            o.put("km", k == 0 ? -1 : k / 10.0);
+            int fa = u8(p, 19), fb = u8(p, 20), fc = u8(p, 21);
+            String[] keysA = {"cg", "cd", "vl", "co", "pl", "pc", "pp", "cf"};
+            for (int i = 0; i < 8; i++) o.put(keysA[i], fa >> i & 1);
+            o.put("vr", fb & 1);
+            o.put("ar", fb >> 1 & 1);
+            o.put("dg", fb >> 2 & 1);
+            o.put("lv", fb >> 3 & 1);
+            int ce = fb >> 4 & 3, fm = fb >> 6 & 3, em = fc & 3;
+            o.put("ce", ce == 3 ? -1 : ce);
+            o.put("fm", fm == 3 ? -1 : fm);
+            o.put("em", em == 3 ? -1 : em);
+            o.put("lr", fc >> 2 & 3);
+            return o;
+        } catch (Exception ex) { return null; }
+    }
 
     /** Résumé pour l'écran (status JSON). */
     JSONObject toJson() {
