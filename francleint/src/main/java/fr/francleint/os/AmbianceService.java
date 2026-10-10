@@ -124,7 +124,7 @@ public class AmbianceService extends Service {
             o.put("sport", sport);
             o.put("engineWarm", engine == null || engine.warm);
             o.put("hp", ok ? (int) Math.max(0, obd.num("hp", 0)) : System.currentTimeMillis() - accelAt < 2200 ? estHp : 0);
-            if (ok) o.put("nm", (int) Math.round(obd.num("q", 0)));
+            if (ok) { o.put("nm", (int) Math.round(obd.num("q", 0))); o.put("car", obd.car); }
             o.put("ledColor", String.format("#%02X%02X%02X", (int) cr, (int) cg, (int) cb));
             return o.toString();
         } catch (Exception e) { return "{}"; }
@@ -135,13 +135,18 @@ public class AmbianceService extends Service {
         if (o.on("cg") || o.on("cd")) blinkerSignal();
         double v = o.num("v", -1);
         if (v >= 0) speedKmh = v;
+        sound.update(o.num("r", 0), o.num("q", 0) / 135.0);
     }
+
+    void setEngineSound(boolean on) { prefs.edit().putBoolean("engineSound", on).apply(); sound.setEnabled(on); }
+    void setEngineVol(float v) { prefs.edit().putFloat("engineVol", v).apply(); sound.setVolume(v); }
 
     private final Handler h = new Handler(Looper.getMainLooper());
     private Led led;
     private final Sky sky = new Sky();
     Trip trip;
     Engine engine;
+    final EngineSound sound = new EngineSound();   // son moteur factice (réglage, coupé par défaut)
     ObdLink obd;                           // boîtier OBD (écoute seule de la Clio) : vraies données quand il est là
     private volatile long warmFlashAt = 0;
     private SharedPreferences prefs;
@@ -182,6 +187,8 @@ public class AmbianceService extends Service {
         led.start();
         obd = new ObdLink(this, this::onCar);
         obd.start();
+        sound.setVolume(prefs.getFloat("engineVol", 0.6f));
+        sound.setEnabled(prefs.getBoolean("engineSound", false));
         startLocation();
         h.post(tick);
         h.post(fade);
@@ -347,6 +354,7 @@ public class AmbianceService extends Service {
         removeOverlay();
         led.stop();
         if (obd != null) obd.stop();
+        sound.stop();
         if (trip != null) trip.save();
         if (engine != null) engine.save(System.currentTimeMillis());
         instance = null;
@@ -466,9 +474,10 @@ public class AmbianceService extends Service {
         inCall = calling();
 
         // Lumière dehors estimée, de 0 (nuit noire) à 1 (plein soleil)
-        double sun = clamp((elevation + 6) / 18.0, 0, 1);     // -6° → 0, +12° → 1
+        double sun = clamp((elevation + 2) / 14.0, 0, 1);     // -2° → 0 (fin du crépuscule clair), +12° → 1
         double a = sun * sky.factor();
-        if (lights) a = Math.min(a, 0.15);                       // phares allumés : tunnel, pluie, nuit
+        // Phares allumés : en plein jour = pluie ou tunnel (on reste en mode jour, juste un peu plus doux) ; sinon nuit
+        if (lights) a = elevation > 3 ? Math.min(a, 0.45) : Math.min(a, 0.10);
 
         if (speedKmh < 2) { if (stillSince == 0) stillSince = now; } else stillSince = 0;
         boolean parked = (hasFix || obdOk()) && stillSince > 0 && now - stillSince > 60_000;
@@ -578,7 +587,7 @@ public class AmbianceService extends Service {
             if (fl >= 0 && fl < 1500 && !blinker) {
                 // Moteur chaud : 2 clignotements ambre (allumé 350 ms, éteint 250 ms), puis on repart du noir
                 boolean on = fl < 350 || (fl >= 600 && fl < 950);
-                double v = on ? 1 : 0;
+                double v = on ? lum(Math.min(1, Math.max(targetLevel, 0.08) * 2)) : 0;   // pas éblouissant la nuit
                 cr = AMBER[0] * v; cg = AMBER[1] * v; cb = AMBER[2] * v; cl = 1;
                 led.color((int) Math.round(cr), (int) Math.round(cg), (int) Math.round(cb));
                 applyOverlay();
@@ -605,10 +614,11 @@ public class AmbianceService extends Service {
             cg += (tc[1] - cg) * k;
             cb += (tc[2] - cb) * k;
             cl += (tl - cl) * k;
-            double m = blinkMix < 0.01 ? 0 : blinkMix > 0.99 ? 1 : blinkMix, tlv = Math.max(cl, 0.5);
-            led.color((int) Math.round(cr * cl * (1 - m) + TURN[0] * tlv * m),
-                      (int) Math.round(cg * cl * (1 - m) + TURN[1] * tlv * m),
-                      (int) Math.round(cb * cl * (1 - m) + TURN[2] * tlv * m));
+            double m = blinkMix < 0.01 ? 0 : blinkMix > 0.99 ? 1 : blinkMix;
+            double lv = lum(cl), tlv = lum(Math.min(1, Math.max(cl, 0.06) * 1.6));   // clignotant : un peu plus visible, jamais éblouissant la nuit
+            led.color((int) Math.round(cr * lv * (1 - m) + TURN[0] * tlv * m),
+                      (int) Math.round(cg * lv * (1 - m) + TURN[1] * tlv * m),
+                      (int) Math.round(cb * lv * (1 - m) + TURN[2] * tlv * m));
             curDim += (targetDim - curDim) * 0.025;
             applyOverlay();
             h.postDelayed(this, 30);   // ≈ 33 images/seconde
@@ -708,10 +718,10 @@ public class AmbianceService extends Service {
         // Le vrai rétroéclairage descend jusqu'à 25 % (le contraste reste bon).
         // En dessous, le filtre sombre prend le relais, seulement la nuit.
         boolean canWrite = Build.VERSION.SDK_INT < 23 || Settings.System.canWrite(this);
-        if (canWrite) targetDim = clamp((0.30 - v) / 0.30, 0, 1) * 0.70;
+        if (canWrite) targetDim = clamp((0.30 - v) / 0.30, 0, 1) * 0.78;   // nuit : filtre plus sombre
         else targetDim = clamp(1 - v, 0, 1) * 0.6;
         if (!canWrite) return;
-        v = Math.max(v, 0.25);
+        v = Math.max(v, 0.12);                  // rétroéclairage mini 12 % (nuit)
         int target = (int) Math.round(clamp(v, 0.05, 1) * 255);
         if (lastScreen < 0) lastScreen = target;
         long now = System.currentTimeMillis();
@@ -747,6 +757,9 @@ public class AmbianceService extends Service {
         synchronized (led.seen) { name = led.seen.get(addr); }
         led.connect(addr, name == null ? "" : name);
     }
+
+    /** Intensité perçue : l'œil voit les LED faibles bien plus fort qu'elles ne sont → courbe (nuit nettement plus douce). */
+    private static double lum(double x) { return x <= 0 ? 0 : Math.max(0.012, Math.pow(Math.min(1, x), 1.6)); }
 
     private static double clamp(double v, double lo, double hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -790,6 +803,8 @@ public class AmbianceService extends Service {
             o.put("albumLed", prefs.getBoolean("albumLed", false));
             o.put("skyLed", prefs.getBoolean("skyLed", true));
             o.put("showroom", showroomUntil > 0);
+            o.put("engineSound", prefs.getBoolean("engineSound", false));
+            o.put("engineVol", Math.round(prefs.getFloat("engineVol", 0.6f) * 100));
             if (trip != null) o.put("trip", trip.toJson());
             o.put("wakeOnPhone", prefs.getBoolean("wakeOnPhone", true));
             o.put("wakeRssi", wakeRssi());
