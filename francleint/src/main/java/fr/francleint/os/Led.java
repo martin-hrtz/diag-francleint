@@ -35,7 +35,7 @@ class Led {
     static final UUID CHR = UUID.fromString("0000fff3-0000-1000-8000-00805f9b34fb");
 
     private final Context ctx;
-    private final Handler h = new Handler(Looper.getMainLooper());
+    private final Handler h;
     private final BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
     private final SharedPreferences prefs;
 
@@ -49,7 +49,8 @@ class Led {
     volatile String gattInfo = "";
     final Map<String, String> seen = new LinkedHashMap<>(); // adresse -> nom
 
-    Led(Context ctx) {
+    Led(Context ctx, Looper looper) {
+        this.h = new Handler(looper);
         this.ctx = ctx;
         this.prefs = ctx.getSharedPreferences("led", Context.MODE_PRIVATE);
     }
