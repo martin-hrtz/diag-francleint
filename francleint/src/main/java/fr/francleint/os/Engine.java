@@ -49,6 +49,25 @@ final class Engine {
         return became;
     }
 
+    /** Vraie température d'eau du boîtier OBD (°C), -100 = inconnue. */
+    double water = -100;
+    static final double WARM_C = 80, COLD_C = 60;   // chaud à 80 °C d'eau, redevient froid sous 60 °C
+
+    /**
+     * Version boîtier OBD : on suit la vraie température d'eau au lieu de l'estimation.
+     * La chaleur estimée est recalée dessus, pour rester juste si le boîtier se tait.
+     */
+    boolean real(long now, double waterC) {
+        water = waterC;
+        lastTick = now;
+        heat = Math.max(0, Math.min(1, (waterC - 20) / (WARM_C - 20)));
+        boolean became = false;
+        if (!warm && waterC >= WARM_C) { warm = true; became = true; }
+        else if (warm && waterC < COLD_C) warm = false;
+        if (became || now - lastSave > 15000) save(now);
+        return became;
+    }
+
     /** 0 → 100 % de chauffe, pour l'écran. */
     int pct() { return warm ? 100 : (int) Math.floor(heat * 100); }
 
