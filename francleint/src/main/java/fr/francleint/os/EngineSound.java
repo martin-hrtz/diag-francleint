@@ -45,8 +45,8 @@ final class EngineSound {
             if (Build.VERSION.SDK_INT >= 23) {
                 t = new AudioTrack.Builder()
                         .setAudioAttributes(new AudioAttributes.Builder()
-                                .setUsage(AudioAttributes.USAGE_GAME)
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
+                                .setUsage(AudioAttributes.USAGE_MEDIA)
+                                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
                         .setAudioFormat(new AudioFormat.Builder().setSampleRate(RATE)
                                 .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
                                 .setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
