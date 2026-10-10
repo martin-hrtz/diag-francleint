@@ -181,7 +181,7 @@ class ObdLink {
                     try {
                         car = new JSONObject(line);
                         at = System.currentTimeMillis();
-                        h.post(() -> { if (listener != null) listener.onCar(ObdLink.this); });
+                        if (listener != null) listener.onCar(ObdLink.this);   // direct : pas d'attente derrière l'écran
                     } catch (Exception ignored) { }
                 }
             }
