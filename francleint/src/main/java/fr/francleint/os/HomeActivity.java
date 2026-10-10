@@ -268,10 +268,6 @@ public class HomeActivity extends Activity {
                         o.put("dur", dur);
                     }
                 }
-                if (!o.has("title") && MediaListener.nTitle != null && System.currentTimeMillis() - MediaListener.nAt < 30 * 60_000) {
-                    o.put("title", MediaListener.nTitle);                 // titre lu dans la notification de l'appli CarPlay
-                    o.put("artist", MediaListener.nText == null ? "" : MediaListener.nText);
-                }
                 o.put("autoCarplay", prefs.getBoolean("autoCarplay", true));
                 o.put("name", prefs.getString("name", "Martin"));
                 o.put("welcomeOn", prefs.getBoolean("welcome", true));
@@ -421,11 +417,6 @@ public class HomeActivity extends Activity {
                             .append(" · ").append(md == null ? "sans titre" : md.getString(MediaMetadata.METADATA_KEY_TITLE)).append('\n');
                 }
             } catch (Exception e) { b.append("Lecteurs : erreur ").append(e.getMessage()).append('\n'); }
-            b.append("Session via notification : ").append(MediaListener.token != null ? MediaListener.tokenPkg : "aucune").append('\n');
-            b.append("Notifications récentes :\n");
-            synchronized (MediaListener.log) {
-                for (java.util.Map.Entry<String, String> e : MediaListener.log.entrySet()) b.append(" • ").append(e.getKey()).append(" → ").append(e.getValue()).append('\n');
-            }
             return b.toString();
         }
 
