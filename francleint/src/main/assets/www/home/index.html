@@ -206,6 +206,58 @@ body.drive .clock { font-size: 8rem; }
 .item .pstate { flex: none; margin-top: 0; height: 2.6rem; padding: 0 1.1rem; border-radius: 999px; font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; background: var(--accent); color: #fff; }
 .item .pstate.ok { background: none; color: var(--accent-hi); padding: 0 .25rem; }
 
+
+/* ───── Voiture (boîtier OBD) : voyants, clignotants, rapport, page Voiture ───── */
+:root { --ok: #3FBF74; --hi: #4C8DFF; --warn: #F5A524; --bad: #E0583A; }
+.tells { display: flex; flex-wrap: wrap; margin-top: 1rem; min-height: 2.6rem; }
+.tt { display: none; align-items: center; height: 2.6rem; padding: 0 .95rem 0 .75rem; margin: 0 .6rem .6rem 0; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line); font-size: 1rem; font-weight: 600; color: var(--ink-2); animation: tt-in 300ms var(--ease); }
+.tt.on { display: flex; }
+.tt svg { width: 1.45rem; height: 1.45rem; margin-right: .5rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tt em { font-style: normal; }
+.tt.g { color: var(--ok); } .tt.b { color: var(--hi); } .tt.r { color: var(--bad); border-color: rgba(224,88,58,.45); } .tt.a { color: var(--warn); } .tt.w { color: var(--ink); }
+@keyframes tt-in { from { opacity: 0; transform: translateY(.3rem); } to { opacity: 1; transform: none; } }
+.ring svg.blk { position: absolute; top: 50%; left: auto; width: 2.8rem; height: 2.8rem; margin-top: -1.4rem; fill: var(--ok); opacity: .1; transition: opacity 120ms linear; }
+.ring svg.blk.l { left: -1.2rem; } .ring svg.blk.r { right: -1.2rem; }
+.blk.on { animation: blk 680ms steps(1) infinite; }
+@keyframes blk { 0% { opacity: 1; } 50% { opacity: .12; } }
+.ring .gear { display: none; margin: .7rem auto 0; width: 3.2rem; height: 2.2rem; border-radius: .7rem; background: var(--surface-2); font-size: 1.35rem; font-weight: 700; line-height: 2.2rem; text-align: center; font-variant-numeric: tabular-nums; }
+.ring .gear.on { display: block; }
+.ring .gear.rv { background: var(--ink); color: var(--bg); }
+
+#car { grid-template-rows: 2.75rem minmax(0,1fr); }
+.carv { min-height: 0; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.45fr); grid-gap: 1.25rem; gap: 1.25rem; }
+.carbox { position: relative; overflow: hidden; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
+.carbox svg { height: 100%; width: auto; max-width: 100%; }
+.carbox .off { position: absolute; left: 0; right: 0; bottom: 1.25rem; text-align: center; font-size: 1.05rem; font-weight: 600; color: var(--ink-3); }
+.cv .body { fill: var(--surface-2); stroke: var(--line); stroke-width: 2; }
+.cv .glass { fill: var(--bg); opacity: .8; }
+.cv .roof { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.cv .door { stroke: var(--ink-3); stroke-width: 5; stroke-linecap: round; transition: stroke 250ms var(--ease); }
+.cv .door.open { stroke: var(--bad); }
+.cv .trunk { fill: none; stroke: var(--ink-3); stroke-width: 5; stroke-linecap: round; transition: stroke 250ms var(--ease), transform 300ms var(--ease); }
+.cv .trunk.open { stroke: var(--bad); }
+.cv .wheel { fill: var(--ink-3); }
+.cv .lamp { fill: var(--ink-3); transition: fill 250ms var(--ease); }
+.cv .lamp.on { fill: #F4F1E6; }
+.cv .tail { fill: #4A2420; transition: fill 200ms var(--ease); }
+.cv .tail.on { fill: #FF3B30; } .cv .tail.rev { fill: #FFFFFF; }
+.cv .beam { opacity: 0; transition: opacity 300ms var(--ease); }
+.cv .beam.on { opacity: 1; }
+.cv .ind { fill: transparent; }
+.cv .ind.on { fill: #FFA41B; animation: blk 680ms steps(1) infinite; }
+.cv .lock { fill: none; stroke: var(--ink-3); stroke-width: 3; stroke-linecap: round; transition: stroke 250ms var(--ease); }
+.cv .lock.on { stroke: var(--ok); }
+.cgrid { min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); grid-template-rows: repeat(3, minmax(0,1fr)); grid-gap: 1rem; gap: 1rem; }
+.ct { position: relative; overflow: hidden; border-radius: 1.25rem; background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; }
+.ct span { font-size: 1rem; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.ct b { font-size: 3.4rem; font-weight: 600; font-stretch: 75%; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ct b small { font-size: 1.1rem; font-weight: 600; color: var(--ink-2); margin-left: .2rem; }
+.ct .bar { height: .45rem; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.ct .bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--live); transition: width 200ms linear; }
+.ct.brk .bar i { background: var(--bad); }
+.ct.hot b { color: var(--live); }
+
 /* Pas de cadre orange au toucher / au focus */
 *:focus { outline: none !important; }
 button:focus { outline: none !important; }
@@ -240,6 +292,19 @@ button:focus { outline: none !important; }
   <symbol id="i-cam" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></symbol>
   <symbol id="i-apps" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5v-3.5l2.2-5h13.6l2.2 5v3.5z"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/></symbol>
+  <symbol id="i-low" viewBox="0 0 24 24"><path d="M10 5C6 5 3 8 3 12s3 7 7 7V5z"/><path d="M14 8.5l7 2M14 12.5l7 2M14 16.5l7 2"/></symbol>
+  <symbol id="i-high" viewBox="0 0 24 24"><path d="M10 5C6 5 3 8 3 12s3 7 7 7V5z"/><path d="M14 7.5h7M14 12h7M14 16.5h7"/></symbol>
+  <symbol id="i-pos" viewBox="0 0 24 24"><path d="M9 7.5c-2.5 0-4.5 2-4.5 4.5s2 4.5 4.5 4.5z"/><path d="M13 9.5l4-1.5M13 14.5l4 1.5M2.5 12H1"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><rect x="8" y="2.5" width="9" height="19" rx="3.5"/><path d="M8 9l-5 3.5"/></symbol>
+  <symbol id="i-trunk" viewBox="0 0 24 24"><rect x="7.5" y="2.5" width="9" height="15" rx="3.5"/><path d="M7.5 17.5l-2 4h13l-2-4"/></symbol>
+  <symbol id="i-park" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5"/><path d="M4.5 6.5a9.5 9.5 0 0 0 0 11M19.5 6.5a9.5 9.5 0 0 1 0 11M10.5 15V9h2a1.8 1.8 0 0 1 0 3.6h-2"/></symbol>
+  <symbol id="i-belt" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M7.5 21v-7a4.5 4.5 0 0 1 9 0v7M8.5 9.5l7.5 9"/></symbol>
+  <symbol id="i-limit" viewBox="0 0 24 24"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></symbol>
+  <symbol id="i-defrost" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10c1.2 1 2.3 1 3.5 0s2.3-1 3.5 0 2.3 1 3 0M7 14.5c1.2 1 2.3 1 3.5 0s2.3-1 3.5 0 2.3 1 3 0"/></symbol>
+  <symbol id="i-temp" viewBox="0 0 24 24"><path d="M12 3v11"/><circle cx="12" cy="17" r="3"/><path d="M15.5 6h3M15.5 10h3"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-blk" viewBox="0 0 24 24"><path d="M10.5 4.5 3 12l7.5 7.5v-4.5H21V9H10.5z"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
 </svg>
 
@@ -254,11 +319,26 @@ button:focus { outline: none !important; }
           <span class="chip" id="stWifi"><svg><use href="#i-wifi"/></svg><em id="stWifiTxt" style="font-style:normal">—</em></span>
         </div>
         <div class="acts">
-          <button class="act" id="showBtn" aria-label="Mode Showroom"><svg><use href="#i-spark"/></svg></button>
+          <button class="act" data-page="car" aria-label="Voiture"><svg><use href="#i-car"/></svg></button>
+          <button class="act" id="showBtn" aria-label="Mode Showroom" style="display:none"><svg><use href="#i-spark"/></svg></button>
           <button class="act" data-open="ambiance" aria-label="Ambiance"><svg><use href="#i-sun"/></svg></button>
           <button class="act" data-page="apps" aria-label="Applis"><svg><use href="#i-apps"/></svg></button>
           <button class="act" data-page="settings" aria-label="Réglages"><svg><use href="#i-gear"/></svg></button>
         </div>
+      </div>
+      <div class="tells" id="tells">
+        <span class="tt g" id="tCg"><svg style="fill:currentColor;stroke:none"><use href="#i-blk"/></svg><em>Clignotant</em></span>
+        <span class="tt g" id="tCd"><svg style="fill:currentColor;stroke:none;transform:scaleX(-1)"><use href="#i-blk"/></svg><em>Clignotant</em></span>
+        <span class="tt g" id="tVl"><svg><use href="#i-pos"/></svg><em>Veilleuses</em></span>
+        <span class="tt g" id="tCo"><svg><use href="#i-low"/></svg><em>Codes</em></span>
+        <span class="tt b" id="tPl"><svg><use href="#i-high"/></svg><em>Pleins phares</em></span>
+        <span class="tt r" id="tPo"><svg><use href="#i-door"/></svg><em>Porte ouverte</em></span>
+        <span class="tt r" id="tCf"><svg><use href="#i-trunk"/></svg><em>Coffre ouvert</em></span>
+        <span class="tt r" id="tFm"><svg><use href="#i-park"/></svg><em>Frein à main</em></span>
+        <span class="tt r" id="tCe"><svg><use href="#i-belt"/></svg><em>Ceinture</em></span>
+        <span class="tt w" id="tLr"><svg><use href="#i-limit"/></svg><em id="tLrT">Limiteur</em></span>
+        <span class="tt a" id="tDg"><svg><use href="#i-defrost"/></svg><em>Dégivrage</em></span>
+        <span class="tt b" id="tEf"><svg><use href="#i-temp"/></svg><em id="tEfT">Moteur froid</em></span>
       </div>
       <div style="margin-top:auto">
         <p class="hello" id="hello">Bonjour <b>Martin</b></p>
@@ -270,14 +350,16 @@ button:focus { outline: none !important; }
       <div class="stats">
         <div class="eff"><span>Effort moteur</span><b id="dEff">—</b></div>
         <div><span>Puissance</span><b id="dHp">—</b></div>
-        <div><span>Couple aux roues</span><b id="dNm">—</b></div>
+        <div><span id="dNmL">Couple aux roues</span><b id="dNm">—</b></div>
       </div>
       <div class="ring">
         <svg viewBox="0 0 200 200" aria-hidden="true">
           <circle class="trk" cx="100" cy="100" r="88" stroke-dasharray="414.7 552.9" transform="rotate(135 100 100)"/>
           <circle class="val" id="dArc" cx="100" cy="100" r="88" stroke-dasharray="0 552.9" transform="rotate(135 100 100)"/>
         </svg>
-        <div class="mid"><b class="spd" id="dSpeed">—</b><span class="unit">km/h</span></div>
+        <div class="mid"><b class="spd" id="dSpeed">—</b><span class="unit">km/h</span><span class="gear" id="dGear"></span></div>
+        <svg class="blk l" id="blkL" viewBox="0 0 24 24"><use href="#i-blk"/></svg>
+        <svg class="blk r" id="blkR" viewBox="0 0 24 24" style="transform:scaleX(-1)"><use href="#i-blk"/></svg>
       </div>
     </section>
     <div class="dock">
@@ -292,6 +374,56 @@ button:focus { outline: none !important; }
       <button class="ctl" data-media="next" aria-label="Morceau suivant"><svg><use href="#i-next"/></svg></button>
       <span class="prog" id="prog"></span>
     </section>
+  </div>
+</section>
+
+
+<!-- VOITURE (boîtier OBD, écoute seule) -->
+<section class="page sub" id="car">
+  <header><h1>Voiture</h1><button data-page="home">Retour</button></header>
+  <div class="carv">
+    <div class="carbox">
+      <svg class="cv" viewBox="0 0 240 440" aria-label="Vue de dessus de la Clio">
+        <defs>
+          <linearGradient id="gBeam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FFF6D8" stop-opacity=".55"/><stop offset="1" stop-color="#FFF6D8" stop-opacity="0"/></linearGradient>
+          <linearGradient id="gHigh" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#CFE0FF" stop-opacity=".6"/><stop offset="1" stop-color="#CFE0FF" stop-opacity="0"/></linearGradient>
+        </defs>
+        <path class="beam" id="cvLow" fill="url(#gBeam)" d="M72 98 L38 30 L108 30 Z M168 98 L132 30 L202 30 Z"/>
+        <path class="beam" id="cvHigh" fill="url(#gHigh)" d="M72 98 L20 0 L120 0 Z M168 98 L120 0 L220 0 Z"/>
+        <rect class="wheel" id="cvWL" x="48" y="128" width="14" height="40" rx="5"/>
+        <rect class="wheel" id="cvWR" x="178" y="128" width="14" height="40" rx="5"/>
+        <rect class="wheel" x="48" y="318" width="14" height="40" rx="5"/>
+        <rect class="wheel" x="178" y="318" width="14" height="40" rx="5"/>
+        <rect class="body" x="58" y="88" width="124" height="320" rx="40"/>
+        <rect class="lamp" id="cvHL" x="66" y="94" width="26" height="9" rx="4"/>
+        <rect class="lamp" id="cvHR" x="148" y="94" width="26" height="9" rx="4"/>
+        <circle class="ind" id="cvIFL" cx="64" cy="112" r="6"/><circle class="ind" id="cvIFR" cx="176" cy="112" r="6"/>
+        <circle class="ind" id="cvIRL" cx="64" cy="386" r="6"/><circle class="ind" id="cvIRR" cx="176" cy="386" r="6"/>
+        <path class="glass" d="M76 176 Q120 156 164 176 L158 206 Q120 194 82 206 Z"/>
+        <rect class="roof" x="78" y="212" width="84" height="118" rx="16"/>
+        <path class="glass" d="M82 336 Q120 346 158 336 L162 360 Q120 370 78 360 Z"/>
+        <g id="cvLock" class="lock" transform="translate(108 256)"><rect x="2" y="12" width="20" height="15" rx="3"/><path d="M6 12V8a6 6 0 0 1 12 0v4"/></g>
+        <line class="door" id="cvDFL" x1="58" y1="206" x2="58" y2="272"/>
+        <line class="door" id="cvDFR" x1="182" y1="206" x2="182" y2="272"/>
+        <line class="door" x1="58" y1="280" x2="58" y2="334"/>
+        <line class="door" x1="182" y1="280" x2="182" y2="334"/>
+        <line class="trunk" id="cvTrunk" x1="84" y1="408" x2="156" y2="408"/>
+        <rect class="tail" id="cvTL" x="64" y="394" width="22" height="8" rx="3"/>
+        <rect class="tail" id="cvTR" x="154" y="394" width="22" height="8" rx="3"/>
+      </svg>
+      <p class="off" id="carOff">Boîtier OBD non connecté</p>
+    </div>
+    <div class="cgrid">
+      <div class="ct hot"><span>Régime</span><b id="cRpm">—</b></div>
+      <div class="ct"><span>Rapport</span><b id="cGear">—</b></div>
+      <div class="ct"><span>Eau moteur</span><b id="cWater">—</b></div>
+      <div class="ct hot"><span>Couple moteur</span><b id="cNm">—</b></div>
+      <div class="ct hot"><span>Puissance</span><b id="cHp">—</b></div>
+      <div class="ct"><span>Volant</span><b id="cSteer">—</b></div>
+      <div class="ct"><span>Accélérateur</span><b id="cAcc">—</b><span class="bar"><i id="cAccB"></i></span></div>
+      <div class="ct brk"><span>Freinage</span><b id="cBrk">—</b><span class="bar"><i id="cBrkB"></i></span></div>
+      <div class="ct"><span>Kilométrage</span><b id="cKm" style="font-size:2.7rem">—</b></div>
+    </div>
   </div>
 </section>
 
@@ -321,6 +453,9 @@ button:focus { outline: none !important; }
   <div class="list">
     <button class="item" data-page="perms"><span><b>Autorisations</b><span id="permsTxt">Tout activer au même endroit</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="ambiance"><span><b>Ambiance</b><span>LED et luminosité de l'écran</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" id="showItem"><span><b>Mode Showroom</b><span>LED en vague de couleurs, voiture à l'arrêt</span></span><span class="pill">Lancer</span></button>
+    <button class="item" id="engineSound"><span><b>Son moteur</b><span>Grondement qui suit le vrai régime (boîtier OBD)</span></span><span class="toggle" id="engineSoundT"><i></i></span></button>
+    <button class="item" id="engineVol"><span><b>Volume du son moteur</b><span>Discret en croisière, monte quand tu accélères</span></span><span class="val" id="engineVolTxt">Moyen</span></button>
     <button class="item" id="albumLed"><span><b>LED couleur de la pochette</b><span>Hors mode sport, les LED prennent la couleur du morceau</span></span><span class="toggle" id="albumLedT"><i></i></span></button>
     <button class="item" id="albumUi"><span><b>Écran couleur de la pochette</b><span>Boutons et accents aux couleurs de l'album</span></span><span class="toggle" id="albumUiT"><i></i></span></button>
     <button class="item" id="skyLed"><span><b>LED couleur du ciel</b><span>Doré au coucher du soleil, bleu à la tombée de la nuit</span></span><span class="toggle" id="skyLedT"><i></i></span></button>
@@ -438,14 +573,72 @@ button:focus { outline: none !important; }
     var nm = s.nm != null ? (on ? Math.max(0, s.nm) : 0) : hp > 0 && v > 2 ? Math.round(hp * 735.5 * 0.85 / v * 0.31) : 0;
     $('dHp').innerHTML = on ? hp + '<small>ch</small>' : '—';
     $('dNm').innerHTML = on ? nm + '<small>N·m</small>' : '—';
+    $('dNmL').textContent = s.nm != null ? 'Couple moteur' : 'Couple aux roues';
     $('dArc').setAttribute('stroke-dasharray', (414.7 * pw / 100).toFixed(1) + ' 552.9');
     $('dArc').style.opacity = pw >= 1 ? 1 : 0;
     document.querySelector('.gauge').style.setProperty('--gop', (0.06 + 0.22 * pw / 100).toFixed(2));
     if (!cold) $('sportMeter').style.width = pw + '%';
   }
+
+  // ───── Voiture : voyants, clignotants, rapport, page Voiture ─────
+  var blkL = 0, blkR = 0;
+  function tog(id, on) { $(id).classList.toggle('on', !!on); }
+  function gearTxt(g) { return g === -1 ? 'R' : g > 0 ? String(g) : 'N'; }
+  function car(c, spd) {
+    var ok = !!c, now = Date.now();
+    if (ok && c.cg) blkL = now; if (ok && c.cd) blkR = now;
+    var L = ok && now - blkL < 800, R = ok && now - blkR < 800;
+    tog('blkL', L); tog('blkR', R);
+    var g = $('dGear'); g.classList.toggle('on', ok && c.r > 400); g.classList.toggle('rv', ok && c.g === -1);
+    if (ok) g.textContent = gearTxt(c.g);
+    tog('tCg', L && !R); tog('tCd', R && !L);
+    if (L && R) { tog('tCg', true); $('tCg').querySelector('em').textContent = 'Warnings'; } else $('tCg').querySelector('em').textContent = 'Clignotant';
+    tog('tVl', ok && c.vl && !c.co && !c.pl); tog('tCo', ok && c.co && !c.pl); tog('tPl', ok && c.pl);
+    tog('tPo', ok && (c.pc || c.pp)); tog('tCf', ok && c.cf);
+    tog('tFm', ok && c.fm === 1 && spd > 2); tog('tCe', ok && c.ce === 0 && spd > 5);
+    tog('tLr', ok && c.lr > 0); if (ok && c.lr) $('tLrT').textContent = c.lr === 2 ? 'Régulateur' : 'Limiteur';
+    tog('tDg', ok && c.dg);
+    tog('tEf', ok && c.e > -40 && c.e < 60); if (ok) $('tEfT').textContent = 'Moteur froid · ' + c.e + ' °C';
+    if (current === 'car') carPage(c, L, R);
+  }
+  function carPage(c, L, R) {
+    var ok = !!c;
+    $('carOff').style.display = ok ? 'none' : 'block';
+    if (!ok) return;
+    $('cRpm').innerHTML = c.r + '<small>tr/min</small>';
+    $('cGear').textContent = c.r > 400 ? gearTxt(c.g) : '—';
+    $('cWater').innerHTML = (c.e > -40 ? c.e : '—') + '<small>°C</small>';
+    $('cNm').innerHTML = Math.max(0, c.q) + '<small>N·m</small>';
+    $('cHp').innerHTML = Math.max(0, c.hp) + '<small>ch</small>';
+    $('cSteer').innerHTML = Math.abs(c.s) + '<small>° ' + (c.s > 3 ? 'gauche' : c.s < -3 ? 'droite' : '') + '</small>';
+    $('cAcc').innerHTML = Math.max(0, c.a) + '<small>%</small>'; $('cAccB').style.width = Math.max(0, Math.min(100, c.a)) + '%';
+    $('cBrk').innerHTML = Math.max(0, c.f) + '<small>%</small>'; $('cBrkB').style.width = Math.max(0, Math.min(100, c.f)) + '%';
+    $('cKm').innerHTML = (c.km > 0 ? Math.floor(c.km).toLocaleString('fr-FR') : '—') + '<small>km</small>';
+    // Vue de dessus
+    tog('cvLow', c.co || c.pl); tog('cvHigh', c.pl); tog('cvHL', c.vl || c.co || c.pl); tog('cvHR', c.vl || c.co || c.pl);
+    tog('cvIFL', L); tog('cvIRL', L); tog('cvIFR', R); tog('cvIRR', R);
+    $('cvDFL').classList.toggle('open', !!c.pc); $('cvDFL').setAttribute('transform', c.pc ? 'rotate(40 58 206)' : '');
+    $('cvDFR').classList.toggle('open', !!c.pp); $('cvDFR').setAttribute('transform', c.pp ? 'rotate(-40 182 206)' : '');
+    $('cvTrunk').classList.toggle('open', !!c.cf); $('cvTrunk').setAttribute('transform', c.cf ? 'translate(0 16)' : '');
+    tog('cvLock', c.vr);
+    var tl = c.f > 4 ? 'on' : '', rv = c.ar || c.g === -1;
+    ['cvTL', 'cvTR'].forEach(function (id) { var e = $(id); e.classList.toggle('on', !!tl || !!c.vl); e.classList.toggle('rev', !!rv); });
+    var a = Math.max(-35, Math.min(35, -c.s / 14));
+    $('cvWL').setAttribute('transform', 'rotate(' + a.toFixed(1) + ' 55 148)'); $('cvWR').setAttribute('transform', 'rotate(' + a.toFixed(1) + ' 185 148)');
+  }
   function live() {
-    if (!NATIVE || !Home.live) return;
-    try { gauge(JSON.parse(Home.live())); } catch (e) { }
+    var s;
+    if (!NATIVE) {   // aperçu navigateur : ?obd simule le boîtier
+      if (!/obd/.test(location.search)) return;
+      var t = Date.now() / 1000, bl = Math.floor(t / .34) % 2;
+      s = { speed: 48, power: 35, sport: true, engineWarm: true, hp: 41, nm: 96, car: { v: 48, r: 2350, e: 84, q: 96, hp: 41, a: 34, f: 0, s: 120, g: 3, km: 78841.6,
+        cg: bl, cd: 0, vl: 1, co: 1, pl: 0, pc: /door/.test(location.search) ? 1 : 0, pp: 0, cf: 0, vr: 0, ar: 0, em: 0, fm: 0, ce: 1, dg: 1, lv: 0, lr: 1 } };
+    } else {
+      if (!Home.live) return;
+      try { s = JSON.parse(Home.live()); } catch (e) { return; }
+    }
+    gauge(s);
+    car(s.car, s.speed || 0);
   }
 
   function refresh() {
@@ -490,6 +683,8 @@ button:focus { outline: none !important; }
     $('albumLedT').classList.toggle('on', !!s.albumLed);
     $('albumUiT').classList.toggle('on', !!s.albumUi); albumUi = !!s.albumUi; applyAlbumUi();
     $('skyLedT').classList.toggle('on', s.skyLed !== false);
+    $('engineSoundT').classList.toggle('on', !!s.engineSound);
+    if (s.engineVol != null) $('engineVolTxt').textContent = s.engineVol <= 40 ? 'Faible' : s.engineVol <= 70 ? 'Moyen' : 'Fort';
     $('driveModeT').classList.toggle('on', s.driveMode !== false);
     price = parseFloat(s.price) || 2.04;
     // Mode conduite : entre au-dessus de 30 km/h (2 mesures), sort sous 10 km/h (≈ 10 s)
@@ -532,6 +727,9 @@ button:focus { outline: none !important; }
     else if (t.id === 'albumUi') { albumUi = !$('albumUiT').classList.contains('on'); if (NATIVE) Home.setPref('albumUi', albumUi ? '1' : '0'); $('albumUiT').classList.toggle('on', albumUi); applyAlbumUi(); }
     else if (t.id === 'skyLed') { var sk = !$('skyLedT').classList.contains('on'); if (NATIVE) Home.setPref('skyLed', sk ? '1' : '0'); $('skyLedT').classList.toggle('on', sk); }
     else if (t.id === 'driveMode') { var dm = !$('driveModeT').classList.contains('on'); if (NATIVE) Home.setPref('driveMode', dm ? '1' : '0'); $('driveModeT').classList.toggle('on', dm); }
+    else if (t.id === 'showItem') { show('home'); $('showBtn').click(); }
+    else if (t.id === 'engineSound') { var es = !$('engineSoundT').classList.contains('on'); if (NATIVE) Home.setPref('engineSound', es ? '1' : '0'); $('engineSoundT').classList.toggle('on', es); if (es) toast('Son moteur : actif quand le boîtier OBD est connecté'); }
+    else if (t.id === 'engineVol') { var lv = [[30, 'Faible'], [60, 'Moyen'], [100, 'Fort']], cur = $('engineVolTxt').textContent, k = 0; for (var i = 0; i < 3; i++) if (lv[i][1] === cur) k = (i + 1) % 3; if (NATIVE) Home.setPref('engineVol', String(lv[k][0])); $('engineVolTxt').textContent = lv[k][1]; }
     else if (t.id === 'showBtn') { var ok = NATIVE ? Home.showroom(true) : true; if (!ok) { toast('Arrête-toi pour lancer le Showroom'); } else { $('showBlob').style.animationDelay = (-(Date.now() % 9000)) + 'ms, 0ms'; $('showName').textContent = 'francleint'; $('show').classList.add('on'); } }
     else if (t.id === 'albumLed') { var al = !$('albumLedT').classList.contains('on'); if (NATIVE) Home.setPref('albumLed', al ? '1' : '0'); $('albumLedT').classList.toggle('on', al); }
     else if (t.id === 'welcomeOn') { var wo = !$('welcomeT').classList.contains('on'); if (NATIVE) Home.setPref('welcome', wo ? '1' : '0'); $('welcomeT').classList.toggle('on', wo); }
