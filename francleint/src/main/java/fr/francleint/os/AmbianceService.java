@@ -205,6 +205,7 @@ public class AmbianceService extends Service {
         f.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         f.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         f.addAction(PROX_TICK);
+        f.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(screen, f);
     }
 
@@ -336,6 +337,7 @@ public class AmbianceService extends Service {
         @Override public void onReceive(Context c, Intent i) {
             String a = i.getAction();
             if (PROX_TICK.equals(a)) { proxTick(); return; }
+            if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(a)) { bluetoothState(i.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)); return; }
             if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(a) || BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(a)) {
                 phoneEvent(i, BluetoothDevice.ACTION_ACL_CONNECTED.equals(a));
                 return;
@@ -349,6 +351,23 @@ public class AmbianceService extends Service {
         }
     };
 
+    // ---------- Bluetooth qui plante / redémarre : on repart de zéro, LED et boîtier OBD ----------
+    private final Runnable btRestart = () -> {
+        if (led != null) led.restart();
+        if (obd != null) obd.start();
+    };
+
+    private void bluetoothState(int st) {
+        h.removeCallbacks(btRestart);
+        if (st == BluetoothAdapter.STATE_TURNING_OFF || st == BluetoothAdapter.STATE_OFF) {
+            // Les anciennes liaisons sont mortes : on les ferme proprement, sinon elles bloquent la reconnexion.
+            if (led != null) led.shutdown();
+            if (obd != null) obd.pause();
+        } else if (st == BluetoothAdapter.STATE_ON) {
+            h.postDelayed(btRestart, 4000);   // on laisse CarPlay se reconnecter d'abord
+        }
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) { return START_STICKY; }
 
@@ -359,6 +378,7 @@ public class AmbianceService extends Service {
     public void onDestroy() {
         h.removeCallbacksAndMessages(null);
         try { unregisterReceiver(screen); } catch (Exception ignored) { }
+        h.removeCallbacks(btRestart);
         removeOverlay();
         led.stop();
         if (fxThread != null) fxThread.quitSafely();
