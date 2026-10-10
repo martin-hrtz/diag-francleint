@@ -27,10 +27,7 @@ final class Art {
                 PlaybackState st = mc.getPlaybackState();
                 if (st != null && st.getState() == PlaybackState.STATE_PLAYING) return mc;
             }
-            if (!list.isEmpty()) return list.get(0);
-            // Pas de lecteur déclaré : session trouvée dans une notification (ex. appli CarPlay)
-            if (MediaListener.token != null) return new MediaController(c, MediaListener.token);
-            return null;
+            return list.isEmpty() ? null : list.get(0);
         } catch (Exception e) {
             return null;
         }
