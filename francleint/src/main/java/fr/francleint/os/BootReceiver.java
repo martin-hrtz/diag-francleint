@@ -10,5 +10,8 @@ public class BootReceiver extends BroadcastReceiver {
     public void onReceive(Context c, Intent i) {
         try { AmbianceService.start(c); } catch (Exception ignored) { }
         if (!Intent.ACTION_MY_PACKAGE_REPLACED.equals(i.getAction())) HomeActivity.welcome(c);
+        else {   // nouvelle version installée : on rouvre l'accueil
+            try { c.startActivity(new Intent(c, HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+        }
     }
 }
