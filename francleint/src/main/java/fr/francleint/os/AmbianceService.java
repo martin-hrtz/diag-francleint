@@ -26,6 +26,7 @@ import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
@@ -142,6 +143,10 @@ public class AmbianceService extends Service {
     void setEngineVol(float v) { prefs.edit().putFloat("engineVol", v).apply(); sound.setVolume(v); }
 
     private final Handler h = new Handler(Looper.getMainLooper());
+    // Fil dédié aux LED (fondus, clignotants, couleur d'effort) : jamais ralenti par l'écran ou CarPlay
+    private HandlerThread fxThread;
+    private Handler fx;
+    private double postedDim = -1;
     private Led led;
     private final Sky sky = new Sky();
     Trip trip;
@@ -183,7 +188,10 @@ public class AmbianceService extends Service {
         engine = new Engine(prefs);
         startForegroundCompat();
         startedAt = System.currentTimeMillis();
-        led = new Led(this);
+        fxThread = new HandlerThread("lumiere", android.os.Process.THREAD_PRIORITY_DISPLAY);
+        fxThread.start();
+        fx = new Handler(fxThread.getLooper());
+        led = new Led(this, fxThread.getLooper());
         led.start();
         obd = new ObdLink(this, this::onCar);
         obd.start();
@@ -191,7 +199,7 @@ public class AmbianceService extends Service {
         sound.setEnabled(prefs.getBoolean("engineSound", false));
         startLocation();
         h.post(tick);
-        h.post(fade);
+        fx.post(fade);
         IntentFilter f = new IntentFilter(Intent.ACTION_SCREEN_ON);
         f.addAction(Intent.ACTION_SCREEN_OFF);
         f.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
@@ -353,6 +361,7 @@ public class AmbianceService extends Service {
         try { unregisterReceiver(screen); } catch (Exception ignored) { }
         removeOverlay();
         led.stop();
+        if (fxThread != null) fxThread.quitSafely();
         if (obd != null) obd.stop();
         sound.stop();
         if (trip != null) trip.save();
@@ -579,8 +588,8 @@ public class AmbianceService extends Service {
                 cr = tc[0] * br; cg = tc[1] * br; cb = tc[2] * br; cl = 1;
                 led.color((int) Math.round(cr), (int) Math.round(cg), (int) Math.round(cb));
                 curDim += (0 - curDim) * 0.05;
-                applyOverlay();
-                h.postDelayed(this, 30);
+                postOverlay();
+                fx.postDelayed(this, 30);
                 return;
             }
             long fl = System.currentTimeMillis() - warmFlashAt;
@@ -590,8 +599,8 @@ public class AmbianceService extends Service {
                 double v = on ? lum(Math.min(1, Math.max(targetLevel, 0.08) * 2)) : 0;   // pas éblouissant la nuit
                 cr = AMBER[0] * v; cg = AMBER[1] * v; cb = AMBER[2] * v; cl = 1;
                 led.color((int) Math.round(cr), (int) Math.round(cg), (int) Math.round(cb));
-                applyOverlay();
-                h.postDelayed(this, 30);
+                postOverlay();
+                fx.postDelayed(this, 30);
                 return;
             }
             double tl = targetLevel;
@@ -620,8 +629,8 @@ public class AmbianceService extends Service {
                       (int) Math.round(cg * lv * (1 - m) + TURN[1] * tlv * m),
                       (int) Math.round(cb * lv * (1 - m) + TURN[2] * tlv * m));
             curDim += (targetDim - curDim) * 0.025;
-            applyOverlay();
-            h.postDelayed(this, 30);   // ≈ 33 images/seconde
+            postOverlay();
+            fx.postDelayed(this, 30);   // ≈ 33 images/seconde, sur le fil des LED
         }
     };
 
@@ -632,6 +641,14 @@ public class AmbianceService extends Service {
     volatile int dimPct = 0;
 
     boolean canOverlay() { return Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this); }
+
+    /** Filtre de nuit : on ne redessine l'écran que si l'assombrissement change vraiment (sinon ça fait ramer tout l'écran). */
+    private void postOverlay() {
+        double d = curDim;
+        if (Math.abs(d - postedDim) < 0.006 && (d < 0.01) == (postedDim < 0.01)) return;
+        postedDim = d;
+        h.post(this::applyOverlay);
+    }
 
     private void applyOverlay() {
         dimPct = (int) Math.round(curDim * 100);
