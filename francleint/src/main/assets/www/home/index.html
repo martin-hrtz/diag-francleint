@@ -209,15 +209,17 @@ body.drive .clock { font-size: 8rem; }
 
 /* ───── Voiture (boîtier OBD) : voyants, clignotants, rapport, page Voiture ───── */
 :root { --ok: #3FBF74; --hi: #4C8DFF; --warn: #F5A524; --bad: #E0583A; }
-.tells { display: flex; flex-wrap: wrap; margin-top: 1rem; min-height: 2.6rem; }
-.tt { display: none; align-items: center; height: 2.6rem; padding: 0 .95rem 0 .75rem; margin: 0 .6rem .6rem 0; border-radius: 999px;
-  background: var(--surface); border: 1px solid var(--line); font-size: 1rem; font-weight: 600; color: var(--ink-2); animation: tt-in 300ms var(--ease); }
-.tt.on { display: flex; }
-.tt svg { width: 1.45rem; height: 1.45rem; margin-right: .5rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.tt em { font-style: normal; }
-.tt.g { color: var(--ok); } .tt.b { color: var(--hi); } .tt.r { color: var(--bad); border-color: rgba(224,88,58,.45); } .tt.a { color: var(--warn); } .tt.w { color: var(--ink); }
-@keyframes tt-in { from { opacity: 0; transform: translateY(.3rem); } to { opacity: 1; transform: none; } }
-.ring svg.blk { position: absolute; top: 50%; left: auto; width: 2.8rem; height: 2.8rem; margin-top: -1.4rem; fill: var(--ok); opacity: .1; transition: opacity 120ms linear; }
+.ring .lamps { position: absolute; left: 50%; bottom: 1.1rem; width: 12rem; margin-left: -6rem; display: flex; justify-content: center; align-items: center; height: 2.4rem; pointer-events: none; }
+.lp { display: none; align-items: center; height: 2.4rem; margin: 0 .3rem; opacity: 0; transform: scale(.7); }
+.lp.on { display: flex; animation: lp-in 260ms var(--ease) forwards; }
+.ring .lp svg { position: static; width: 2.1rem; height: 2.1rem; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+.lp em { font-style: normal; font-size: .85rem; font-weight: 700; letter-spacing: .06em; margin-left: .25rem; }
+.lp.g { color: #43D17E; } .lp.b { color: #5C9BFF; } .lp.r { color: #FF5A3C; } .lp.a { color: #FFB020; } .lp.w { color: var(--ink); }
+.lp.g svg, .lp.b svg, .lp.r svg, .lp.a svg { -webkit-filter: drop-shadow(0 0 .35rem currentColor); filter: drop-shadow(0 0 .35rem currentColor); }
+body.jour .lp svg { -webkit-filter: none; filter: none; }
+@keyframes lp-in { to { opacity: 1; transform: none; } }
+.ring svg.blk { position: absolute; top: 50%; left: auto; width: 2.6rem; height: 2.6rem; margin-top: -1.3rem; fill: #43D17E; opacity: .07; transition: opacity 120ms linear; }
+.ring svg.blk.on { -webkit-filter: drop-shadow(0 0 .5rem rgba(67,209,126,.8)); filter: drop-shadow(0 0 .5rem rgba(67,209,126,.8)); }
 .ring svg.blk.l { left: -1.2rem; } .ring svg.blk.r { right: -1.2rem; }
 .blk.on { animation: blk 680ms steps(1) infinite; }
 @keyframes blk { 0% { opacity: 1; } 50% { opacity: .12; } }
@@ -258,6 +260,12 @@ body.drive .clock { font-size: 8rem; }
 .ct.brk .bar i { background: var(--bad); }
 .ct.hot b { color: var(--live); }
 
+#sheet { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 92; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; }
+#sheet.on { display: flex; }
+.sh-box { width: 52rem; max-height: 36rem; border-radius: 1.5rem; background: var(--surface); border: 1px solid var(--line); padding: 1.5rem 1.75rem; display: flex; flex-direction: column; }
+.sh-box h2 { font-size: 1.5rem; font-weight: 600; }
+.sh-box pre { margin: 1rem 0; flex: 1; overflow: auto; font: 1rem/1.5 ui-monospace, monospace; color: var(--ink-2); white-space: pre-wrap; user-select: text; }
+.sh-box .pill { align-self: flex-end; }
 /* Pas de cadre orange au toucher / au focus */
 *:focus { outline: none !important; }
 button:focus { outline: none !important; }
@@ -326,20 +334,6 @@ button:focus { outline: none !important; }
           <button class="act" data-page="settings" aria-label="Réglages"><svg><use href="#i-gear"/></svg></button>
         </div>
       </div>
-      <div class="tells" id="tells">
-        <span class="tt g" id="tCg"><svg style="fill:currentColor;stroke:none"><use href="#i-blk"/></svg><em>Clignotant</em></span>
-        <span class="tt g" id="tCd"><svg style="fill:currentColor;stroke:none;transform:scaleX(-1)"><use href="#i-blk"/></svg><em>Clignotant</em></span>
-        <span class="tt g" id="tVl"><svg><use href="#i-pos"/></svg><em>Veilleuses</em></span>
-        <span class="tt g" id="tCo"><svg><use href="#i-low"/></svg><em>Codes</em></span>
-        <span class="tt b" id="tPl"><svg><use href="#i-high"/></svg><em>Pleins phares</em></span>
-        <span class="tt r" id="tPo"><svg><use href="#i-door"/></svg><em>Porte ouverte</em></span>
-        <span class="tt r" id="tCf"><svg><use href="#i-trunk"/></svg><em>Coffre ouvert</em></span>
-        <span class="tt r" id="tFm"><svg><use href="#i-park"/></svg><em>Frein à main</em></span>
-        <span class="tt r" id="tCe"><svg><use href="#i-belt"/></svg><em>Ceinture</em></span>
-        <span class="tt w" id="tLr"><svg><use href="#i-limit"/></svg><em id="tLrT">Limiteur</em></span>
-        <span class="tt a" id="tDg"><svg><use href="#i-defrost"/></svg><em>Dégivrage</em></span>
-        <span class="tt b" id="tEf"><svg><use href="#i-temp"/></svg><em id="tEfT">Moteur froid</em></span>
-      </div>
       <div style="margin-top:auto">
         <p class="hello" id="hello">Bonjour <b>Martin</b></p>
         <p class="clock" id="clock">--:--</p>
@@ -358,6 +352,18 @@ button:focus { outline: none !important; }
           <circle class="val" id="dArc" cx="100" cy="100" r="88" stroke-dasharray="0 552.9" transform="rotate(135 100 100)"/>
         </svg>
         <div class="mid"><b class="spd" id="dSpeed">—</b><span class="unit">km/h</span><span class="gear" id="dGear"></span></div>
+        <div class="lamps" id="lamps">
+          <span class="lp g" id="tVl"><svg><use href="#i-pos"/></svg></span>
+          <span class="lp g" id="tCo"><svg><use href="#i-low"/></svg></span>
+          <span class="lp b" id="tPl"><svg><use href="#i-high"/></svg></span>
+          <span class="lp r" id="tPo"><svg><use href="#i-door"/></svg></span>
+          <span class="lp r" id="tCf"><svg><use href="#i-trunk"/></svg></span>
+          <span class="lp r" id="tFm"><svg><use href="#i-park"/></svg></span>
+          <span class="lp r" id="tCe"><svg><use href="#i-belt"/></svg></span>
+          <span class="lp w" id="tLr"><svg><use href="#i-limit"/></svg><em id="tLrT">LIM</em></span>
+          <span class="lp a" id="tDg"><svg><use href="#i-defrost"/></svg></span>
+          <span class="lp b" id="tEf"><svg><use href="#i-temp"/></svg></span>
+        </div>
         <svg class="blk l" id="blkL" viewBox="0 0 24 24"><use href="#i-blk"/></svg>
         <svg class="blk r" id="blkR" viewBox="0 0 24 24" style="transform:scaleX(-1)"><use href="#i-blk"/></svg>
       </div>
@@ -453,6 +459,7 @@ button:focus { outline: none !important; }
   <div class="list">
     <button class="item" data-page="perms"><span><b>Autorisations</b><span id="permsTxt">Tout activer au même endroit</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" data-open="ambiance"><span><b>Ambiance</b><span>LED et luminosité de l'écran</span></span><svg><use href="#i-chev"/></svg></button>
+    <button class="item" id="mediaDiag"><span><b>Diagnostic musique</b><span>Ce que l'écran voit du lecteur CarPlay</span></span><svg><use href="#i-chev"/></svg></button>
     <button class="item" id="showItem"><span><b>Mode Showroom</b><span>LED en vague de couleurs, voiture à l'arrêt</span></span><span class="pill">Lancer</span></button>
     <button class="item" id="engineSound"><span><b>Son moteur</b><span>Grondement qui suit le vrai régime (boîtier OBD)</span></span><span class="toggle" id="engineSoundT"><i></i></span></button>
     <button class="item" id="engineVol"><span><b>Volume du son moteur</b><span>Discret en croisière, monte quand tu accélères</span></span><span class="val" id="engineVolTxt">Moyen</span></button>
@@ -474,6 +481,7 @@ button:focus { outline: none !important; }
 </section>
 
 <div id="show" aria-hidden="true"><div class="blob" id="showBlob"></div><div class="word"><b id="showName">francleint</b><span>MODE SHOWROOM</span></div><p class="exit">Touche l'écran pour quitter</p></div>
+<div id="sheet"><div class="sh-box"><h2>Diagnostic musique</h2><pre id="sheetTxt"></pre><button class="pill" id="sheetClose">Fermer</button></div></div>
 <p class="toast" id="toast"></p>
 <script>
 (function () {
@@ -581,7 +589,7 @@ button:focus { outline: none !important; }
   }
 
   // ───── Voiture : voyants, clignotants, rapport, page Voiture ─────
-  var blkL = 0, blkR = 0;
+  var blkL = 0, blkR = 0, localPlay = false;
   function tog(id, on) { $(id).classList.toggle('on', !!on); }
   function gearTxt(g) { return g === -1 ? 'R' : g > 0 ? String(g) : 'N'; }
   function car(c, spd) {
@@ -591,14 +599,12 @@ button:focus { outline: none !important; }
     tog('blkL', L); tog('blkR', R);
     var g = $('dGear'); g.classList.toggle('on', ok && c.r > 400); g.classList.toggle('rv', ok && c.g === -1);
     if (ok) g.textContent = gearTxt(c.g);
-    tog('tCg', L && !R); tog('tCd', R && !L);
-    if (L && R) { tog('tCg', true); $('tCg').querySelector('em').textContent = 'Warnings'; } else $('tCg').querySelector('em').textContent = 'Clignotant';
     tog('tVl', ok && c.vl && !c.co && !c.pl); tog('tCo', ok && c.co && !c.pl); tog('tPl', ok && c.pl);
     tog('tPo', ok && (c.pc || c.pp)); tog('tCf', ok && c.cf);
     tog('tFm', ok && c.fm === 1 && spd > 2); tog('tCe', ok && c.ce === 0 && spd > 5);
-    tog('tLr', ok && c.lr > 0); if (ok && c.lr) $('tLrT').textContent = c.lr === 2 ? 'Régulateur' : 'Limiteur';
+    tog('tLr', ok && c.lr > 0); if (ok && c.lr) $('tLrT').textContent = c.lr === 2 ? 'RÉG' : 'LIM';
     tog('tDg', ok && c.dg);
-    tog('tEf', ok && c.e > -40 && c.e < 60); if (ok) $('tEfT').textContent = 'Moteur froid · ' + c.e + ' °C';
+    tog('tEf', ok && c.e > -40 && c.e < 60);
     if (current === 'car') carPage(c, L, R);
   }
   function carPage(c, L, R) {
@@ -678,7 +684,8 @@ button:focus { outline: none !important; }
       if (!uri) { albumRgb = null; applyAlbumUi(); }
     }
     $('prog').style.width = s.dur > 0 ? (100 * s.pos / s.dur).toFixed(1) + '%' : '0';
-    $('playIcon').setAttribute('href', s.playing ? '#i-pause' : '#i-playtri');
+    var pl = s.playing != null ? s.playing : localPlay;   // sans info du lecteur : on suit les appuis
+    $('playIcon').setAttribute('href', pl ? '#i-pause' : '#i-playtri');
     $('autoCpT').classList.toggle('on', !!s.autoCarplay);
     $('albumLedT').classList.toggle('on', !!s.albumLed);
     $('albumUiT').classList.toggle('on', !!s.albumUi); albumUi = !!s.albumUi; applyAlbumUi();
@@ -718,7 +725,7 @@ button:focus { outline: none !important; }
     var t = e.target.closest('button'); if (!t) return;
     if (t.dataset.page) show(t.dataset.page);
     else if (t.dataset.open) { if (NATIVE) Home.open(t.dataset.open); }
-    else if (t.dataset.media) { if (NATIVE) Home.media(t.dataset.media); setTimeout(refresh, 400); }
+    else if (t.dataset.media) { if (NATIVE) Home.media(t.dataset.media); if (t.dataset.media === 'play') { localPlay = !localPlay; $('playIcon').setAttribute('href', localPlay ? '#i-pause' : '#i-playtri'); } setTimeout(refresh, 400); }
     else if (t.dataset.pkg) { if (NATIVE) Home.launch(t.dataset.pkg); }
     else if (t.id === 'upd') { if (NATIVE) { if ($('updBtn').textContent === 'Installer') Home.updateInstall(); else Home.updateCheck(); updStart(); } }
     else if (t.id === 'sportSw' && t.classList.contains('cold')) { toast('Moteur froid · le sport s\u2019active tout seul une fois chaud'); }
@@ -727,6 +734,8 @@ button:focus { outline: none !important; }
     else if (t.id === 'albumUi') { albumUi = !$('albumUiT').classList.contains('on'); if (NATIVE) Home.setPref('albumUi', albumUi ? '1' : '0'); $('albumUiT').classList.toggle('on', albumUi); applyAlbumUi(); }
     else if (t.id === 'skyLed') { var sk = !$('skyLedT').classList.contains('on'); if (NATIVE) Home.setPref('skyLed', sk ? '1' : '0'); $('skyLedT').classList.toggle('on', sk); }
     else if (t.id === 'driveMode') { var dm = !$('driveModeT').classList.contains('on'); if (NATIVE) Home.setPref('driveMode', dm ? '1' : '0'); $('driveModeT').classList.toggle('on', dm); }
+    else if (t.id === 'mediaDiag') { $('sheetTxt').textContent = NATIVE && Home.mediaDebug ? Home.mediaDebug() : 'Aperçu navigateur'; $('sheet').classList.add('on'); }
+    else if (t.id === 'sheetClose') { $('sheet').classList.remove('on'); }
     else if (t.id === 'showItem') { show('home'); $('showBtn').click(); }
     else if (t.id === 'engineSound') { var es = !$('engineSoundT').classList.contains('on'); if (NATIVE) Home.setPref('engineSound', es ? '1' : '0'); $('engineSoundT').classList.toggle('on', es); if (es) toast('Son moteur : actif quand le boîtier OBD est connecté'); }
     else if (t.id === 'engineVol') { var lv = [[30, 'Faible'], [60, 'Moyen'], [100, 'Fort']], cur = $('engineVolTxt').textContent, k = 0; for (var i = 0; i < 3; i++) if (lv[i][1] === cur) k = (i + 1) % 3; if (NATIVE) Home.setPref('engineVol', String(lv[k][0])); $('engineVolTxt').textContent = lv[k][1]; }
