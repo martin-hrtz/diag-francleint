@@ -210,6 +210,13 @@ public class HomeActivity extends Activity {
             if (a != null) a.setSport(on);
         }
 
+        /** Compteur seulement (vitesse, effort, ch, couple) : léger, appelé 4 fois / s. */
+        @JavascriptInterface
+        public String live() {
+            AmbianceService a = AmbianceService.instance;
+            return a == null ? "{}" : a.live();
+        }
+
         @JavascriptInterface
         public String status() {
             try {
@@ -220,7 +227,7 @@ public class HomeActivity extends Activity {
                 if (a != null) {
                     try {
                         JSONObject x = new JSONObject(a.status());
-                        for (String k : new String[]{"speed", "power", "sport", "ledColor", "hp", "weather", "temp", "lat", "lon", "context", "ledLevel", "gps", "ledReady", "ledState", "albumLed", "skyLed", "showroom", "trip", "engineWarm", "enginePct", "engineMin", "water", "obd"}) if (x.has(k)) o.put(k, x.get(k));
+                        for (String k : new String[]{"speed", "power", "sport", "ledColor", "hp", "weather", "temp", "lat", "lon", "context", "ledLevel", "gps", "ledReady", "ledState", "albumLed", "skyLed", "showroom", "trip", "engineWarm", "enginePct", "engineMin", "water", "obd", "nm"}) if (x.has(k)) o.put(k, x.get(k));
                     } catch (Exception ignored) { }
                 }
 
