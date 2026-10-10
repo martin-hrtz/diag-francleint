@@ -142,6 +142,7 @@ class ObdLink {
         @Override public void onConnectionStateChange(BluetoothGatt g, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED && status == BluetoothGatt.GATT_SUCCESS) {
                 state = "connecté";
+                try { g.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH); } catch (Exception ignored) { }   // liaison radio la plus rapide
                 try { g.requestMtu(185); } catch (Exception e) { g.discoverServices(); }
             } else {
                 try { g.close(); } catch (Exception ignored) { }
